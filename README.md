@@ -1,0 +1,2 @@
+# mydetails
+DemoProject

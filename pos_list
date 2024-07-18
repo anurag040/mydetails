@@ -1,0 +1,71 @@
+Posting Lists
+First term: 2, 5, 20, 35, 67, 90, 112, 135, 145, 260, 267; with skip pointers at 2, 67, 145
+Second term: 3, 5, 7, 20, 35, 150, 260, 261, 270, 300; with skip pointers at 3, 35, 270
+Detailed Steps with Skip Pointers
+Compare 2 and 3:
+
+Current elements: 2 (first list) and 3 (second list).
+Since 2 < 3, check the skip pointer in the first list (which points to 67).
+Because 67 > 3, we should not use the skip pointer. Instead, we move the pointer in the first list to the next element.
+Compare 5 and 3:
+
+Current elements: 5 (first list) and 3 (second list).
+Since 3 < 5, check the skip pointer in the second list (which points to 35).
+Because 35 > 5, we should not use the skip pointer. Instead, we move the pointer in the second list to the next element.
+Compare 5 and 5:
+
+Current elements: 5 (both lists).
+Since they match, we add 5 to the intersection and move both pointers to the next elements (20 in the first list and 7 in the second list).
+Compare 20 and 7:
+
+Current elements: 20 (first list) and 7 (second list).
+Since 7 < 20, check the skip pointer in the second list (which points to 35).
+Because 35 > 20, we should not use the skip pointer. Instead, we move the pointer in the second list to the next element.
+Compare 20 and 20:
+
+Current elements: 20 (both lists).
+Since they match, we add 20 to the intersection and move both pointers to the next elements (35 in the first list and 35 in the second list).
+Compare 35 and 35:
+
+Current elements: 35 (both lists).
+Since they match, we add 35 to the intersection and move both pointers to the next elements (67 in the first list and 150 in the second list).
+Compare 67 and 150:
+
+Current elements: 67 (first list) and 150 (second list).
+Since 67 < 150, check the skip pointer in the first list (which points to 145).
+Because 145 < 150, we use the skip pointer to jump to 145.
+Compare 145 and 150:
+
+Current elements: 145 (first list) and 150 (second list).
+Since 145 < 150, move the pointer in the first list to the next element (260).
+Compare 260 and 150:
+
+Current elements: 260 (first list) and 150 (second list).
+Since 150 < 260, check the skip pointer in the second list (which points to 270).
+Because 270 > 260, we should not use the skip pointer. Instead, we move the pointer in the second list to the next element (260).
+Compare 260 and 260:
+
+Current elements: 260 (both lists).
+Since they match, we add 260 to the intersection and move both pointers to the next elements (267 in the first list and 261 in the second list).
+Compare 267 and 261:
+
+Current elements: 267 (first list) and 261 (second list).
+Since 261 < 267, check the skip pointer in the second list (which points to 270).
+Because 270 > 267, we should not use the skip pointer. Instead, we move the pointer in the second list to the next element (270).
+Compare 267 and 270:
+
+Current elements: 267 (first list) and 270 (second list).
+Since 267 < 270, move the pointer in the first list (end of the first list reached).
+Total Comparisons
+Compare 2 and 3
+Compare 5 and 3
+Compare 5 and 5
+Compare 20 and 7
+Compare 20 and 20
+Compare 35 and 35
+Compare 67 and 150 (skip pointer used)
+Compare 145 and 150
+Compare 260 and 150
+Compare 260 and 260
+Compare 267 and 261
+Compare 267 and 270

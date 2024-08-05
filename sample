@@ -1,0 +1,59 @@
+<div class="login-container">
+    <div class="login-content">
+        <h1>Sign In</h1>
+        <button class="login-button" (click)="login()">Sign in with Microsoft</button>
+    </div>
+</div>
+
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f3f2f1;
+}
+
+.login-content {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+}
+
+.login-button {
+    background-color: #0078d4;
+    color: #ffffff;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #005a9e;
+}
+
+h1 {
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    color: #323130;
+}
+
+
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-custom-login',
+  templateUrl: './custom-login.component.html',
+  styleUrls: ['./custom-login.component.css']
+})
+export class CustomLoginComponent {
+
+  login() {
+    window.location.href = 'http://localhost:8080/oauth2/authorization/azure';
+  }
+}

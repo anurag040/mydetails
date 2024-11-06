@@ -1,0 +1,121 @@
+<div class="copilot-container">
+  <button mat-raised-button color="primary" (click)="fetchSuggestions()">
+    <mat-icon>auto_fix_high</mat-icon> Fix Using My Copilot
+  </button>
+  
+  <!-- Suggestion Panel -->
+  <mat-drawer-container class="suggestion-drawer-container" *ngIf="suggestions && !loading">
+    <mat-drawer mode="side" opened>
+      <h3>Suggested Fixes</h3>
+      <mat-divider></mat-divider>
+      <div *ngFor="let suggestion of suggestions; let i = index" class="suggestion-item">
+        <pre class="suggestion-code">{{ suggestion.code }}</pre>
+        <div class="suggestion-actions">
+          <button mat-icon-button color="primary" (click)="applySuggestion(i)">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="dismissSuggestion(i)">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-drawer>
+  </mat-drawer-container>
+  
+  <!-- Loading Spinner -->
+  <mat-progress-spinner *ngIf="loading" mode="indeterminate"></mat-progress-spinner>
+</div>
+
+
+
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+interface Suggestion {
+  id: number;
+  code: string;
+}
+
+@Component({
+  selector: 'app-copilot',
+  templateUrl: './copilot.component.html',
+  styleUrls: ['./copilot.component.css']
+})
+export class CopilotComponent {
+  loading = false;
+  suggestions: Suggestion[] | null = null;
+
+  constructor(private http: HttpClient) {}
+
+  fetchSuggestions() {
+    this.loading = true;
+    this.suggestions = null;
+    this.http.get<Suggestion[]>('https://api.example.com/get-suggestions').subscribe({
+      next: (data) => {
+        this.suggestions = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        alert('Failed to fetch suggestions. Please try again.');
+      }
+    });
+  }
+
+  applySuggestion(index: number) {
+    // Code to apply the suggestion, e.g., insert it into a code editor or save
+    alert(`Applied suggestion ${this.suggestions![index].code}`);
+    this.suggestions?.splice(index, 1);
+  }
+
+  dismissSuggestion(index: number) {
+    // Simply removes the suggestion from the list
+    this.suggestions?.splice(index, 1);
+  }
+}
+
+
+
+.copilot-container {
+  text-align: center;
+  padding: 20px;
+}
+
+button {
+  font-weight: bold;
+}
+
+.suggestion-drawer-container {
+  width: 100%;
+  height: auto;
+  margin-top: 20px;
+}
+
+h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.suggestion-item {
+  background-color: #f4f6f8;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.suggestion-code {
+  font-family: monospace;
+  white-space: pre-wrap;
+  margin-right: 10px;
+}
+
+.suggestion-actions button {
+  margin-left: 5px;
+}
+
+mat-progress-spinner {
+  margin-top: 20px;
+}

@@ -16,7 +16,7 @@ button {
 }
 
 h3 {
-  color: #4267B2; /* Facebook-like blue */
+  color: #4267B2;
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 20px;
@@ -32,6 +32,7 @@ h3 {
   justify-content: space-between;
   align-items: center;
   transition: box-shadow 0.3s ease;
+  height: 100px; /* Fixed height for uniformity */
 }
 
 .suggestion-item:hover {
@@ -44,6 +45,9 @@ h3 {
   color: #333;
   flex: 1;
   margin-right: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* Keeps text in a single line */
 }
 
 .suggestion-actions {
@@ -59,34 +63,9 @@ h3 {
 }
 
 .suggestion-actions button:hover {
-  color: #29487d; /* Darker blue for hover */
+  color: #29487d;
 }
 
 mat-progress-spinner {
   margin-top: 20px;
 }
-
-
-
-<div class="copilot-container">
-  <button mat-raised-button color="primary" (click)="fetchSuggestions()">
-    <mat-icon>auto_fix_high</mat-icon> Fix Using My Copilot
-  </button>
-  
-  <div *ngIf="suggestions && !loading" class="suggestion-drawer-container">
-    <h3>Suggested Fixes</h3>
-    <div *ngFor="let suggestion of suggestions; let i = index" class="suggestion-item">
-      <pre class="suggestion-code">{{ suggestion.code }}</pre>
-      <div class="suggestion-actions">
-        <button mat-icon-button (click)="applySuggestion(i)">
-          <mat-icon>check_circle</mat-icon>
-        </button>
-        <button mat-icon-button (click)="dismissSuggestion(i)">
-          <mat-icon>cancel</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <mat-progress-spinner *ngIf="loading" mode="indeterminate"></mat-progress-spinner>
-</div>

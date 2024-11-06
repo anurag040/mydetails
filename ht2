@@ -1,71 +1,90 @@
-.copilot-container {
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
-  text-align: left;
+import { Component, OnInit } from '@angular/core';
+
+interface Suggestion {
+  id: number;
+  code: string;
 }
 
-button {
-  font-weight: bold;
-  margin-bottom: 20px;
+@Component({
+  selector: 'app-copilot',
+  templateUrl: './copilot.component.html',
+  styleUrls: ['./copilot.component.css']
+})
+export class CopilotComponent implements OnInit {
+  loading = false;
+  suggestions: Suggestion[] = [
+    { id: 1, code: 'Refactor this function to reduce complexity and improve readability.' },
+    { id: 2, code: 'Consider using a more efficient sorting algorithm here.' },
+    { id: 3, code: 'Replace repeated code with a helper function to follow DRY principles.' },
+  ];
+  displayedSuggestions: { id: number, code: string }[] = [];
+
+  ngOnInit() {
+    this.startTypingEffect();
+  }
+
+  // Method to start typing effect for each suggestion
+  async startTypingEffect() {
+    for (const suggestion of this.suggestions) {
+      await this.typeSuggestion(suggestion);
+    }
+  }
+
+  // Types out each suggestion one character at a time
+  typeSuggestion(suggestion: Suggestion) {
+    return new Promise<void>((resolve) => {
+      let typedText = '';
+      let index = 0;
+
+      const interval = setInterval(() => {
+        typedText += suggestion.code[index];
+        this.displayedSuggestions = [
+          ...this.displayedSuggestions,
+          { id: suggestion.id, code: typedText }
+        ];
+        
+        if (index >= suggestion.code.length - 1) {
+          clearInterval(interval);
+          resolve();
+        } else {
+          index++;
+        }
+      }, 50); // Typing speed in milliseconds
+    });
+  }
+
+  // Handle applying a suggestion
+  applySuggestion(index: number) {
+    alert(`Applied suggestion: ${this.displayedSuggestions[index].code}`);
+    this.displayedSuggestions.splice(index, 1);
+  }
+
+  // Handle dismissing a suggestion
+  dismissSuggestion(index: number) {
+    this.displayedSuggestions.splice(index, 1);
+  }
 }
 
-.suggestion-drawer-container {
-  width: 100%;
-  margin-top: 20px;
-}
 
-h3 {
-  color: #4267B2;
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.suggestion-item {
-  background-color: #ffffff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: box-shadow 0.3s ease;
-  height: 100px; /* Fixed height for uniformity */
-}
-
-.suggestion-item:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.suggestion-code {
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
-  color: #333;
-  flex: 1;
-  margin-right: 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap; /* Keeps text in a single line */
-}
-
-.suggestion-actions {
-  display: flex;
-  align-items: center;
-}
-
-.suggestion-actions button {
-  color: #4267B2;
-  font-size: 20px;
-  margin-left: 5px;
-  transition: color 0.3s ease;
-}
-
-.suggestion-actions button:hover {
-  color: #29487d;
-}
-
-mat-progress-spinner {
-  margin-top: 20px;
-}
+<div class="copilot-container">
+  <button mat-raised-button color="primary" (click)="fetchSuggestions()">
+    <mat-icon>auto_fix_high</mat-icon> Fix Using My Copilot
+  </button>
+  
+  <div *ngIf="displayedSuggestions && !loading" class="suggestion-drawer-container">
+    <h3>Suggested Fixes</h3>
+    <div *ngFor="let suggestion of displayedSuggestions; let i = index" class="suggestion-item">
+      <pre class="suggestion-code">{{ suggestion.code }}</pre>
+      <div class="suggestion-actions">
+        <button mat-icon-button (click)="applySuggestion(i)">
+          <mat-icon>check_circle</mat-icon>
+        </button>
+        <button mat-icon-button (click)="dismissSuggestion(i)">
+          <mat-icon>cancel</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <mat-progress-spinner *ngIf="loading" mode="indeterminate"></mat-progress-spinner>
+</div>

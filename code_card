@@ -1,0 +1,40 @@
+<mat-card class="code-card">
+  <mat-card-header>
+    <mat-card-title>Code Example</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <pre><code [innerText]="code"></code></pre>
+  </mat-card-content>
+</mat-card>
+
+.code-card {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: monospace;
+  font-size: 14px;
+
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 12px;
+    border-radius: 4px;
+  }
+}
+
+
+import { Component, Input } from '@angular/core';
+
+@Component({
+  selector: 'app-code-card',
+  templateUrl: './code-card.component.html',
+  styleUrls: ['./code-card.component.scss']
+})
+export class CodeCardComponent {
+  @Input() code: string = '';
+}
+
+
+<app-code-card [code]="'const example = true; // Your code here'"></app-code-card>

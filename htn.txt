@@ -47,6 +47,13 @@ export class CopilotComponent {
 
   constructor(private http: HttpClient) {}
 
+ // Hardcoded suggestions
+  suggestions: Suggestion[] = [
+    { id: 1, code: 'Refactor this function to reduce complexity and improve readability.' },
+    { id: 2, code: 'Consider using a more efficient sorting algorithm here.' },
+    { id: 3, code: 'Replace repeated code with a helper function to follow DRY principles.' },
+  ];
+
   fetchSuggestions() {
     this.loading = true;
     this.suggestions = null;

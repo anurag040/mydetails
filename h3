@@ -1,133 +1,60 @@
-
-<body>
-  <div class="content">
-    <div class="box-container">
-      <div class="box">
-        <h3>Eliza Explains</h3>
-        <p>This box contains explanations provided by Eliza.</p>
-      </div>
-      <div class="box">
-        <h3>Eliza Suggests</h3>
-        <p>This box contains suggestions provided by Eliza.</p>
-      </div>
-    </div>
-    <div class="button-container">
-      <button class="fancy-button accept-button" onclick="accept()">Accept</button>
-      <button class="fancy-button adjust-button" onclick="adjust()">Adjust</button>
-    </div>
-  </div>
-</body>
+<button class="pulsing-button"><span class="icon">✨</span>Ask Eliza</button>
 
 
-/* Body styling with watermark effect */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-image: repeating-linear-gradient(
-        -45deg,
-        transparent 0,
-        transparent 40px,
-        rgba(0, 0, 0, 0.05) 40px,
-        rgba(0, 0, 0, 0.05) 80px
-      ),
-      repeating-linear-gradient(
-        -45deg,
-        transparent 0,
-        transparent 40px,
-        rgba(0, 0, 0, 0.05) 40px,
-        rgba(0, 0, 0, 0.05) 80px
-      );
-    background-size: 200px 200px;
-  }
-  
-  body::before {
-    content: "ELIZA ELIZA ELIZA ELIZA ELIZA ELIZA ELIZA ELIZA ELIZA ELIZA ";
-    position: fixed;
-    top: 0;
-    left: 0;
-    font-size: 20px;
-    color: rgba(0, 0, 0, 0.05);
-    transform: rotate(-45deg);
-    width: 100%;
-    height: 100%;
-    white-space: nowrap;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  
-  /* Content container styling */
-  .content {
-    padding: 20px;
-    position: relative;
-    z-index: 1;
-  }
-  
-  /* Box container and styling */
-  .box-container {
-    display: flex;
-    gap: 20px;
-  }
-  
-  .box {
-    padding: 20px;
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    width: 200px;
-  }
-  
-  /* Button container and styling */
-  .button-container {
-    margin-top: 20px;
-  }
-  
-  .fancy-button {
-    padding: 10px 20px;
-    margin-right: 10px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
-    border: none;
-  }
-  
-  .accept-button {
-    background-color: #4CAF50;
-    color: white;
-  }
-  
-  .adjust-button {
-    background-color: #008CBA;
-    color: white;
-  }
+.pulsing-button {
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  color: charcoal;
+  background: rgba(255, 255, 255, 0.15); /* Slightly darker for better contrast */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 153, 255, 0.4); /* Soft blue glow */
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  z-index: 0;
+  animation: pulse 2s infinite; /* Continuous pulsing animation */
+}
 
+/* Gradient background effect */
+.pulsing-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 153, 255, 0.3), rgba(102, 204, 255, 0.3));
+  border-radius: 12px;
+  z-index: -1;
+  pointer-events: none;
+  animation: pulse-bg 2s infinite; /* Background pulsing animation */
+}
 
-import { Component } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+/* Add a stronger shadow on hover */
+.pulsing-button:hover {
+  box-shadow: 0 8px 20px rgba(0, 153, 255, 0.6);
+}
 
-@Component({
-  selector: 'app-eliza-modal',
-  standalone: true,
-  imports: [],
-  templateUrl: './eliza-modal.component.html',
-  styleUrl: './eliza-modal.component.scss'
-})
-export class ElizaModalComponent {
-
-  constructor(public dialogRef: MatDialogRef<ElizaModalComponent>) {}
-
-  close(): void {
-    this.dialogRef.close();
+/* Pulse animation for the button */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(0, 153, 255, 0.4);
   }
-
-  accept(): void {
-    console.log('Accepted');
-    this.dialogRef.close(); // or add any accept logic here
+  90% {
+    box-shadow: 0 4px 25px #00485e; /* Stronger glow at peak */
   }
+}
 
-  adjust(): void {
-    console.log('Adjusted');
-    this.dialogRef.close(); // or add any adjust logic here
+/* Pulse animation for the gradient background */
+@keyframes pulse-bg {
+  0%, 100% {
+    opacity: 0.7;
   }
-
+  50% {
+    opacity: 1;
+  }
 }

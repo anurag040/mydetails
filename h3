@@ -1,0 +1,67 @@
+<div class="ask-eliza-button" (click)="openModal()">
+  <span class="icon">✨</span> Ask Eliza
+</div>
+
+.ask-eliza-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  background-color: #f3f3f3;
+  font-weight: bold;
+  color: #555;
+  transition: background-color 0.3s ease;
+  max-width: fit-content;
+}
+
+.ask-eliza-button:hover {
+  background-color: #e0e0e0;
+}
+
+.ask-eliza-button .icon {
+  margin-right: 8px;
+  font-size: 18px; /* Adjust icon size */
+}
+
+import { Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { ElizaModalComponent } from './eliza-modal/eliza-modal.component';
+
+@Component({
+  selector: 'app-ask-eliza',
+  templateUrl: './ask-eliza.component.html',
+  styleUrls: ['./ask-eliza.component.css']
+})
+export class AskElizaComponent {
+
+  constructor(private dialog: MatDialog) {}
+
+  openModal() {
+    this.dialog.open(ElizaModalComponent, {
+      width: '400px',
+      height: '300px',
+      data: { /* Pass any data if needed */ }
+    });
+  }
+}
+
+
+import { Component, Inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+@Component({
+  selector: 'app-eliza-modal',
+  templateUrl: './eliza-modal.component.html'
+})
+export class ElizaModalComponent {
+  constructor(
+    public dialogRef: MatDialogRef<ElizaModalComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
+
+  close(): void {
+    this.dialogRef.close();
+  }
+}

@@ -1,29 +1,46 @@
-<div class="ask-eliza-button" (click)="openModal()">
-  <span class="icon">✨</span> Ask Eliza
-</div>
-
 .ask-eliza-button {
   display: flex;
   align-items: center;
   cursor: pointer;
   padding: 8px 12px;
-  border: 1px solid #ccc;
   border-radius: 20px;
-  background-color: #f3f3f3;
+  background-color: #ffffff;
   font-weight: bold;
-  color: #555;
-  transition: background-color 0.3s ease;
+  color: #333;
   max-width: fit-content;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ask-eliza-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #ff8a00, #e52e71, #9b00e8, #0076ff);
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  border-radius: 22px;
+  opacity: 0.5;
+}
+
+.ask-eliza-button:hover::before {
+  opacity: 1;
 }
 
 .ask-eliza-button:hover {
-  background-color: #e0e0e0;
+  color: #000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .ask-eliza-button .icon {
   margin-right: 8px;
-  font-size: 18px; /* Adjust icon size */
+  font-size: 18px;
 }
+
 
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';

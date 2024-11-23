@@ -1,0 +1,155 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-video-uploader',
+  templateUrl: './video-uploader.component.html',
+  styleUrls: ['./video-uploader.component.css']
+})
+export class VideoUploaderComponent {
+  selectedFile: File | null = null;
+  uploadedVideoPath: string | null = null;
+
+  onVideoSelected(event: any): void {
+    this.selectedFile = event.target.files[0];
+  }
+
+  uploadVideo(): void {
+    if (this.selectedFile) {
+      // Create a local URL for the video preview
+      const fakeServerPath = URL.createObjectURL(this.selectedFile);
+      this.uploadedVideoPath = fakeServerPath;
+
+      // Real-world example: Use a service to upload the video
+      // this.videoService.uploadVideo(this.selectedFile).subscribe((response) => {
+      //   this.uploadedVideoPath = response.filePath;
+      // });
+    }
+  }
+}
+
+
+
+
+<div class="video-uploader-container">
+  <h2>Upload and Play Video</h2>
+
+  <div class="upload-section">
+    <label for="video-upload" class="custom-upload-button">
+      Choose Video
+    </label>
+    <input
+      type="file"
+      id="video-upload"
+      accept="video/*"
+      (change)="onVideoSelected($event)"
+      hidden
+    />
+    <button
+      class="upload-button"
+      [disabled]="!selectedFile"
+      (click)="uploadVideo()"
+    >
+      Upload
+    </button>
+  </div>
+
+  <div *ngIf="uploadedVideoPath" class="video-preview">
+    <h3>Video Preview</h3>
+    <video
+      #videoPlayer
+      controls
+      autoplay
+      [src]="uploadedVideoPath"
+      class="video-player"
+    ></video>
+  </div>
+</div>
+
+
+
+.video-uploader-container {
+  width: 50%;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.upload-section {
+  margin-bottom: 20px;
+}
+
+.custom-upload-button {
+  display: inline-block;
+  padding: 10px 20px;
+  color: white;
+  background-color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.custom-upload-button:hover {
+  background-color: #0056b3;
+}
+
+.upload-button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  color: white;
+  background-color: #28a745;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.upload-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.upload-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.video-preview {
+  margin-top: 20px;
+}
+
+.video-player {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class VideoService {
+  constructor(private http: HttpClient) {}
+
+  uploadVideo(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post('your-backend-api-endpoint', formData);
+  }
+}
+
+
+<app-video-uploader></app-video-uploader>

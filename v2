@@ -1,3 +1,79 @@
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-video-uploader',
+  templateUrl: './video-uploader.component.html',
+  styleUrls: ['./video-uploader.component.css']
+})
+export class VideoUploaderComponent implements OnInit {
+  selectedFile: File | null = null;
+  videoList: Array<{ name: string; path: string; isDefault: boolean }> = [];
+  playingVideo: string | null = null;
+
+  ngOnInit(): void {
+    this.loadDefaultVideos();
+    this.loadUploadedVideos();
+  }
+
+  onVideoSelected(event: any): void {
+    this.selectedFile = event.target.files[0];
+  }
+
+  uploadVideo(): void {
+    if (this.selectedFile) {
+      const reader = new FileReader();
+
+      reader.onload = (e: any) => {
+        const videoBlobUrl = e.target.result;
+        const videoData = {
+          name: this.selectedFile!.name,
+          path: videoBlobUrl,
+          isDefault: false
+        };
+
+        // Save the uploaded video
+        this.videoList.push(videoData);
+        this.saveUploadedVideos();
+
+        // Clear selected file
+        this.selectedFile = null;
+      };
+
+      reader.readAsDataURL(this.selectedFile);
+    }
+  }
+
+  playVideo(videoPath: string): void {
+    this.playingVideo = videoPath;
+  }
+
+  private loadDefaultVideos(): void {
+    // Add default videos with absolute paths (e.g., from C drive or assets folder)
+    this.videoList = [
+      { name: 'Sample Video 1', path: 'file:///C:/video-uploads/video1.mp4', isDefault: true },
+      { name: 'Sample Video 2', path: 'file:///C:/video-uploads/video2.mp4', isDefault: true }
+    ];
+  }
+
+  private loadUploadedVideos(): void {
+    const savedVideos = localStorage.getItem('uploadedVideos');
+    if (savedVideos) {
+      const uploadedVideos = JSON.parse(savedVideos).map((video: any) => ({
+        ...video,
+        isDefault: false
+      }));
+      this.videoList = [...this.videoList, ...uploadedVideos];
+    }
+  }
+
+  private saveUploadedVideos(): void {
+    const uploadedVideos = this.videoList.filter(video => !video.isDefault);
+    localStorage.setItem('uploadedVideos', JSON.stringify(uploadedVideos));
+  }
+}
+
+
+
 <div class="video-uploader-container">
   <h2>Upload and Play Videos</h2>
 
@@ -21,11 +97,11 @@
     </button>
   </div>
 
-  <h3>Uploaded Videos</h3>
+  <h3>Available Videos</h3>
   <div class="video-thumbnails">
-    <div class="video-thumbnail" *ngFor="let video of videoList" (click)="playVideo(video.blobUrl)">
+    <div class="video-thumbnail" *ngFor="let video of videoList" (click)="playVideo(video.path)">
       <div class="video-frame">
-        <video [src]="video.blobUrl" class="thumbnail-preview" muted autoplay loop></video>
+        <video [src]="video.path" class="thumbnail-preview" muted autoplay loop></video>
         <div class="play-button-overlay">
           <i class="fa fa-play-circle"></i>
         </div>

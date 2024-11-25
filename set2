@@ -1,0 +1,72 @@
+<div style="max-width: 400px; margin: auto; font-family: Arial, sans-serif;">
+  <div style="text-align: center; padding: 16px;">
+    <div style="background-color: #f2f2f2; padding: 16px; border-radius: 50%; width: 80px; height: 80px; margin: auto;">
+      <span style="font-size: 40px; color: #f44336;">J</span>
+    </div>
+    <h2>Hi, Java New!</h2>
+    <button style="background-color: #4285f4; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">
+      Manage your Google Account
+    </button>
+  </div>
+
+  <mat-accordion>
+    <!-- Section 1 -->
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title> Search history </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-form-field style="width: 100%;" appearance="fill">
+        <mat-label>Save search history</mat-label>
+        <mat-select>
+          <mat-option value="enabled">Enabled</mat-option>
+          <mat-option value="disabled">Disabled</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-expansion-panel>
+
+    <!-- Section 2 -->
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title> Saves and Collections </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-form-field style="width: 100%;" appearance="fill">
+        <mat-label>Auto-save options</mat-label>
+        <mat-select>
+          <mat-option value="all">Save All</mat-option>
+          <mat-option value="none">Do Not Save</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-expansion-panel>
+
+    <!-- Section 3 -->
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title> SafeSearch </mat-panel-title>
+      </mat-expansion-panel-header>
+      <mat-form-field style="width: 100%;" appearance="fill">
+        <mat-label>Blur explicit content</mat-label>
+        <mat-select>
+          <mat-option value="on">On</mat-option>
+          <mat-option value="off">Off</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>
+
+
+mat-accordion {
+  margin: 16px 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+mat-expansion-panel-header {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+mat-form-field {
+  margin-top: 16px;
+}

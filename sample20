@@ -1,0 +1,105 @@
+<div class="app-container">
+  <!-- Spinner -->
+  <div *ngIf="isLoading" class="spinner-container">
+    <div class="spinner"></div>
+    <p>Loading external content...</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading">
+    <h1>External Content Loaded</h1>
+    <p>The new tab has successfully loaded its content.</p>
+  </div>
+</div>
+
+.app-container {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .spinner-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+  }
+  
+  .spinner {
+    border: 8px solid #f3f3f3; /* Light grey */
+    border-top: 8px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }  
+
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { SpinnerComponent } from './spinner/spinner.component';
+import { CommonModule, NgIf } from '@angular/common';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, SpinnerComponent],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
+})
+export class AppComponent implements OnInit {
+  isLoading = true; // Spinner state
+  private chatWindow: Window | null = null;
+
+  ngOnInit(): void {
+    this.openChatWindow();
+  }
+
+  openChatWindow(): void {
+    const url = 'https://en.wikipedia.org/wiki/Special:Random'; // Replace with the desired URL
+    const width = 300;
+    const height = 400;
+    const left = window.innerWidth - width - 10; // Position in bottom-right corner
+    const top = window.innerHeight - height - 10;
+
+    // Open the new tab or popup window
+    this.chatWindow = window.open(
+      url,
+      'chatWindow',
+      `width=${width},height=${height},left=${left},top=${top},resizable,scrollbars`
+    );
+
+    if (!this.chatWindow) {
+      alert('Popup blocked! Please allow popups for this site.');
+      this.isLoading = false; // Stop spinner if popup fails
+      return;
+    }
+
+    // Poll the new window to check if it has loaded
+    const checkWindow = setInterval(() => {
+      try {
+        // Check if the content in the new window is fully loaded
+        if (this.chatWindow?.document.readyState === 'complete') {
+          this.isLoading = false; // Stop the spinner once loaded
+          clearInterval(checkWindow);
+        }
+      } catch (e) {
+        // Ignore cross-origin errors
+      }
+
+      // If the window is closed manually, stop checking
+      if (this.chatWindow?.closed) {
+        this.isLoading = false; // Stop the spinner
+        clearInterval(checkWindow);
+      }
+    }, 100); // Check every 100ms
+  }
+}

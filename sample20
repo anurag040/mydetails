@@ -1,3 +1,53 @@
+document.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Glass Window</title>
+          <style>
+            body {
+              margin: 0;
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              background: rgba(255, 255, 255, 0.2);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
+              font-family: Arial, sans-serif;
+            }
+            .glass-container {
+              width: 90%;
+              height: 90%;
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              border-radius: 10px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            }
+            .glass-container h1 {
+              color: #ffffff;
+              text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            }
+            .glass-container p {
+              color: rgba(255, 255, 255, 0.7);
+              text-align: center;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="glass-container">
+            <h1>Chat Window</h1>
+            <p>This is a glass-like popup window resembling a Teams screen.</p>
+          </div>
+        </body>
+      </html>
+    `);
+
 <div class="app-container">
   <!-- Spinner -->
   <div *ngIf="isLoading" class="spinner-container">

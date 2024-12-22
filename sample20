@@ -1,155 +1,53 @@
-document.write(`
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Glass Window</title>
-          <style>
-            body {
-              margin: 0;
-              height: 100%;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              background: rgba(255, 255, 255, 0.2);
-              backdrop-filter: blur(10px);
-              -webkit-backdrop-filter: blur(10px);
-              font-family: Arial, sans-serif;
-            }
-            .glass-container {
-              width: 90%;
-              height: 90%;
-              background: rgba(255, 255, 255, 0.2);
-              border: 1px solid rgba(255, 255, 255, 0.3);
-              border-radius: 10px;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-            }
-            .glass-container h1 {
-              color: #ffffff;
-              text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-            }
-            .glass-container p {
-              color: rgba(255, 255, 255, 0.7);
-              text-align: center;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="glass-container">
-            <h1>Chat Window</h1>
-            <p>This is a glass-like popup window resembling a Teams screen.</p>
-          </div>
-        </body>
-      </html>
-    `);
-
-<div class="app-container">
-  <!-- Spinner -->
-  <div *ngIf="isLoading" class="spinner-container">
-    <div class="spinner"></div>
-    <p>Loading external content...</p>
-  </div>
-
-  <!-- Content -->
-  <div *ngIf="!isLoading">
-    <h1>External Content Loaded</h1>
-    <p>The new tab has successfully loaded its content.</p>
+<app-header></app-header>
+<div class="router-container">
+  <router-outlet></router-outlet>
+  <div *ngIf="isLoading" class="spinner-overlay">
+    <app-spinner></app-spinner>
   </div>
 </div>
 
-.app-container {
-    text-align: center;
-    margin-top: 50px;
-  }
-  
-  .spinner-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh; /* Full viewport height */
-  }
-  
-  .spinner {
-    border: 8px solid #f3f3f3; /* Light grey */
-    border-top: 8px solid #3498db; /* Blue */
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }  
 
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { SpinnerComponent } from './spinner/spinner.component';
-import { CommonModule, NgIf } from '@angular/common';
+.router-container {
+  position: relative; /* To contain the spinner */
+}
+
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent overlay */
+  z-index: 1000;
+}
+
+import { Component, OnInit } from '@angular/core';
+import { Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, SpinnerComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  isLoading = true; // Spinner state
-  private chatWindow: Window | null = null;
+  isLoading = false;
+
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.openChatWindow();
-  }
-
-  openChatWindow(): void {
-    const url = 'https://en.wikipedia.org/wiki/Special:Random'; // Replace with the desired URL
-    const width = 300;
-    const height = 400;
-    const left = window.innerWidth - width - 10; // Position in bottom-right corner
-    const top = window.innerHeight - height - 10;
-
-    // Open the new tab or popup window
-    this.chatWindow = window.open(
-      url,
-      'chatWindow',
-      `width=${width},height=${height},left=${left},top=${top},resizable,scrollbars`
-    );
-
-    if (!this.chatWindow) {
-      alert('Popup blocked! Please allow popups for this site.');
-      this.isLoading = false; // Stop spinner if popup fails
-      return;
-    }
-
-    // Poll the new window to check if it has loaded
-    const checkWindow = setInterval(() => {
-      try {
-        // Check if the content in the new window is fully loaded
-        if (this.chatWindow?.document.readyState === 'complete') {
-          this.isLoading = false; // Stop the spinner once loaded
-          clearInterval(checkWindow);
-        }
-      } catch (e) {
-        // Ignore cross-origin errors
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.isLoading = true;
+      } else if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
+        this.isLoading = false;
       }
-
-      // If the window is closed manually, stop checking
-      if (this.chatWindow?.closed) {
-        this.isLoading = false; // Stop the spinner
-        clearInterval(checkWindow);
-      }
-    }, 100); // Check every 100ms
+    });
   }
 }

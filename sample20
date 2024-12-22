@@ -1,14 +1,26 @@
-<app-header></app-header>
-<div class="content-container">
-  <router-outlet></router-outlet>
-  <div *ngIf="isLoading" class="spinner-overlay">
-    <app-spinner></app-spinner>
+<div class="app-wrapper">
+  <app-header></app-header>
+  <div class="content-wrapper">
+    <router-outlet></router-outlet>
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <app-spinner></app-spinner>
+    </div>
   </div>
 </div>
+.app-wrapper {
+  display: flex;
+  flex-direction: column; /* Stack header and content vertically */
+  height: 100vh; /* Ensure it takes up the full viewport */
+}
 
-.content-container {
-  position: relative; /* Spinner overlay stays within this container */
-  padding-top: 0; /* Prevents extra space between the header and content */
+app-header {
+  z-index: 10; /* Ensure the header is always above other content */
+}
+
+.content-wrapper {
+  position: relative; /* To contain the spinner overlay */
+  flex: 1; /* Allows this container to grow and fill remaining space */
+  overflow: hidden; /* Prevents any overflow issues */
 }
 
 .spinner-overlay {
@@ -20,7 +32,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent overlay */
-  z-index: 1000; /* Ensures spinner is above other content */
-  pointer-events: none; /* Allows interaction with the header */
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent */
+  z-index: 100; /* Ensure spinner is above the content but below the header */
+  pointer-events: none; /* Allow interactions with the header */
 }
+
+isLoading = false;

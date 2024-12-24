@@ -1,0 +1,60 @@
+# Oracle Database Configuration
+spring.datasource.url=jdbc:oracle:thin:@<host>:<port>/<service>
+spring.datasource.username=<your_db_user>
+spring.datasource.password=<your_db_password>
+spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
+
+# Spring Session Configuration
+spring.session.store-type=jdbc
+
+# JSESSIONID Cookie Configuration
+server.servlet.session.cookie.name=JSESSIONID
+server.servlet.session.cookie.domain=.bnymellon.net
+server.servlet.session.cookie.secure=true
+server.servlet.session.cookie.http-only=true
+
+<dependency>
+    <groupId>org.springframework.session</groupId>
+    <artifactId>spring-session-jdbc</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-client</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc8</artifactId>
+    <scope>runtime</scope>
+</dependency>
+
+
+CREATE TABLE SPRING_SESSION (
+    PRIMARY_ID VARCHAR2(36 CHAR) NOT NULL,
+    SESSION_ID VARCHAR2(36 CHAR) NOT NULL UNIQUE,
+    CREATION_TIME NUMBER(19,0) NOT NULL,
+    LAST_ACCESS_TIME NUMBER(19,0) NOT NULL,
+    MAX_INACTIVE_INTERVAL NUMBER(10,0) NOT NULL,
+    EXPIRY_TIME NUMBER(19,0) NOT NULL,
+    PRINCIPAL_NAME VARCHAR2(100 CHAR),
+    CONSTRAINT SPRING_SESSION_PK PRIMARY KEY (PRIMARY_ID)
+);
+
+CREATE INDEX SPRING_SESSION_IX1 ON SPRING_SESSION (SESSION_ID);
+CREATE INDEX SPRING_SESSION_IX2 ON SPRING_SESSION (EXPIRY_TIME);
+CREATE INDEX SPRING_SESSION_IX3 ON SPRING_SESSION (PRINCIPAL_NAME);
+
+CREATE TABLE SPRING_SESSION_ATTRIBUTES (
+    SESSION_PRIMARY_ID VARCHAR2(36 CHAR) NOT NULL,
+    ATTRIBUTE_NAME VARCHAR2(200 CHAR) NOT NULL,
+    ATTRIBUTE_BYTES BLOB NOT NULL,
+    CONSTRAINT SPRING_SESSION_ATTRIBUTES_PK PRIMARY KEY (SESSION_PRIMARY_ID, ATTRIBUTE_NAME),
+    CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID)
+        REFERENCES SPRING_SESSION (PRIMARY_ID) ON DELETE CASCADE
+);
+
+spring.datasource.initialization-mode=always
+spring.session.jdbc.initialize-schema=always

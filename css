@@ -2,42 +2,66 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  width: 50px; /* Width of the button */
-  height: 50px; /* Height of the button */
+  width: 60px; /* Button size */
+  height: 60px;
+  background-color: #007BFF; /* Background color */
   border: none;
-  border-radius: 50%; /* Makes it circular */
-  background-color: #007BFF; /* Button background color */
+  border-radius: 50%; /* Circular button */
   cursor: pointer;
   transition: transform 0.3s ease, background-color 0.3s ease;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .arrow-button:hover {
-  background-color: #0056b3; /* Darker color on hover */
-  transform: scale(1.1); /* Slight scaling effect */
+  background-color: #0056b3; /* Darker blue on hover */
+  transform: scale(1.1); /* Hover effect */
 }
 
 .arrow-icon {
   position: relative;
-  width: 15px; /* Arrow width */
-  height: 15px; /* Arrow height */
-  border: solid #fff; /* Arrow color */
-  border-width: 2px 2px 0 0; /* Make it look like an arrow */
-  transform: rotate(45deg); /* Rotate to make an arrowhead */
+  display: inline-block;
+  width: 24px; /* Width of arrow */
+  height: 24px; /* Height of arrow */
 }
 
-.arrow-icon.backward {
-  transform: rotate(-135deg); /* Rotate for backward arrow */
+.arrow-icon::before,
+.arrow-icon::after {
+  content: '';
+  position: absolute;
+  width: 12px; /* Arrow thickness */
+  height: 4px; /* Arrow height */
+  background-color: white; /* Arrow color */
+  border-radius: 2px; /* Smooth edges */
 }
 
-.arrow-icon.forward {
-  transform: rotate(45deg); /* Rotate for forward arrow */
+.arrow-icon::before {
+  transform: rotate(45deg); /* Top part of arrow */
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  margin-top: -6px;
+  margin-left: -12px;
 }
 
+.arrow-icon::after {
+  transform: rotate(-45deg); /* Bottom part of arrow */
+  top: 50%;
+  left: 50%;
+  transform-origin: center;
+  margin-top: 2px;
+  margin-left: -12px;
+}
+
+.backward .arrow-icon::before,
+.backward .arrow-icon::after {
+  transform: rotate(135deg); /* Adjust for backward arrow */
+}
 
 <button mat-button class="arrow-button">
-  <span class="arrow-icon forward"></span>
+  <div class="arrow-icon"></div>
 </button>
 
-<button mat-button class="arrow-button">
-  <span class="arrow-icon backward"></span>
+<button mat-button class="arrow-button backward">
+  <div class="arrow-icon"></div>
 </button>

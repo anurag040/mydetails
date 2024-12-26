@@ -1,0 +1,28 @@
+.arrow-with-pointer {
+  position: relative;
+  display: inline-block;
+  margin: 20px;
+}
+
+.arrow-head {
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 20px solid #007BFF; /* Arrowhead color */
+  position: relative;
+}
+
+.arrow-pointer {
+  width: 60px; /* Pointer length */
+  height: 5px; /* Pointer thickness */
+  background-color: #007BFF; /* Pointer color */
+  position: absolute;
+  top: 50%; /* Align vertically */
+  left: -65px; /* Position the tail relative to the head */
+  transform: translateY(-50%);
+}
+<div class="arrow-with-pointer">
+  <div class="arrow-pointer"></div>
+  <div class="arrow-head"></div>
+</div>

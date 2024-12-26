@@ -1,28 +1,43 @@
-.arrow-with-pointer {
-  position: relative;
-  display: inline-block;
-  margin: 20px;
+.arrow-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px; /* Width of the button */
+  height: 50px; /* Height of the button */
+  border: none;
+  border-radius: 50%; /* Makes it circular */
+  background-color: #007BFF; /* Button background color */
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-.arrow-head {
-  width: 0;
-  height: 0;
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  border-top: 20px solid #007BFF; /* Arrowhead color */
-  position: relative;
+.arrow-button:hover {
+  background-color: #0056b3; /* Darker color on hover */
+  transform: scale(1.1); /* Slight scaling effect */
 }
 
-.arrow-pointer {
-  width: 60px; /* Pointer length */
-  height: 5px; /* Pointer thickness */
-  background-color: #007BFF; /* Pointer color */
-  position: absolute;
-  top: 50%; /* Align vertically */
-  left: -65px; /* Position the tail relative to the head */
-  transform: translateY(-50%);
+.arrow-icon {
+  position: relative;
+  width: 15px; /* Arrow width */
+  height: 15px; /* Arrow height */
+  border: solid #fff; /* Arrow color */
+  border-width: 2px 2px 0 0; /* Make it look like an arrow */
+  transform: rotate(45deg); /* Rotate to make an arrowhead */
 }
-<div class="arrow-with-pointer">
-  <div class="arrow-pointer"></div>
-  <div class="arrow-head"></div>
-</div>
+
+.arrow-icon.backward {
+  transform: rotate(-135deg); /* Rotate for backward arrow */
+}
+
+.arrow-icon.forward {
+  transform: rotate(45deg); /* Rotate for forward arrow */
+}
+
+
+<button mat-button class="arrow-button">
+  <span class="arrow-icon forward"></span>
+</button>
+
+<button mat-button class="arrow-button">
+  <span class="arrow-icon backward"></span>
+</button>

@@ -1,0 +1,112 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.ensemble import IsolationForest
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+from datetime import datetime, timedelta
+import numpy as np
+
+# Load your data
+df = pd.read_csv('data/Trade_Activity_Broadridge_DTCC.csv')
+
+# Convert timestamps to datetime
+df['Execution_Timestamp'] = pd.to_datetime(df['Execution_Timestamp'])
+df['Transaction_Date'] = pd.to_datetime(df['Transaction_Date'])
+
+# Announcements dictionary
+announcements = {
+    'Amazon.com Inc.': ['2023-12-15', '2022-11-10']
+}
+
+# Function to find the closest announcement date after the transaction date
+def find_closest_announcement_date(transaction_date, announcement_dates):
+    announcement_dates = [datetime.strptime(date, '%Y-%m-%d') for date in announcement_dates]
+    future_dates = [date for date in announcement_dates if date > transaction_date]
+    current_date = datetime.today().date() + timedelta(days=60)
+    
+    if not future_dates:
+        return current_date  # Return the current date if no future dates are found
+    
+    closest_date = min(future_dates, key=lambda x: abs(x - transaction_date))
+    return closest_date
+
+# Filtering the data
+df = df[df['Instrument_Name'].isin(announcements.keys())]
+
+# Mapping the announcement dates
+df['Announcement_Date'] = df.apply(
+    lambda row: find_closest_announcement_date(row['Transaction_Date'], announcements.get(row['Instrument_Name'], [])),
+    axis=1
+)
+
+# Ensure 'Closest_Announcement_Date' is of type Timestamp
+df['Announcement_Date'] = pd.to_datetime(df['Announcement_Date'])
+
+# Calculate time differences (in days) between trades and announcements
+df['Time_Diff'] = (df['Execution_Timestamp'] - df['Announcement_Date']).dt.days
+
+# Define pre-announcement and post-announcement windows (in days)
+pre_announcement_window_days = 30  # 30 days
+post_announcement_window_days = 2  # 2 days
+
+# Calculate whether each trade falls within the pre-announcement and post-announcement windows
+df['Pre_Announcement_Window'] = df['Time_Diff'].apply(lambda x: -pre_announcement_window_days <= x <= 0)
+df['Post_Announcement_Window'] = df['Time_Diff'].apply(lambda x: 0 <= x <= post_announcement_window_days)
+
+# Additional feature engineering
+df['Trade_Volume_Deviation'] = df.groupby('Instrument_Name')['Quantity'].transform(lambda x: x / x.mean())
+df['Trade_Frequency'] = df.groupby('Instrument_Name')['Transaction_Date'].transform(lambda x: x.diff().dt.days.fillna(0))
+
+# Select relevant features
+features = ['Quantity', 'Direction', 'Time_Diff', 'Trade_Volume_Deviation', 'Trade_Frequency']
+df['Direction'] = df['Direction'].apply(lambda x: 1 if x == 'Buy' else 0)
+
+# Handle missing values by filling them with the mean of the column
+df[features] = df[features].fillna(df[features].mean())
+
+# Normalize the data
+scaler = StandardScaler()
+X = scaler.fit_transform(df[features])
+
+# Reduce dimensionality with PCA
+pca = PCA(n_components=2)
+X_reduced = pca.fit_transform(X)
+
+# Clustering with MiniBatchKMeans on reduced data
+minibatch_kmeans = MiniBatchKMeans(n_clusters=3, batch_size=1000)
+minibatch_kmeans.fit(X_reduced)
+clusters_reduced = minibatch_kmeans.predict(X_reduced)
+df['Cluster'] = clusters_reduced
+
+# Anomaly detection with Isolation Forest on reduced data
+iso_forest = IsolationForest(contamination=0.05, random_state=42)
+iso_forest.fit(X_reduced)
+anomaly_scores = iso_forest.decision_function(X_reduced)
+df['Anomaly_Score'] = anomaly_scores
+df['Anomaly'] = np.where(anomaly_scores < np.percentile(anomaly_scores, 5), -1, 1)
+
+# Filter potential insider trading anomalies
+insider_trading_anomalies_reduced = df[df['Anomaly'] == -1]
+
+# Display the anomalies
+print(insider_trading_anomalies_reduced)
+insider_trading_anomalies_reduced.to_csv('insider_trading_anomalies_reduced.csv')
+
+# Visualization
+plt.figure(figsize=(14, 7))
+
+# Scatter plot of PCA components colored by anomaly score
+plt.scatter(X_reduced[:, 0], X_reduced[:, 1], c=df['Anomaly_Score'], cmap='coolwarm', alpha=0.6)
+plt.colorbar(label='Anomaly Score')
+plt.title('PCA Components with Anomaly Scores')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.show()
+
+# Save the results
+insider_trading_anomalies_reduced_output = insider_trading_anomalies_reduced[['BRx_Transaction_ID', 'Source_Transaction_ID', 'Account_ID', 'Instrument_Name', 'Quantity', 'Execution_Timestamp', 'Direction', 'Pre_Announcement_Window', 'Cluster', 'Anomaly_Score']]
+insider_trading_anomalies_reduced_output.to_csv('/data/output.csv', index=False)

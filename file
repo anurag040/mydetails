@@ -1,0 +1,119 @@
+import bnym_eliza as eliza
+import redis  # For caching
+from langchain_openai import ChatOpenAI
+from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate
+from langchain.tools import tool  # Import @tool
+from utils.helper_functions import get_props
+from utils.db_functions import execute_query_vertica
+
+# Initialize Redis for query caching
+cache = redis.Redis(host='localhost', port=6379, db=0)
+
+# Load configuration properties
+props = get_props()
+eliza.api_base = "https://llm.QA.bnymellon.net/"
+eliza.session = eliza.Session.connect(client_id=props['elz_client_id'], client_secret=props['elz_client_secret'])
+openai_client = get_openai_client()
+chat = ChatOpenAI(model="openai-gpt-4", client=openai_client.chat.completions)
+region = props["emx_buddy_region"]
+
+# Reset session
+@tool
+def reset_session():
+    eliza.session = eliza.Session.connect(client_id=props['elz_client_id'], client_secret=props['elz_client_secret'])
+    global chat
+    chat = ChatOpenAI(model="openai-gpt-4", client=openai_client.chat.completions)
+
+# Schema selection
+@tool
+def get_schema(region='qa'):
+    return 'dp_udt_uat' if region == 'qa' else 'dp_udt'
+
+# Modify date in query
+@tool
+def modify_date_in_base_query(question: str, base_query: str):
+    date_system_prompt = '''
+    You are a Vertica SQL expert. Extract the correct date condition from the user query using `created_timestamp`.
+    
+    **Rules:**
+    - If no date is mentioned, default to **last 7 days**.
+    - If "last few days/weeks" is mentioned, **exclude today**.
+    - If "today" is mentioned, use only today's date.
+    - If "yesterday" or a specific date is given, use only that date.
+    
+    **Return only the extracted date condition in SQL format.**
+    '''
+    new_date = chat(date_system_prompt + f"\nUser Question: {question}").content.strip()
+    return base_query.replace("<date place holder>", new_date)
+
+# Query caching
+def get_cached_query(question):
+    return cache.get(question)
+
+def cache_query(question, query):
+    cache.set(question, query, ex=3600)
+
+# Query generation
+@tool
+def generate_query_tool(question: str):
+    cached_query = get_cached_query(question)
+    if cached_query:
+        return {"query": cached_query.decode(), "result": None}
+    
+    system_prompt = '''
+    You are an expert in Vertica SQL. Generate an **optimized SQL query** based on the user request.
+    
+    **Query Rules:**
+    - If no time range is given, limit to **last 7 days**.
+    - Avoid `SELECT *`; return only necessary columns.
+    - Limit results to **10 rows** unless otherwise specified.
+    - Use `PROCTIME_RECEIVED` for date filtering.
+    - Use `GROUP BY` for counts/aggregations.
+    
+    **Filters & Mappings:**
+    - "Incoming" → `DIRN_WITH_RESPECT_TO_BANK_CD = 'INBOUND'`
+    - "Outgoing" → `DIRN_WITH_RESPECT_TO_BANK_CD = 'OUTBOUND'`
+    - "Amount" → `primary_amount`
+    
+    **Guardrails:**
+    - If the query is **not related to SQL**, return "N".
+    - If asked for **all data**, return an error instead of an expensive query.
+    - Ensure valid column names.
+    '''
+    sql_query = chat(system_prompt + f"\nUser Question: {question}").content.strip()
+    
+    if not sql_query.lower().startswith("select"):
+        return {"query": sql_query, "result": None}
+    
+    final_query = modify_date_in_base_query(question, sql_query)
+    cache_query(question, final_query)
+    result = execute_query_vertica(final_query, region=region)
+    return {"query": final_query, "result": result}
+
+# Query validation
+@tool
+def validate_query_tool(query: str):
+    validation_prompt = f"Check if the following SQL query is valid and safe:\n```sql\n{query}\n```"
+    validation_result = chat(validation_prompt).content.strip()
+    return validation_result
+
+# Query explanation
+@tool
+def explain_query_tool(query: str):
+    explanation_prompt = f"Explain the following SQL query in simple terms:\n```sql\n{query}\n```"
+    explanation = chat(explanation_prompt).content.strip()
+    return explanation
+
+# User feedback
+feedback_store = {}
+@tool
+def collect_feedback_tool(question: str, feedback: str):
+    feedback_store[question] = feedback
+    return "Feedback stored successfully! Future queries will improve."
+
+# Handling ambiguity
+@tool
+def clarify_question(question: str):
+    clarification_prompt = f"Determine if this question is clear for generating an SQL query: {question}\n\nIf unclear, suggest a better question. Otherwise, return 'OK'."
+    response = chat(clarification_prompt).content.strip()
+    return response if response != "OK" else None

@@ -4,18 +4,17 @@ import openai  # For LLM integration (e.g., OpenAI GPT)
 # Load the rules from a CSV file (or database in production)
 rules = pd.read_csv("rules.csv")
 
-# Function to extract and infer conditions from a user query using an LLM
+# Function to interpret the user's question and extract conditions using an LLM
 def extract_conditions_from_query(query):
-    # Use an LLM to interpret the query and infer conditions
+    # Use an LLM to interpret the query and extract conditions
     prompt = f"""
-    You are a rules engine assistant. Your task is to extract and infer conditions from the following user query:
+    You are a rules engine assistant. Your task is to extract conditions from the following user query:
     Query: "{query}"
 
-    Return the conditions as a Python dictionary. Use "not_" as a prefix for negative conditions.
-    For example:
-    - "Give me rules for ResponderBic8 = MELNUS3C" → {{"ResponderBic8": "MELNUS3C"}}
-    - "Give me rules excluding messageType = cust.053" → {{"not_messageType": "cust.053"}}
-    - "Give me all rules" → {{"all": True}}
+    Return the conditions as a Python dictionary. For example:
+    - "Get me all rules for sender IRVTUSRN and MT 103" → {{"sender": "IRVTUSRN", "messageType": "103"}}
+    - "Find rules for receiver MELNUS3C" → {{"receiver": "MELNUS3C"}}
+    - "Show all rules for MT 202" → {{"messageType": "202"}}
 
     Conditions:
     """
@@ -28,36 +27,53 @@ def extract_conditions_from_query(query):
     conditions = eval(response.choices[0].text.strip())  # Convert the response to a dictionary
     return conditions
 
+# Function to map user-friendly fields to rule fields
+def map_fields(conditions):
+    field_mapping = {
+        "sender": "ResponderBic8",  # Map "sender" to "ResponderBic8"
+        "receiver": "ResponderBic8",  # Map "receiver" to "ResponderBic8"
+        "messageType": "messageType",  # Map "messageType" to "messageType"
+        "MT": "messageType"  # Map "MT" to "messageType"
+    }
+    mapped_conditions = {}
+    for key, value in conditions.items():
+        if key in field_mapping:
+            mapped_conditions[field_mapping[key]] = value
+        else:
+            mapped_conditions[key] = value  # Keep the original key if no mapping exists
+    return mapped_conditions
+
+# Function to evaluate if a rule matches the conditions
+def rule_matches_conditions(rule, conditions):
+    for key, value in conditions.items():
+        if key in rule.index and str(value) not in str(rule[key]):
+            return False
+        elif str(value) not in str(rule["Rule Info"]):
+            return False
+    return True
+
 # Function to filter rules based on conditions
 def filter_rules(rules, conditions):
-    if "all" in conditions and conditions["all"]:  # Handle "all rules" query
-        return rules
-
-    filtered_rules = rules.copy()
-    for key, value in conditions.items():
-        if key.startswith("not_"):  # Handle "not in" conditions
-            clean_key = key.replace("not_", "")
-            if clean_key in filtered_rules.columns:
-                filtered_rules = filtered_rules[~filtered_rules[clean_key].astype(str).str.contains(str(value), case=False, na=False)]
-            else:
-                filtered_rules = filtered_rules[~filtered_rules["Rule Info"].astype(str).str.contains(str(value), case=False, na=False)]
-        else:  # Handle positive conditions
-            if key in filtered_rules.columns:
-                filtered_rules = filtered_rules[filtered_rules[key].astype(str).str.contains(str(value), case=False, na=False)]
-            else:
-                filtered_rules = filtered_rules[filtered_rules["Rule Info"].astype(str).str.contains(str(value), case=False, na=False)]
-    return filtered_rules
+    matching_rules = []
+    for _, rule in rules.iterrows():
+        if rule_matches_conditions(rule, conditions):
+            matching_rules.append(rule)
+    return pd.DataFrame(matching_rules)
 
 # Function to handle user queries
 def handle_user_query(query):
-    # Step 1: Extract and infer conditions from the query using the LLM
+    # Step 1: Extract conditions from the query using the LLM
     conditions = extract_conditions_from_query(query)
     print(f"Extracted conditions: {conditions}")
 
-    # Step 2: Filter rules based on the extracted conditions
-    matching_rules = filter_rules(rules, conditions)
+    # Step 2: Map user-friendly fields to rule fields
+    mapped_conditions = map_fields(conditions)
+    print(f"Mapped conditions: {mapped_conditions}")
 
-    # Step 3: Return the results
+    # Step 3: Filter rules based on the extracted conditions
+    matching_rules = filter_rules(rules, mapped_conditions)
+
+    # Step 4: Return the results
     if not matching_rules.empty:
         print("\nMatching rules:")
         print(matching_rules[['Rule Type', 'Rule Name', 'Rule Info', 'Rule Clob']])
@@ -65,11 +81,11 @@ def handle_user_query(query):
         print("\nNo matching rules found.")
 
 # Example usage
-user_query = "Give me rules for ResponderBic8 = MELNUS3C"
+user_query = "get me all rules for sender IRVTUSRN and MT 103"
 handle_user_query(user_query)
 
-user_query = "Give me rules excluding messageType = cust.053"
+user_query = "find rules for receiver MELNUS3C"
 handle_user_query(user_query)
 
-user_query = "Give me all rules"
+user_query = "show all rules for MT 202"
 handle_user_query(user_query)

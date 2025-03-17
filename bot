@@ -1,0 +1,320 @@
+/* Reset and Fullscreen */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background-color: #f8f9fa;
+    font-family: 'Calibri', sans-serif;
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Layout Styling */
+  .main-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+  }
+  
+  /* Sidebar - Previous Questions (25%) */
+  .sidebar {
+    width: 25%;
+    background: #343541;
+    color: white;
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid #444;
+  }
+  
+  .sidebar h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #fff;
+  }
+  
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .sidebar li {
+    padding: 12px;
+    background: #444654;
+    margin: 8px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .sidebar li:hover {
+    background: #565869;
+  }
+  
+  /* Chat Window (60%) */
+  .chat-window {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    background: #343541;
+    color: white;
+    position: relative;
+  }
+  
+  .chat-box {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #222;
+  }
+  
+  .chat-box::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .chat-box::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  
+  .message {
+    max-width: 75%;
+    padding: 12px;
+    margin: 8px;
+    border-radius: 10px;
+    word-wrap: break-word;
+    font-size: 14px;
+  }
+  
+  .user {
+    align-self: flex-end;
+    background-color: #444654;
+    color: white;
+  }
+  
+  .bot {
+    align-self: flex-start;
+    background-color: #444654;
+  }
+  
+  /* Typing Indicator */
+  .typing-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+  }
+  
+  .typing-indicator .dot {
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out;
+  }
+  
+  .typing-indicator .dot:nth-child(1) {
+    animation-delay: 0s;
+  }
+  
+  .typing-indicator .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  
+  .typing-indicator .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translateY(-8px);
+      opacity: 1;
+    }
+  }
+  
+  /* Chat Input */
+  .input-container {
+    display: flex;
+    border-top: 1px solid #444;
+    padding: 15px;
+    background: #40414f;
+  }
+  
+  input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #343541;
+    color: white;
+    font-size: 14px;
+  }
+  
+  input::placeholder {
+    color: #aaa;
+  }
+  
+  button {
+    background: gray;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    margin-left: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  
+  button:hover {
+    background: #343541;
+  }
+  
+  /* Right Space (15%) */
+  .right-space {
+    width: 15%;
+    background: #343541;
+  }  
+
+
+<div class="main-container">
+  <!-- Left Sidebar: Previous Questions (25%) -->
+  <div class="sidebar">
+    <h3>Previous Questions</h3>
+    <ul>
+      <li *ngFor="let question of previousQuestions" (click)="loadQuestion(question)">
+        {{ question }}
+      </li>
+    </ul>
+  </div>
+
+  <!-- Center Chat Window (60%) -->
+  <div class="chat-window">
+    <div class="chat-box" #chatBox>
+      <div *ngFor="let msg of messages" class="message" [ngClass]="msg.sender">
+        <span *ngIf="msg.typing" class="typing-indicator">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </span>
+        <span *ngIf="!msg.typing">{{ msg.text }}</span>
+      </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="input-container">
+      <input type="text" [(ngModel)]="userInput" placeholder="Type a message..." (keyup.enter)="sendMessage()" />
+      <button (click)="sendMessage()">➤</button>
+    </div>
+  </div>
+
+  <!-- Right Side: Empty Space (15%) -->
+  <div class="right-space"></div>
+</div>
+
+
+import { Component, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements AfterViewInit {
+  previousQuestions: string[] = [
+    'What is Machine Learning?',
+    'Explain Neural Networks.',
+    'How does ChatGPT work?'
+  ];
+  
+  messages: { text: string, sender: string, typing?: boolean }[] = [
+    { text: 'Hello! How can I assist you today?', sender: 'bot' }
+  ];
+  
+  userInput: string = '';
+
+  @ViewChild('chatBox') chatBox!: ElementRef;
+
+  ngAfterViewInit() {
+    this.scrollToBottom();
+  }
+
+  sendMessage() {
+    if (!this.userInput.trim()) return;
+
+    this.messages.push({ text: this.userInput, sender: 'user' });
+    this.userInput = '';
+    this.scrollToBottom();
+
+    // Simulate bot typing effect
+    this.messages.push({ text: '', sender: 'bot', typing: true });
+
+    setTimeout(() => {
+      this.messages.pop();
+      this.messages.push({ text: 'This is a dummy response!', sender: 'bot' });
+      this.scrollToBottom();
+    }, 1500);
+  }
+
+  loadQuestion(question: string) {
+    this.userInput = question;
+  }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      this.chatBox.nativeElement.scrollTop = this.chatBox.nativeElement.scrollHeight;
+    }, 100);
+  }
+}
+
+
+
+:root {
+  --primary-bg: #1e1e1e;
+  --secondary-bg: #2a2a2a;
+  --text-color: #d1d1d1;
+  --button-bg: #444;
+  --button-hover: #666;
+}
+
+body {
+  background-color: var(--primary-bg);
+  color: var(--text-color);
+}
+
+.chat-bubble {
+  background-color: var(--secondary-bg);
+  color: var(--text-color);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+button {
+  background-color: var(--button-bg);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: var(--button-hover);
+}

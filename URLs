@@ -1,1 +1,11 @@
 https://medium.com/disney-streaming/combining-multiple-angular-applications-into-a-single-one-e87d530d6527
+
+@Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/{spring:\\w+}")
+                .setViewName("forward:/index.html");
+        registry.addViewController("/**/{spring:\\w+}")
+                .setViewName("forward:/index.html");
+        registry.addViewController("/{spring:\\w+}/**{spring:?!(\\.js|\\.css|\\.json)$}")
+                .setViewName("forward:/index.html");
+    }

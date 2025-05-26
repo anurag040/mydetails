@@ -1,0 +1,73 @@
+// src/app/activity.service.ts
+import { Injectable } from '@angular/core';
+import { Idle, DEFAULT_INTERRUPTSOURCES } from '@ng-idle/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ActivityService {
+  private channel = new BroadcastChannel('user-activity');
+
+  constructor(private idle: Idle) {
+    this.init();
+  }
+
+  private init(): void {
+    // 20 minutes of inactivity before idle
+    this.idle.setIdle(20 * 60);
+    // 30-second timeout countdown
+    this.idle.setTimeout(30);
+    // Interrupts on user input events
+    this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
+
+    // Fired when idle period starts
+    this.idle.onIdleStart.subscribe(() => {
+      console.warn('Idle threshold reached, showing warning');
+      // TODO: Display your 30-second warning UI here
+    });
+
+    // Fired during the timeout countdown
+    this.idle.onTimeoutWarning.subscribe((countdown: number) => {
+      console.warn(`Session will expire in ${countdown} seconds`);
+      // TODO: Update warning UI with countdown
+    });
+
+    // Fired when timeout completes
+    this.idle.onTimeout.subscribe(() => this.broadcastTimeout());
+
+    // Start watching for idle
+    this.idle.watch();
+
+    // Listen for broadcasts from other tabs/apps
+    this.channel.onmessage = (event) => {
+      if (event.data === 'active') {
+        this.idle.watch(); // reset idle timer
+      } else if (event.data === 'timeout') {
+        this.logout();     // perform logout simultaneously
+      }
+    };
+
+    // Broadcast local activity and reset own timer
+    ['mousemove', 'mousedown', 'keydown', 'touchstart'].forEach(evt =>
+      window.addEventListener(evt, () => {
+        this.idle.watch();            // reset this app's timer
+        this.channel.postMessage('active');
+      })
+    );
+  }
+
+  /**
+   * Notify all tabs/apps of timeout then logout locally
+   */
+  private broadcastTimeout(): void {
+    this.channel.postMessage('timeout');
+    this.logout();
+  }
+
+  /**
+   * Redirects browser to the logout endpoint
+   */
+  private logout(): void {
+    window.location.href = '/logout';
+  }
+}

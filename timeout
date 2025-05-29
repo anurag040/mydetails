@@ -1,48 +1,45 @@
-// src/app/activity.service.ts
 import { Injectable, NgZone } from '@angular/core';
-import { Idle, DEFAULT_INTERRUPTSOURCES } from '@ng-idle/core';
-import { Keepalive } from '@ng-idle/keepalive';
 
 @Injectable({ providedIn: 'root' })
-export class ActivityService {
-  private channel: BroadcastChannel;
+export class ActivitySyncService {
+  private channel = new BroadcastChannel('user-activity-sync');
+  private idleTimeout: any;
+  private readonly idleTimeMs = 20 * 60 * 1000; // 20 mins
 
-  constructor(
-    private idle: Idle,
-    private keepalive: Keepalive,
-    private ngZone: NgZone
-  ) {
-    this.channel = new BroadcastChannel('user-activity');
-    this.idle.setIdle(300);
-    this.idle.setTimeout(30);
-    this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
-    this.idle.onInterrupt.subscribe(() => this.channel.postMessage('active'));
-    this.channel.onmessage = msg => {
-      if (msg.data === 'active') {
-        this.ngZone.run(() => this.idle.watch());
+  constructor(private zone: NgZone) {
+    // Listen for activity from other tabs/apps
+    this.channel.onmessage = (event) => {
+      if (event.data === 'active') {
+        this.resetIdleTimer(false); // false = don't re-broadcast
       }
     };
-    this.keepalive.interval(60);
-    this.keepalive.onPing.subscribe(() => {});
-    this.idle.watch();
+    this.resetIdleTimer(false);
+
+    // Listen for activity in this app
+    ['mousemove', 'keydown', 'click', 'touchstart'].forEach(evt =>
+      window.addEventListener(evt, () => this.resetIdleTimer(true))
+    );
+  }
+
+  resetIdleTimer(broadcast = true) {
+    // Called on activity (local or from BroadcastChannel)
+    if (this.idleTimeout) clearTimeout(this.idleTimeout);
+
+    if (broadcast) {
+      // Tell other tabs/apps that user is active here
+      this.channel.postMessage('active');
+    }
+
+    // Reset local idle timer
+    this.idleTimeout = setTimeout(() => {
+      this.handleIdleTimeout();
+    }, this.idleTimeMs);
+  }
+
+  private handleIdleTimeout() {
+    // Time to log out user (show popup or auto-logout)
+    // Call your logout logic here
+    window.location.href = '/logout'; // or trigger your popup
   }
 }
-
-
-// src/app/app.module.ts
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { NgIdleModule } from '@ng-idle/core';
-import { KeepaliveModule } from '@ng-idle/keepalive';
-import { AppComponent } from './app.component';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    NgIdleModule.forRoot(),
-    KeepaliveModule.forRoot()
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {}
+constructor(private activitySync: ActivitySyncService) {}

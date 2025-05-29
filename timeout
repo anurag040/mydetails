@@ -43,3 +43,10 @@ export class ActivitySyncService {
   }
 }
 constructor(private activitySync: ActivitySyncService) {}
+
+
+I have  java 17 spring boot applications with angular 16 frontend , URLs are like eua.bny.net/fmr2,eua.bny.net/eprint2,eua.bny.net/presistence,
+
+these apps share the same spring session. I login to all three apps and they have one session entry in db, I become idle for 20 mins in app 1 and 2, while continue to work in persistence in third tab of browser , on 20 mins of idle in tab1 and tab2 i have a logic to autologout the user , a popup comes which logs out the user , and this deleted the entry from db as well, that means persistence app where I'm active currently also dies, I my app 1 and app 2 to know that someone is working on app3 and they should keep restartig their idle time and should not show popup until all become idle. Otherwise my active app also dies.
+I don't want to leverage nay databasescall to handle this, is there a way that i can handle this.
+Note: these apps are in multiple clusters and across different datacenters.

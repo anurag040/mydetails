@@ -50,3 +50,60 @@ I have  java 17 spring boot applications with angular 16 frontend , URLs are lik
 these apps share the same spring session. I login to all three apps and they have one session entry in db, I become idle for 20 mins in app 1 and 2, while continue to work in persistence in third tab of browser , on 20 mins of idle in tab1 and tab2 i have a logic to autologout the user , a popup comes which logs out the user , and this deleted the entry from db as well, that means persistence app where I'm active currently also dies, I my app 1 and app 2 to know that someone is working on app3 and they should keep restartig their idle time and should not show popup until all become idle. Otherwise my active app also dies.
 I don't want to leverage nay databasescall to handle this, is there a way that i can handle this.
 Note: these apps are in multiple clusters and across different datacenters.
+
+
+import org.springframework.security.web.session.InvalidSessionStrategy;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .sessionManagement(session -> session
+                .invalidSessionStrategy(apiAwareInvalidSessionStrategy())
+            )
+            // Other security configurations...
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().authenticated()
+            );
+        
+        return http.build();
+    }
+
+    @Bean
+    public InvalidSessionStrategy apiAwareInvalidSessionStrategy() {
+        return new ApiAwareInvalidSessionStrategy("/mfa-login");
+    }
+
+    // Custom strategy implementation
+    public static class ApiAwareInvalidSessionStrategy implements InvalidSessionStrategy {
+        private final String redirectUrl;
+        private final RequestMatcher apiRequestMatcher = new AntPathRequestMatcher("/api/**");
+
+        public ApiAwareInvalidSessionStrategy(String redirectUrl) {
+            this.redirectUrl = redirectUrl;
+        }
+
+        @Override
+        public void onInvalidSessionDetected(HttpServletRequest request, 
+                                           HttpServletResponse response) throws IOException {
+            
+            if (apiRequestMatcher.matches(request)) {
+                // API request - return 401
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write(
+                    "{\"error\":\"Session expired\",\"redirectUrl\":\"" + redirectUrl + "\"}"
+                );
+            } else {
+                // Browser request - 302 redirect
+                response.sendRedirect(redirectUrl);
+            }
+        }
+    }
+}

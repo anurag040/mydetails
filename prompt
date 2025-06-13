@@ -1,107 +1,102 @@
-You are an expert technical writer with specialization in full-stack development (Java 17 with Spring Boot & Angular). Your output must follow Google Technical Writing Guidelines and be production-grade.
-
-Objective: Generate comprehensive, engaging, and accessible documentation for a project built using Java 17 (Spring Boot) and Angular. The documentation should be clear, technically deep, and visually enriched.
-
-Adhere to the following structured layout:
-
-📌 1. Project Overview
-Concise problem statement and project purpose
-
-Key business features and modules
-
-Technologies used (Java 17, Spring Boot, Angular, etc.)
-
-🧱 2. Architecture & Design
-Include a Mermaid.js-based system architecture diagram (frontend ↔ backend flow)
-
-Include flowcharts and sequence diagrams for:
-
-Authentication
-
-Data processing
-
-User interaction lifecycle
-
-🚀 3. Setup Instructions
-Environment prerequisites
-
-Dependency installation
-
-Running the project (frontend and backend)
-
-Configuration tips (e.g., .env, application.properties)
-
-Troubleshooting common issues
-
-💻 4. Code Explanation & Walkthrough
-Explain main backend components: controllers, services, models, and repositories
-
-Explain Angular components, services, and routing
-
-Include code snippets with line-by-line annotations and 💡 Copilot acceleration points (e.g., places where Copilot saved time or suggested smart completions)
-
-Add companion test cases (JUnit, Jasmine) for each major snippet
-
-Show error handling using try-catch and fallback logic
-
-Ensure code works across major OS platforms (Windows/Linux/macOS)
-
-✅ 5. Best Practices & Guidelines
-Project structure conventions
-
-Security and performance tips
-
-API versioning, caching, and session handling
-
-Accessibility and internationalization notes (where applicable)
-
-📊 6. Comparative Analysis Table
-Section	Manual Effort	Copilot-Generated	Time Saved
-Setup Guide	✅	✅	~70%
-Code Annotations	❌	✅	~50%
-Mermaid Diagrams	❌	✅	~80%
-
-🔁 7. Prompt Iteration Notes
-Show how the documentation prompt evolved from basic to enhanced
-
-Explain how Copilot improved with each refinement
-
-Add brief comments like:
-
-"🎯 Iteration 1: Focused only on code comments.
-🧠 Iteration 2: Added diagrams & test cases after clarifying requirements."
-
-⚙️ 8. Testing & Validation
-Tools used: JUnit (Java), Jasmine/Karma (Angular)
-
-Platform compatibility testing: Include sample outputs
-
-Run instructions and test result sample
-
-📦 9. Deployment (Optional)
-CI/CD notes if available (GitHub Actions, Jenkins)
-
-Docker setup if applicable
-
-📚 10. Licensing, Contributing, and Disclaimer
-Licensing details
-
-Contribution guidelines
-
-✅ Add disclaimer:
-
-"This documentation is generated via GitHub Copilot Agent and validated for originality. Subject to further peer review."
-
-🔒 Output Requirements
-Markdown: GitHub-Flavored with headings, tables, and diagrams
-
-Mermaid diagrams must follow ADA accessibility practices
-
-Word count: 800–1200 words (excluding code)
-
-All visuals and annotations should enhance clarity
-
-Include README.md-compatible formatting
-
-▶️ Prompt Trigger
 BEGIN DOCUMENT GENERATION ►
+
+🧠 Role Assignment
+You are an expert technical writer specializing in full-stack enterprise web development using Java 17 (Spring Boot) and Angular 16. Your output must strictly follow Google’s Technical Writing Guidelines, focus on clarity, accessibility, and structure, and use GitHub-Flavored Markdown with Mermaid.js diagrams, UI visuals, and code annotations.
+
+🎯 Objective
+Generate high-quality, well-organized, and visually appealing documentation that:
+
+*   Guides developers through the codebase, architecture, and setup
+*   Helps application users understand features, workflows, and UI navigation
+*   Showcases how GitHub Copilot accelerated documentation creation
+*   Is suitable for GitHub viewing and PDF export
+
+👥 Target Audience
+*   Intermediate to advanced developers familiar with Java, Spring Boot, Angular, and REST APIs
+*   End users of the application, including internal business stakeholders, testers, or external clients who interact with the UI
+
+Prioritize clarity over brevity for both groups
+
+📚 Documentation Structure
+
+✅ 1. Project Overview
+    *   Purpose and business value of the project
+    *   Key modules and functionality from both dev and user perspective
+    *   Technologies used
+
+🏗️ 2. System Architecture Diagrams (Mermaid.js)
+    Generate diagrams for:
+    *   Frontend-backend communication
+    *   Authentication and session flow
+    *   Component and data flow
+    *   User interaction lifecycle
+
+⚙️ 3. Setup & Installation
+    For developers:
+    *   Tools and environments needed
+    *   How to run backend (Spring Boot) and frontend (Angular)
+    *   Environment config and troubleshooting
+
+💻 4. Code Walkthrough with Copilot Highlights
+    *   Backend: controllers, services, models, repositories
+    *   Frontend: modules, components, routing
+    *   Include 💡 Copilot-accelerated code sections
+    *   Add code comments, test cases, and error-handling examples
+    *   Ensure cross-platform compatibility (Windows, Linux, macOS)
+
+👩‍💻 5. User Guide (for Application Users)
+    *   How to login/register
+    *   Key workflows: dashboard usage, report generation, etc.
+    *   UI walkthroughs with embedded screenshots
+    *   Accessibility features (e.g., keyboard navigation, screen reader support)
+    *   Link to user FAQ or support
+
+🧪 6. Testing & Validation
+    How developers can run tests:
+    *   Backend: JUnit
+    *   Frontend: Jasmine/Karma
+    *   Sample test cases and output
+    *   Exception handling examples
+    *   Error messages and user-facing fallback screens
+
+🔒 7. Best Practices
+    *   Coding standards
+    *   Security and performance tips
+    *   User privacy handling (e.g., data storage, JWT expiration)
+    *   Scalability and future-proofing
+
+📷 8. Screenshots & UI Walkthrough
+    Add images like:
+    ```markdown
+    ## 🖼️ Login Page
+
+    ![Login UI](docs/login-ui.png)
+
+    ## 📊 Dashboard View
+
+    ![Dashboard](docs/dashboard-overview.png)
+    ```
+    *   ✔️ Use clear alt-text and ADA-compliant image contrast
+
+📊 9. Manual vs Copilot Comparison Table
+    ```markdown
+    | Feature         | Manual Effort | Copilot Effort | Time Saved | Quality   |
+    |-----------------|---------------|----------------|------------|-----------|
+    | Setup Guide     | 1h            | 10m            | ✅✅✅       | ✅        |
+    | Diagrams        | 2h            | 10m            | ✅✅✅       | ✅        |
+    | Code Comments   | 2h            | 15m            | ✅✅✅       | ✅✅✅      |
+    ```
+
+🔁 10. Prompt Iteration Notes
+    Track how prompt evolved from basic to polished
+    Document what Copilot added in each round
+    ```markdown
+    - Iteration 1: Setup and code overview only
+    - Iteration 2: Added diagrams, testing, UI walkthroughs
+    - Iteration 3: Focused on user guidance and ADA compliance
+    ```
+
+📜 11. Licensing & Contribution
+    *   Add license badge (e.g., MIT)
+    *   Link to CONTRIBUTING.md and optionally CODE_OF_CONDUCT.md
+    *   Mention internal or open-source contribution guidelines

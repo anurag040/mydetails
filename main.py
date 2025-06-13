@@ -2,14 +2,14 @@ import os
 import json
 import pandas as pd
 import openai
-from .dataset_manager import DatasetManager
+from dataset_manager import DatasetManager
 
 # Core Model Class
 class CoreModel:
     def __init__(self, api_key):
         self.api_key = api_key
+        openai.api_key = api_key
         self.llm_name = "gpt-4"  # Default LLM
-        self._client = openai.OpenAI(api_key=api_key)
 
     def set_llm(self, llm_name):
         """Set the LLM to be used for analysis."""
@@ -64,21 +64,21 @@ class CoreModel:
             system_role = "You are a financial data analyst. Your answers should reflect real-world financial markets, trading behavior, and securities data."
         else:
             system_role = "You are a data analyst."
-        response = self._client.chat.completions.create(
-            model=self.llm_name,
+        response = openai.ChatCompletion.create(
+            model=self.llm_name,  # Use the dynamically set LLM
             messages=[
                 {"role": "system", "content": system_role},
                 {"role": "user", "content": f"Analyze the following data: {data}"}
             ],
             max_tokens=1000  # Adjust token limit as needed
         )
-        return response.choices[0].message.content
+        return response.choices[0].message['content']
 
     def benchmark_llm(self, data, model_versions):
         """Compare LLM performance across versions."""
         results = {}
         for version in model_versions:
-            response = self._client.completions.create(
+            response = openai.completions.create(
                 model=version,
                 prompt=f"Analyze the following data: {data}",
                 max_tokens=500
@@ -176,7 +176,7 @@ class CoreModel:
             "Here is the dataset in JSON format: " + json_data
         )
 
-        response = self._client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a data analyst."},
@@ -184,7 +184,7 @@ class CoreModel:
             ]
         )
 
-        return response.choices[0].message.content
+        return response['choices'][0]['message']['content']
 
     def generate_correlation_matrix(self, df):
         """Generate a correlation matrix for the dataset."""
@@ -198,7 +198,7 @@ class CoreModel:
             "Here is the dataset in JSON format: " + json_data
         )
 
-        response = self._client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a data analyst."},
@@ -206,7 +206,7 @@ class CoreModel:
             ]
         )
 
-        return response.choices[0].message.content
+        return response['choices'][0]['message']['content']
 
     def perform_time_series_analysis(self, df):
         """Perform time series analysis on temporal data."""
@@ -301,7 +301,7 @@ Schema:
 Statistics:
 {stats_json}
 """
-        response = self._client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=self.llm_name,
             messages=[
                 {"role": "system", "content": "You are a senior machine learning expert."},
@@ -309,4 +309,52 @@ Statistics:
             ],
             max_tokens=800
         )
-        return response.choices[0].message.content
+        return response['choices'][0]['message']['content']
+
+# Example usage
+if __name__ == "__main__":
+    api_key = os.getenv("OPENAI_API_KEY")
+    core_model = CoreModel(api_key)
+
+    # Initialize DatasetManager
+    manager = DatasetManager()
+
+    # Example datasets
+    datasets = [
+        {"url": "https://people.sc.fsu.edu/~jburkardt/data/csv/hw_200.csv", "name": "heights_weights", "file": "hw_200.csv"},
+        {"url": "https://jsonplaceholder.typicode.com/posts", "name": "json_placeholder", "file": "posts.json"}
+    ]
+
+    # Add securities dataset
+    datasets.append({
+        "url": "https://query1.finance.yahoo.com/v7/finance/download/AAPL?period1=1609459200&period2=1640995200&interval=1d&events=history&includeAdjustedClose=true",
+        "name": "securities_data",
+        "file": "AAPL.csv"
+    })
+
+    # Add real estate dataset
+    datasets.append({
+        "url": "https://people.sc.fsu.edu/~jburkardt/data/csv/real_estate.csv",
+        "name": "real_estate",
+        "file": "Real_Estate_Sales_2001-2022_GL.csv"
+    })
+
+    for dataset in datasets:
+        file_path = manager.download_dataset(dataset['url'], dataset['name'], dataset['file'])
+        df = manager.load_dataset(file_path)
+        manager.generate_plots(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+
+        # Generate dataset profile
+        profile = manager.profile_dataset(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+        print(f"Dataset profile for {dataset['name']}:", json.dumps(profile, indent=2))
+
+        # Perform advanced stats and time-series analysis for securities data
+        if dataset['name'] == "securities_data":
+            stats = manager.advanced_stats(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+            print(f"Advanced stats for {dataset['name']}:\n", json.dumps(stats, indent=2))
+            manager.generate_time_series_plots(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+
+    # Process a specific dataset using CoreModel
+    file_path = "sample_data.csv"  # Replace with your dataset path
+    results = core_model.process(file_path)
+    print(json.dumps(results, indent=2))

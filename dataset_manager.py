@@ -158,7 +158,7 @@ class DatasetManager:
         }
 
         # --- LLM Data Quality, Target, and Model Suggestions ---
-        from .main import CoreModel
+        from main import CoreModel
         import openai
         api_key = os.environ.get("OPENAI_API_KEY", "")
         core_model = CoreModel(api_key)
@@ -281,3 +281,21 @@ Statistics: {stats_json}
         plt.savefig(plot_path)
         plt.close()
         return plot_path
+
+# Example usage
+if __name__ == "__main__":
+    manager = DatasetManager()
+
+    # Example datasets
+    datasets = [
+        {"url": "https://people.sc.fsu.edu/~jburkardt/data/csv/hw_200.csv", "name": "heights_weights", "file": "hw_200.csv"},
+        {"url": "https://jsonplaceholder.typicode.com/posts", "name": "json_placeholder", "file": "posts.json"}
+    ]
+
+    for dataset in datasets:
+        file_path = manager.download_dataset(dataset['url'], dataset['name'], dataset['file'])
+        df = manager.load_dataset(file_path)
+        manager.generate_plots(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+        manager.advanced_stats(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+        manager.profile_dataset(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))
+        manager.generate_distribution_plots(df, os.path.join(manager.base_folder, dataset['name'], 'plots'))

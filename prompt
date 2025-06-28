@@ -1,102 +1,193 @@
-BEGIN DOCUMENT GENERATION ►
+Objective:
+Generate clear, professional, visually appealing, accessible, and production-ready documentation for the EUA MPT Web Project (Java 17 / Spring Boot + Angular 16), with a strong focus on purpose, business value, workflows, CI/CD, and API usage, while reducing emphasis on exhaustive code walkthroughs and testing details.
 
-🧠 Role Assignment
-You are an expert technical writer specializing in full-stack enterprise web development using Java 17 (Spring Boot) and Angular 16. Your output must strictly follow Google’s Technical Writing Guidelines, focus on clarity, accessibility, and structure, and use GitHub-Flavored Markdown with Mermaid.js diagrams, UI visuals, and code annotations.
+📘 Documentation Requirements (Single File)
 
-🎯 Objective
-Generate high-quality, well-organized, and visually appealing documentation that:
+1️⃣ Project Overview (Primary Focus)
+Provide:
 
-*   Guides developers through the codebase, architecture, and setup
-*   Helps application users understand features, workflows, and UI navigation
-*   Showcases how GitHub Copilot accelerated documentation creation
-*   Is suitable for GitHub viewing and PDF export
+Purpose of the project in plain, business-focused language
 
-👥 Target Audience
-*   Intermediate to advanced developers familiar with Java, Spring Boot, Angular, and REST APIs
-*   End users of the application, including internal business stakeholders, testers, or external clients who interact with the UI
+Key problems the project solves
 
-Prioritize clarity over brevity for both groups
+Business value and measurable benefits
 
-📚 Documentation Structure
+Primary user groups and use cases
 
-✅ 1. Project Overview
-    *   Purpose and business value of the project
-    *   Key modules and functionality from both dev and user perspective
-    *   Technologies used
+Overview of how the system integrates into the larger organization
 
-🏗️ 2. System Architecture Diagrams (Mermaid.js)
-    Generate diagrams for:
-    *   Frontend-backend communication
-    *   Authentication and session flow
-    *   Component and data flow
-    *   User interaction lifecycle
+2️⃣ System Architecture Diagrams
+Generate Mermaid and PlantUML diagrams with clear legends:
 
-⚙️ 3. Setup & Installation
-    For developers:
-    *   Tools and environments needed
-    *   How to run backend (Spring Boot) and frontend (Angular)
-    *   Environment config and troubleshooting
+Authentication and Session Flow
 
-💻 4. Code Walkthrough with Copilot Highlights
-    *   Backend: controllers, services, models, repositories
-    *   Frontend: modules, components, routing
-    *   Include 💡 Copilot-accelerated code sections
-    *   Add code comments, test cases, and error-handling examples
-    *   Ensure cross-platform compatibility (Windows, Linux, macOS)
+Component and Data Flow
 
-👩‍💻 5. User Guide (for Application Users)
-    *   How to login/register
-    *   Key workflows: dashboard usage, report generation, etc.
-    *   UI walkthroughs with embedded screenshots
-    *   Accessibility features (e.g., keyboard navigation, screen reader support)
-    *   Link to user FAQ or support
+CI/CD Pipeline Architecture
 
-🧪 6. Testing & Validation
-    How developers can run tests:
-    *   Backend: JUnit
-    *   Frontend: Jasmine/Karma
-    *   Sample test cases and output
-    *   Exception handling examples
-    *   Error messages and user-facing fallback screens
+User Interaction Lifecycle
 
-🔒 7. Best Practices
-    *   Coding standards
-    *   Security and performance tips
-    *   User privacy handling (e.g., data storage, JWT expiration)
-    *   Scalability and future-proofing
+Use:
 
-📷 8. Screenshots & UI Walkthrough
-    Add images like:
-    ```markdown
-    ## 🖼️ Login Page
+Mermaid diagrams with dark theme
 
-    ![Login UI](docs/login-ui.png)
+C4 notation PlantUML diagrams where appropriate
 
-    ## 📊 Dashboard View
+3️⃣ CI/CD & Deployment
+Describe in detail:
 
-    ![Dashboard](docs/dashboard-overview.png)
-    ```
-    *   ✔️ Use clear alt-text and ADA-compliant image contrast
+CI/CD pipelines (tools, workflows, triggers)
 
-📊 9. Manual vs Copilot Comparison Table
-    ```markdown
-    | Feature         | Manual Effort | Copilot Effort | Time Saved | Quality   |
-    |-----------------|---------------|----------------|------------|-----------|
-    | Setup Guide     | 1h            | 10m            | ✅✅✅       | ✅        |
-    | Diagrams        | 2h            | 10m            | ✅✅✅       | ✅        |
-    | Code Comments   | 2h            | 15m            | ✅✅✅       | ✅✅✅      |
-    ```
+Deployment process step by step
 
-🔁 10. Prompt Iteration Notes
-    Track how prompt evolved from basic to polished
-    Document what Copilot added in each round
-    ```markdown
-    - Iteration 1: Setup and code overview only
-    - Iteration 2: Added diagrams, testing, UI walkthroughs
-    - Iteration 3: Focused on user guidance and ADA compliance
-    ```
+Rollback and release management
 
-📜 11. Licensing & Contribution
-    *   Add license badge (e.g., MIT)
-    *   Link to CONTRIBUTING.md and optionally CODE_OF_CONDUCT.md
-    *   Mention internal or open-source contribution guidelines
+Environment configuration for dev, test, and prod
+
+4️⃣ API Usage Guide
+Include:
+
+List of REST endpoints with descriptions
+
+Request and response examples in JSON
+
+Authentication and authorization methods
+
+Common error codes and troubleshooting
+
+Best practices for API consumption
+
+5️⃣ Setup & Installation
+Provide clear instructions:
+
+Prerequisites and environment setup
+
+Backend authentication configuration
+
+Frontend installation and build commands
+
+Configuration guidance
+
+Key troubleshooting tips
+
+6️⃣ User Guide & UI Walkthrough
+For each major screen, include:
+✅ Purpose and value of the screen
+✅ Table of options/actions
+✅ Step-by-step workflow
+✅ Usability and accessibility tips
+
+Screen Order (strict):
+
+Single Message Upload (New Message Screen) (HomePage.png)
+
+ISO 20022 Hub (IsoStudio.png)
+
+My Messages (ProcessesMessages.png)
+
+Batch Upload (IsoStudio.png)
+
+Include detailed workflows:
+
+Message creation
+
+Template store and reuse
+
+XPart selection and validation
+
+Template storage
+
+7️⃣ Code Walkthrough (De-emphasized)
+Include only high-level examples:
+
+Representative annotated snippets for backend and frontend
+
+Short descriptions of key components
+
+Highlight important conventions or design patterns
+
+8️⃣ Testing & Validation (De-emphasized)
+Provide:
+
+Brief list of tools/frameworks used
+
+Example test commands
+
+How testing supports reliability
+
+9️⃣ Best Practices
+Include recommendations:
+
+Coding and design standards
+
+Security measures
+
+Performance optimization
+
+Scalability strategies
+
+🔟 Screenshots & UI Reference
+Create:
+
+A styled HTML table listing all screens and preview images from the Sc/ folder
+
+alt text and ARIA labels for accessibility
+
+1️⃣1️⃣ Copilot vs. No-Copilot Comparison
+Show:
+
+Time taken per section
+
+Quality and completeness comparison
+
+1️⃣2️⃣ Prompt Iteration Notes
+Document all major changes and improvements made during the documentation process
+
+1️⃣3️⃣ Licensing & Contribution
+Include:
+
+Licensing information
+
+Contribution guidelines
+
+Disclaimers
+
+✨ Visual, Formatting, and Accessibility Requirements
+
+Generate one single Markdown file containing all sections above
+
+Add a Table of Contents with anchor links
+
+Use YAML front-matter metadata at the top:
+
+yaml
+Copy
+Edit
+---
+title: EUA MPT Web Project Documentation
+description: Complete project overview, architecture, setup, API usage, and guides
+created: 
+lastUpdated: 
+author: 
+version: 
+---
+Write in a professional, approachable tone, using second-person instructions and short, clear sentences
+
+Validate all code snippets for correctness
+
+Ensure diagrams are correct and consistent
+
+Use semantic HTML in embedded tables (screenshots section)
+
+Produce output that complies with WCAG 2.1 AA accessibility standards
+
+🎨 Bonus (Optional)
+
+Include user personas and use cases illustrating business impact
+
+Provide a 1-page Executive Summary summarizing purpose, benefits, and key workflows
+
+✅ Instruction to Copilot:
+Generate and assemble one single Markdown document strictly following all sections, styles, diagrams, ordering, and formatting above.
+Prioritize clarity, purpose, CI/CD workflows, and API usage over detailed code and test coverage.
+Ensure consistency, correctness, and accessibility across the entire output.

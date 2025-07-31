@@ -1,0 +1,472 @@
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTableModule } from '@angular/material/table';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { ApiService } from '../../services/api.service';
+import { DatasetService, DatasetPreview } from '../../services/dataset.service';
+import { DatasetInfo } from '../../models/api.models';
+import { interval, Subscription } from 'rxjs';
+import { switchMap, takeWhile } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-file-upload',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatChipsModule,
+    MatTableModule,
+    MatExpansionModule
+  ],
+  templateUrl: './file-upload.component.html',
+  styleUrls: ['./file-upload.component.scss']
+})
+export class FileUploadComponent implements OnInit, OnDestroy {
+  isUploading = false;
+  backendOnline = false;
+  currentDataset: DatasetInfo | null = null;
+  datasetPreview: DatasetPreview | null = null;
+  showAnalysisOptions = false;
+  
+  private healthCheckSubscription?: Subscription;
+  private datasetSubscription?: Subscription;
+  private previewSubscription?: Subscription;
+
+  constructor(
+    private apiService: ApiService,
+    private datasetService: DatasetService,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit() {
+    this.checkBackendHealth();
+    this.startHealthCheck();
+    
+    // Subscribe to current dataset changes
+    this.datasetSubscription = this.datasetService.currentDataset$.subscribe(dataset => {
+      this.currentDataset = dataset;
+      if (dataset && !this.datasetPreview) {
+        this.loadDatasetPreview(dataset);
+      }
+    });
+
+    // Subscribe to dataset preview changes
+    this.previewSubscription = this.datasetService.datasetPreview$.subscribe(preview => {
+      this.datasetPreview = preview;
+      this.showAnalysisOptions = !!preview;
+    });
+  }
+
+  ngOnDestroy() {
+    this.healthCheckSubscription?.unsubscribe();
+    this.datasetSubscription?.unsubscribe();
+    this.previewSubscription?.unsubscribe();
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.uploadFile(input.files[0]);
+    }
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.uploadFile(files[0]);
+    }
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  private uploadFile(file: File) {
+    if (!this.backendOnline) {
+      this.snackBar.open('Backend is offline. Please wait for it to come online.', 'Close', { duration: 5000 });
+      return;
+    }
+
+    this.isUploading = true;
+    this.apiService.uploadFile(file).subscribe({
+      next: (response) => {
+        this.isUploading = false;
+        this.datasetService.setCurrentDataset(response);
+        this.snackBar.open('File uploaded successfully!', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        this.isUploading = false;
+        console.error('Upload error:', error);
+        this.snackBar.open('Upload failed. Please try again.', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  private loadDatasetPreview(dataset: DatasetInfo) {
+    this.apiService.previewDataset(dataset.dataset_id, 10).subscribe({
+      next: (preview) => {
+        const datasetPreview: DatasetPreview = {
+          columns: preview.columns || [],
+          rows: preview.data || [],
+          shape: [preview.data?.length || 0, preview.columns?.length || 0],
+          dtypes: preview.dtypes || {}
+        };
+        this.datasetService.setDatasetPreview(datasetPreview);
+      },
+      error: (error) => {
+        console.error('Failed to load dataset preview:', error);
+        this.snackBar.open('Failed to load dataset preview', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  selectBasicAnalysis() {
+    this.datasetService.setSelectedAnalysisType('basic');
+    this.snackBar.open('Basic Analysis selected. Navigate to Statistics tab to continue.', 'Close', { duration: 3000 });
+  }
+
+  selectAdvancedAnalysis() {
+    this.datasetService.setSelectedAnalysisType('advanced');
+    this.snackBar.open('Advanced Analysis selected. Navigate to Statistics tab to continue.', 'Close', { duration: 3000 });
+  }
+
+  openChatWithData() {
+    if (this.currentDataset) {
+      this.snackBar.open('Chat with Data selected. Navigate to Chat tab to continue.', 'Close', { duration: 3000 });
+    }
+  }
+
+  removeDataset() {
+    this.datasetService.clearCurrentDataset();
+    this.showAnalysisOptions = false;
+    this.snackBar.open('Dataset removed', 'Close', { duration: 2000 });
+  }
+
+  getFileIcon(filename: string): string {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'csv': return 'table_chart';
+      case 'xlsx': case 'xls': return 'grid_on';
+      case 'json': return 'code';
+      default: return 'description';
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleString();
+  }
+
+  getDisplayedColumns(): string[] {
+    if (!this.datasetPreview?.columns) return [];
+    return this.datasetPreview.columns.slice(0, 5); // Show first 5 columns
+  }
+
+  getPreviewRows(): any[] {
+    if (!this.datasetPreview?.rows) return [];
+    return this.datasetPreview.rows.slice(0, 10); // Show first 10 rows
+  }
+
+  private checkBackendHealth() {
+    this.apiService.checkHealth().subscribe({
+      next: () => {
+        this.backendOnline = true;
+      },
+      error: () => {
+        this.backendOnline = false;
+      }
+    });
+  }
+
+  private startHealthCheck() {
+    // Only check health every 30 seconds if no dataset is loaded
+    this.healthCheckSubscription = interval(30000)
+      .pipe(
+        takeWhile(() => !this.currentDataset),
+        switchMap(() => this.apiService.checkHealth())
+      )
+      .subscribe({
+        next: () => {
+          this.backendOnline = true;
+        },
+        error: () => {
+          this.backendOnline = false;
+        }
+      });
+  }
+} "${response.filename}" uploaded successfully! 
+        ${response.rows} rows, ${response.columns} columns`;
+        
+        this.snackBar.open(successMessage, 'Close', { 
+          duration: 5000,
+          panelClass: ['success-snackbar']
+        });
+        
+        // Reset upload state
+        setTimeout(() => {
+          this.isUploading = false;
+          this.selectedFile = null;
+          this.uploadProgress = 0;
+        }, 1000);
+      },
+      error: (error: any) => {
+        console.error('Upload error:', error);
+        clearInterval(progressInterval);
+        this.isUploading = false;
+        this.uploadProgress = 0;
+        
+        let errorMessage = 'Upload failed. Please try again.';
+        
+        if (error.status === 0) {
+          errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+          this.backendStatus = 'offline';
+        } else if (error.status === 413) {
+          errorMessage = 'File is too large. Please select a smaller file.';
+        } else if (error.status === 415 || error.status === 400) {
+          errorMessage = 'Unsupported file format. Please upload CSV or Excel files only.';
+        } else if (error.error?.detail) {
+          errorMessage = `Upload failed: ${error.error.detail}`;
+        } else if (error.message) {
+          errorMessage = `Upload failed: ${error.message}`;
+        }
+        
+        this.snackBar.open(errorMessage, 'Close', { 
+          duration: 7000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  loadUploadedFiles(): void {
+    if (this.backendStatus === 'offline') return;
+    
+    this.apiService.getDatasets().subscribe({
+      next: (response) => {
+        console.log('Datasets loaded:', response);
+        this.uploadedFiles = response.datasets || [];
+      },
+      error: (error) => {
+        console.error('Error loading uploaded files:', error);
+        if (error.status === 0) {
+          this.backendStatus = 'offline';
+        }
+        // Don't show error message for this as it's called automatically
+      }
+    });
+  }
+
+  removeFile(): void {
+    this.selectedFile = null;
+  }
+
+  retryConnection(): void {
+    this.backendStatus = 'checking';
+    this.checkBackendStatus();
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  selectDataset(dataset: any): void {
+    this.selectedDataset = dataset;
+  }
+
+  showServerInstructions(): void {
+    const message = `
+To start the backend server:
+
+1. Open a terminal in the project root directory
+2. Run: start-backend.bat
+3. Wait for "Application startup complete" message
+4. The server will be available at http://localhost:8000
+
+Alternatively, you can run the VS Code task "Start Data Analysis Platform" from the Command Palette.
+    `;
+
+    this.snackBar.open(message, 'Got it!', {
+      duration: 15000,
+      panelClass: ['info-snackbar'],
+      verticalPosition: 'top',
+      horizontalPosition: 'center'
+    });
+  }
+
+  debugUpload(): void {
+    console.log('Debug Upload Info:');
+    console.log('Selected file:', this.selectedFile);
+    console.log('Backend status:', this.backendStatus);
+    console.log('Is uploading:', this.isUploading);
+    console.log('Upload progress:', this.uploadProgress);
+    
+    if (this.selectedFile) {
+      console.log('File details:', {
+        name: this.selectedFile.name,
+        size: this.selectedFile.size,
+        type: this.selectedFile.type,
+        lastModified: this.selectedFile.lastModified
+      });
+    }
+
+    // Test backend connectivity
+    this.apiService.checkHealth().subscribe({
+      next: (response) => {
+        console.log('Backend health check successful:', response);
+        this.snackBar.open('Backend is reachable and healthy!', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar']
+        });
+      },
+      error: (error) => {
+        console.error('Backend health check failed:', error);
+        this.snackBar.open('Backend is not reachable!', 'Close', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  performBasicStats(): void {
+    if (!this.currentDataset) return;
+    
+    // Generate dataset ID (this should match the backend's ID generation)
+    const datasetId = this.datasetService.getDatasetId(this.currentDataset);
+    
+    this.snackBar.open('Calculating basic statistics...', 'Close', {
+      duration: 3000,
+      panelClass: ['info-snackbar']
+    });
+    
+    // Prepare basic stats request
+    const request = {
+      dataset_id: datasetId,
+      options: ['descriptive', 'correlation', 'distribution', 'missing_data']
+    };
+    
+    this.apiService.calculateBasicStats(request).subscribe({
+      next: (response) => {
+        console.log('Basic stats calculated:', response);
+        this.snackBar.open('Basic statistics calculated successfully!', 'Close', {
+          duration: 4000,
+          panelClass: ['success-snackbar']
+        });
+        
+        // Store results for statistics dashboard
+        // You can emit an event or use a service to share results
+      },
+      error: (error) => {
+        console.error('Error calculating basic stats:', error);
+        this.snackBar.open('Failed to calculate basic statistics. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  performAdvancedStats(): void {
+    if (!this.currentDataset) return;
+    
+    const datasetId = this.datasetService.getDatasetId(this.currentDataset);
+    
+    this.snackBar.open('Performing advanced statistical analysis...', 'Close', {
+      duration: 3000,
+      panelClass: ['info-snackbar']
+    });
+    
+    // Prepare advanced stats request
+    const request = {
+      dataset_id: datasetId,
+      options: ['regression', 'clustering', 'pca', 'anomaly_detection']
+    };
+    
+    this.apiService.calculateAdvancedStats(request).subscribe({
+      next: (response) => {
+        console.log('Advanced stats calculated:', response);
+        this.snackBar.open('Advanced analysis completed successfully!', 'Close', {
+          duration: 4000,
+          panelClass: ['success-snackbar']
+        });
+        
+        // Store results for statistics dashboard
+      },
+      error: (error) => {
+        console.error('Error calculating advanced stats:', error);
+        this.snackBar.open('Failed to perform advanced analysis. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  chatWithData(): void {
+    if (!this.currentDataset) return;
+    
+    const datasetId = this.datasetService.getDatasetId(this.currentDataset);
+    
+    this.snackBar.open('Preparing chat interface for your data...', 'Close', {
+      duration: 3000,
+      panelClass: ['info-snackbar']
+    });
+    
+    // Test chat functionality
+    const chatMessage = {
+      message: `Tell me about the dataset "${this.currentDataset.filename}"`,
+      dataset_id: datasetId
+    };
+    
+    this.apiService.chatWithData(chatMessage).subscribe({
+      next: (response) => {
+        console.log('Chat response:', response);
+        this.snackBar.open('Chat session started! Check the console for the response.', 'Close', {
+          duration: 4000,
+          panelClass: ['success-snackbar']
+        });
+      },
+      error: (error) => {
+        console.error('Error starting chat:', error);
+        this.snackBar.open('Failed to start chat session. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  clearCurrentDataset(): void {
+    this.currentDataset = null;
+    this.datasetService.clearCurrentDataset();
+    this.snackBar.open('Dataset cleared. Upload a new file to analyze.', 'Close', {
+      duration: 3000,
+      panelClass: ['info-snackbar']
+    });
+  }
+}

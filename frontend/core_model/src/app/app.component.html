@@ -1,0 +1,28 @@
+<div class="main-container">
+  <mat-toolbar color="primary">
+    <mat-icon>analytics</mat-icon>
+    <span style="margin-left: 8px;">Data Analysis Platform</span>
+    <span class="spacer"></span>
+    <mat-icon>insights</mat-icon>
+  </mat-toolbar>
+
+  <mat-tab-group mat-align-tabs="center" class="fade-in">
+    <mat-tab label="📊 Upload Data">
+      <div class="tab-content slide-up">
+        <app-file-upload></app-file-upload>
+      </div>
+    </mat-tab>
+    
+    <mat-tab label="📈 Statistics">
+      <div class="tab-content slide-up">
+        <app-statistics-dashboard></app-statistics-dashboard>
+      </div>
+    </mat-tab>
+    
+    <mat-tab label="💬 Talk to Data">
+      <div class="tab-content slide-up">
+        <app-chat></app-chat>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

@@ -1,0 +1,29 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.tab-content {
+  padding: 24px;
+  min-height: 400px;
+}
+
+mat-toolbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+mat-tab-group {
+  height: calc(100vh - 64px);
+}
+
+.tab-content {
+  padding: 24px;
+  height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .tab-content {
+    padding: 16px;
+    height: auto;
+  }
+}

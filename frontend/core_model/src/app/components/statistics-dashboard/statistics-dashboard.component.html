@@ -1,0 +1,388 @@
+<div class="statistics-dashboard" *ngIf="currentDataset">
+  <!-- Header Section -->
+  <mat-card class="header-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>analytics</mat-icon>
+      <mat-card-title>Statistical Analysis</mat-card-title>
+      <mat-card-subtitle>{{ currentDataset.filename }} • {{ currentDataset.rows }} rows × {{ currentDataset.columns }} columns</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="analysis-type-indicator" *ngIf="selectedAnalysisType">
+        <mat-chip [color]="selectedAnalysisType === 'basic' ? 'primary' : 'accent'" selected>
+          <mat-icon>{{ selectedAnalysisType === 'basic' ? 'analytics' : 'science' }}</mat-icon>
+          {{ selectedAnalysisType === 'basic' ? 'Basic Analysis' : 'Advanced Analysis' }}
+        </mat-chip>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Quick Summary -->
+  <mat-card class="summary-card" *ngIf="quickSummary">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>summarize</mat-icon>
+        Quick Summary
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="summary-grid">
+        <div class="summary-item" *ngFor="let item of quickSummary | keyvalue">
+          <span class="summary-label">{{ item.key }}</span>
+          <span class="summary-value">{{ formatNumber(item.value) }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Analysis Tabs -->
+  <mat-tab-group>
+    <!-- Basic Statistics Tab -->
+    <mat-tab label="Basic Statistics">
+      <div class="tab-content">
+        <!-- Options Selection -->
+        <mat-card class="options-card">
+          <mat-card-header>
+            <mat-card-title>Analysis Options</mat-card-title>
+            <mat-card-subtitle>Select the statistical analyses to perform</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="options-grid">
+              <mat-checkbox 
+                *ngFor="let option of basicOptions" 
+                [(ngModel)]="option.selected"
+                class="option-checkbox">
+                <div class="option-content">
+                  <span class="option-name">{{ option.name }}</span>
+                  <span class="option-description">{{ option.description }}</span>
+                </div>
+              </mat-checkbox>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <button mat-raised-button 
+                    color="primary" 
+                    (click)="calculateBasicStatistics()"
+                    [disabled]="isLoading">
+              <mat-icon>calculate</mat-icon>
+              Calculate Basic Statistics
+            </button>
+            
+            <mat-spinner *ngIf="isLoading" diameter="24" class="inline-spinner"></mat-spinner>
+          </mat-card-actions>
+        </mat-card>
+
+        <!-- Basic Results -->
+        <div class="results-section" *ngIf="basicResults">
+          <!-- Descriptive Statistics -->
+          <mat-card *ngIf="basicResults.descriptive_stats" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>bar_chart</mat-icon>
+                Descriptive Statistics
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="table-container">
+                <table mat-table [dataSource]="getDescriptiveStatsKeys()" class="descriptive-table">
+                  <ng-container matColumnDef="column">
+                    <th mat-header-cell *matHeaderCellDef>Column</th>
+                    <td mat-cell *matCellDef="let column">{{ column }}</td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="mean">
+                    <th mat-header-cell *matHeaderCellDef>Mean</th>
+                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.mean) }}</td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="median">
+                    <th mat-header-cell *matHeaderCellDef>Median</th>
+                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.median) }}</td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="std">
+                    <th mat-header-cell *matHeaderCellDef>Std Dev</th>
+                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.std) }}</td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="min">
+                    <th mat-header-cell *matHeaderCellDef>Min</th>
+                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.min) }}</td>
+                  </ng-container>
+                  
+                  <ng-container matColumnDef="max">
+                    <th mat-header-cell *matHeaderCellDef>Max</th>
+                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.max) }}</td>
+                  </ng-container>
+                  
+                  <tr mat-header-row *matHeaderRowDef="['column', 'mean', 'median', 'std', 'min', 'max']"></tr>
+                  <tr mat-row *matRowDef="let row; columns: ['column', 'mean', 'median', 'std', 'min', 'max']"></tr>
+                </table>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Correlation Analysis -->
+          <mat-card *ngIf="basicResults.correlation_matrix" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>device_hub</mat-icon>
+                Correlation Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="correlation-content">
+                <p><strong>Strong Correlations Found:</strong></p>
+                <div class="correlation-pairs">
+                  <mat-chip 
+                    *ngFor="let pair of getCorrelationPairs()" 
+                    [color]="pair.strength === 'strong' ? 'warn' : 'primary'"
+                    class="correlation-chip">
+                    {{ pair.variable1 }} ↔ {{ pair.variable2 }}: {{ formatNumber(pair.correlation) }}
+                  </mat-chip>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Distribution Analysis -->
+          <mat-card *ngIf="basicResults.distribution_analysis" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>show_chart</mat-icon>
+                Distribution Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="distribution-content">
+                <pre>{{ basicResults.distribution_analysis | json }}</pre>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Missing Data Analysis -->
+          <mat-card *ngIf="basicResults.missing_data_summary" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>error_outline</mat-icon>
+                Missing Data Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="missing-data-content">
+                <pre>{{ basicResults.missing_data_summary | json }}</pre>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Advanced Statistics Tab -->
+    <mat-tab label="Advanced Statistics">
+      <div class="tab-content">
+        <!-- Options Selection -->
+        <mat-card class="options-card">
+          <mat-card-header>
+            <mat-card-title>Advanced Analysis Options</mat-card-title>
+            <mat-card-subtitle>Select advanced statistical and ML analyses</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="options-grid">
+              <mat-checkbox 
+                *ngFor="let option of advancedOptions" 
+                [(ngModel)]="option.selected"
+                class="option-checkbox">
+                <div class="option-content">
+                  <span class="option-name">{{ option.name }}</span>
+                  <span class="option-description">{{ option.description }}</span>
+                </div>
+              </mat-checkbox>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <button mat-raised-button 
+                    color="accent" 
+                    (click)="calculateAdvancedStatistics()"
+                    [disabled]="isLoading">
+              <mat-icon>science</mat-icon>
+              Calculate Advanced Statistics
+            </button>
+            
+            <mat-spinner *ngIf="isLoading" diameter="24" class="inline-spinner"></mat-spinner>
+          </mat-card-actions>
+        </mat-card>
+
+        <!-- Advanced Results -->
+        <div class="results-section" *ngIf="advancedResults">
+          <!-- Regression Analysis -->
+          <mat-card *ngIf="advancedResults.regression_analysis" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>trending_up</mat-icon>
+                Regression Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="regression-content">
+                <div class="metrics-grid" *ngIf="advancedResults.regression_analysis.metrics">
+                  <div class="metric-item">
+                    <span class="metric-label">R² Score</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults.regression_analysis.metrics.r2_score) }}</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Mean Squared Error</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults.regression_analysis.metrics.mse) }}</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">Mean Absolute Error</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults.regression_analysis.metrics.mae) }}</span>
+                  </div>
+                </div>
+                <div class="feature-importance" *ngIf="advancedResults.regression_analysis.feature_importance">
+                  <h4>Feature Importance</h4>
+                  <div class="importance-list">
+                    <div class="importance-item" *ngFor="let item of getFeatureImportanceEntries()">
+                      <span class="feature-name">{{ item.key }}</span>
+                      <div class="importance-bar">
+                        <div class="importance-fill" [style.width.%]="(item.value * 100)"></div>
+                      </div>
+                      <span class="importance-value">{{ formatNumber(item.value) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Clustering Results -->
+          <mat-card *ngIf="advancedResults.clustering_results" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>scatter_plot</mat-icon>
+                Clustering Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="clustering-content">
+                <div class="cluster-summary" *ngIf="advancedResults.clustering_results.summary">
+                  <p><strong>Number of Clusters:</strong> {{ advancedResults.clustering_results.summary.n_clusters }}</p>
+                  <p><strong>Silhouette Score:</strong> {{ formatNumber(advancedResults.clustering_results.summary.silhouette_score) }}</p>
+                  <p><strong>Inertia:</strong> {{ formatNumber(advancedResults.clustering_results.summary.inertia) }}</p>
+                </div>
+                <div class="cluster-details" *ngIf="advancedResults.clustering_results.cluster_centers">
+                  <h4>Cluster Centers</h4>
+                  <pre>{{ advancedResults.clustering_results.cluster_centers | json }}</pre>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- PCA Analysis -->
+          <mat-card *ngIf="advancedResults.pca_analysis" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>compress</mat-icon>
+                Principal Component Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="pca-content">
+                <div class="pca-summary" *ngIf="advancedResults.pca_analysis.explained_variance_ratio">
+                  <h4>Explained Variance by Component</h4>
+                  <div class="variance-list">
+                    <div class="variance-item" *ngFor="let variance of advancedResults.pca_analysis.explained_variance_ratio; let i = index">
+                      <span class="component-label">PC{{ i + 1 }}</span>
+                      <div class="variance-bar">
+                        <div class="variance-fill" [style.width.%]="(variance * 100)"></div>
+                      </div>
+                      <span class="variance-value">{{ (variance * 100).toFixed(2) }}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="cumulative-variance" *ngIf="advancedResults.pca_analysis.cumulative_variance">
+                  <p><strong>Total Variance Explained:</strong> {{ (advancedResults.pca_analysis.cumulative_variance * 100).toFixed(2) }}%</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Time Series Analysis -->
+          <mat-card *ngIf="advancedResults.time_series_analysis" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>timeline</mat-icon>
+                Time Series Analysis
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="timeseries-content">
+                <pre>{{ advancedResults.time_series_analysis | json }}</pre>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Anomaly Detection -->
+          <mat-card *ngIf="advancedResults.anomaly_detection" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>warning</mat-icon>
+                Anomaly Detection
+              </mat-card-title>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="anomaly-content">
+                <div class="anomaly-summary" *ngIf="advancedResults.anomaly_detection.summary">
+                  <p><strong>Anomalies Detected:</strong> {{ advancedResults.anomaly_detection.summary.n_anomalies }}</p>
+                  <p><strong>Anomaly Rate:</strong> {{ (advancedResults.anomaly_detection.summary.anomaly_rate * 100).toFixed(2) }}%</p>
+                </div>
+                <div class="anomaly-details" *ngIf="advancedResults.anomaly_detection.anomaly_indices">
+                  <h4>Anomalous Records (indices)</h4>
+                  <mat-chip-set>
+                    <mat-chip *ngFor="let index of advancedResults.anomaly_detection.anomaly_indices.slice(0, 10)">
+                      {{ index }}
+                    </mat-chip>
+                    <mat-chip *ngIf="advancedResults.anomaly_detection.anomaly_indices.length > 10">
+                      +{{ advancedResults.anomaly_detection.anomaly_indices.length - 10 }} more
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<!-- No Dataset Message -->
+<div class="no-dataset" *ngIf="!currentDataset">
+  <mat-card>
+    <mat-card-content>
+      <div class="no-dataset-content">
+        <mat-icon class="no-dataset-icon">upload_file</mat-icon>
+        <h2>No Dataset Selected</h2>
+        <p>Please upload a dataset first to perform statistical analysis.</p>
+        <button mat-raised-button color="primary" routerLink="/upload">
+          <mat-icon>upload</mat-icon>
+          Upload Dataset
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

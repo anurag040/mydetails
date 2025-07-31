@@ -1,0 +1,1024 @@
+// Modern Dark Theme File Upload Component
+.file-upload-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px;
+  position: relative;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+  min-height: calc(100vh - 160px);
+  color: #e0e0e0;
+  
+  // Status Indicator - Clean Kaggle Style
+  .status-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(20, 20, 20, 0.9);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.1);
+    min-width: 80px;
+    justify-content: center;
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    &.online {
+      border-color: rgba(0, 255, 136, 0.5);
+      background: rgba(0, 255, 136, 0.1);
+      
+      .status-dot {
+        background: #00ff88;
+      }
+      
+      &::after {
+        content: 'Online';
+        color: #00ff88;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        margin-left: 4px;
+      }
+    }
+
+    &.offline {
+      border-color: rgba(255, 102, 0, 0.5);
+      background: rgba(255, 102, 0, 0.1);
+      
+      .status-dot {
+        background: #ff6600;
+      }
+      
+      &::after {
+        content: 'Offline';
+        color: #ff6600;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        margin-left: 4px;
+      }
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { 
+      opacity: 1;
+    }
+    50% { 
+      opacity: 0.6;
+    }
+  }
+}
+
+// Upload Card - Modern Dark Style
+.upload-card {
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
+    transform: translateY(-2px);
+    border-color: rgba(0, 255, 136, 0.4);
+  }
+
+  .mat-mdc-card-header {
+    background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+    color: #000;
+    border-radius: 15px 15px 0 0;
+    padding: 20px 24px;
+    
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+      color: #000;
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: rgba(0, 0, 0, 0.7);
+      margin: 6px 0 0 0;
+      font-size: 14px;
+    }
+  }
+}
+
+// Upload Area - Modern Dark and Professional
+.upload-area {
+  border: 2px dashed rgba(0, 255, 136, 0.4);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(0, 255, 136, 0.05);
+  
+  &:hover {
+    border-color: #00ffaa;
+    background: rgba(0, 255, 136, 0.1);
+    
+    .upload-icon {
+      transform: scale(1.05);
+      color: #00ffaa;
+    }
+  }
+  
+  &.drag-over {
+    border-color: #00ff88;
+    background: rgba(0, 255, 136, 0.15);
+    border-style: solid;
+  }
+
+  .upload-icon {
+    font-size: 64px;
+    color: #00ff88;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+  }
+  
+  p {
+    color: #e0e0e0;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 16px 0;
+  }
+  
+  .upload-hint {
+    color: #999;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  button {
+    margin-top: 20px;
+    background: #00ff88;
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: #00cc66;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    }
+  }
+}
+
+.upload-progress {
+  margin-top: 16px;
+  
+  .mat-mdc-progress-bar {
+    border-radius: 4px;
+    height: 4px;
+    background: #e5e7eb;
+    
+    .mdc-linear-progress__bar-inner {
+      background: #00ff88;
+    }
+  }
+}
+
+// Dataset Card - Modern Dark Style
+.dataset-card {
+  margin-top: 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  
+  .mat-mdc-card-header {
+    background: rgba(0, 255, 136, 0.1);
+    color: #e0e0e0;
+    border-radius: 15px 15px 0 0;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+      color: #00ff88;
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: #999;
+      margin: 6px 0 0 0;
+      font-size: 14px;
+    }
+  }
+  
+  .mat-mdc-card-content {
+    padding: 24px;
+    color: #e0e0e0;
+    background: transparent;
+  }
+}
+
+// Dataset Info Chips - Dark Style
+.dataset-info {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  
+  mat-chip {
+    background: rgba(0, 255, 136, 0.1) !important;
+    color: #00ff88 !important;
+    border: 1px solid rgba(0, 255, 136, 0.3) !important;
+    font-weight: 500;
+    
+    mat-icon {
+      color: #00ff88 !important;
+    }
+  }
+}
+
+// Preview Panel - Modern Dark Style
+.preview-panel {
+  margin: 24px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  .mat-expansion-panel-header {
+    background: rgba(0, 255, 136, 0.1) !important;
+    color: #e0e0e0 !important;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    
+    mat-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #00ff88 !important;
+
+      mat-icon {
+        color: #00ffaa !important;
+      }
+    }
+
+    mat-panel-description {
+      color: #999 !important;
+      font-size: 14px;
+    }
+  }
+
+  .mat-expansion-panel-content {
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #e0e0e0 !important;
+  }
+}
+
+// Column Info - Modern Dark Style
+.column-info {
+  margin-bottom: 24px;
+
+  h4 {
+    color: #e0e0e0;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .columns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .column-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+
+    .column-name {
+      font-weight: 500;
+      color: #e0e0e0;
+    }
+
+    .column-type {
+      font-size: 12px;
+      color: #00ff88;
+      background: rgba(0, 255, 136, 0.2);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+  }
+
+  .more-columns {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    background: rgba(0, 255, 136, 0.05);
+    border-radius: 6px;
+    color: #999;
+    font-style: italic;
+    border: 1px dashed rgba(0, 255, 136, 0.2);
+  }
+}
+
+// Table Container - Modern Dark Design
+.table-container {
+  h4 {
+    color: #e0e0e0;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .preview-table {
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(20, 20, 20, 0.8);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+
+    th {
+      background: rgba(0, 255, 136, 0.1) !important;
+      color: #00ff88 !important;
+      font-weight: 600;
+      padding: 16px 12px;
+      font-size: 14px;
+      border-bottom: 2px solid rgba(0, 255, 136, 0.3) !important;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(0, 255, 136, 0.1) !important;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #e0e0e0 !important;
+      background: rgba(20, 20, 20, 0.6) !important;
+    }
+
+    tr:hover {
+      background: rgba(0, 255, 136, 0.1) !important;
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(26, 26, 26, 0.8) !important;
+    }
+
+    tr:nth-child(even):hover td {
+      background: rgba(0, 255, 136, 0.1) !important;
+    }
+  }
+
+  .table-note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    font-style: italic;
+  }
+}
+
+// Analysis Actions - Modern Dark Style
+.analysis-actions {
+  margin-top: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  h3 {
+    color: #00ff88;
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .analysis-description {
+    color: #999;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    max-width: none;
+  }
+
+  .action-button {
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(20, 20, 20, 0.8);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    text-align: left;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 255, 136, 0.2);
+      border-color: rgba(0, 255, 136, 0.4);
+    }
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .button-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .button-title {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: #e0e0e0;
+      }
+
+      .button-subtitle {
+        font-size: 14px;
+        line-height: 1.2;
+        color: #999;
+      }
+    }
+
+    &[color="primary"] {
+      border-color: rgba(0, 255, 136, 0.3);
+      background: rgba(0, 255, 136, 0.1);
+      
+      .button-content .button-title {
+        color: #00ff88;
+      }
+      mat-icon {
+        color: #00ffaa;
+      }
+      
+      &:hover {
+        border-color: rgba(0, 255, 136, 0.5);
+        background: rgba(0, 255, 136, 0.15);
+      }
+    }
+
+    &[color="accent"] {
+      border-color: rgba(255, 102, 0, 0.3);
+      background: rgba(255, 102, 0, 0.1);
+      
+      .button-content .button-title {
+        color: #ff6600;
+      }
+      mat-icon {
+        color: #ff6600;
+      }
+      
+      &:hover {
+        border-color: rgba(255, 102, 0, 0.5);
+        background: rgba(255, 102, 0, 0.15);
+      }
+    }
+
+    &[color="warn"] {
+      border-color: rgba(255, 102, 0, 0.3);
+      background: rgba(255, 102, 0, 0.1);
+      
+      .button-content .button-title {
+        color: #ff6600;
+      }
+      mat-icon {
+        color: #ff6600;
+      }
+      
+      &:hover {
+        border-color: rgba(255, 102, 0, 0.5);
+        background: rgba(255, 102, 0, 0.15);
+      }
+    }
+  }
+}
+
+// Card Actions - Modern Dark Style
+.mat-mdc-card-actions {
+  padding: 16px 24px;
+  background: rgba(0, 255, 136, 0.05);
+  border-top: 1px solid rgba(0, 255, 136, 0.2);
+  
+  button {
+    margin-right: 12px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    border-radius: 6px;
+    
+    &[color="warn"] {
+      background: rgba(255, 102, 0, 0.1);
+      color: #ff6600;
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      
+      &:hover {
+        background: rgba(255, 102, 0, 0.15);
+        border-color: rgba(255, 102, 0, 0.5);
+      }
+    }
+    
+    &:not([color="warn"]) {
+      background: rgba(20, 20, 20, 0.8);
+      color: #e0e0e0;
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      
+      &:hover {
+        background: rgba(0, 255, 136, 0.1);
+        border-color: rgba(0, 255, 136, 0.4);
+        color: #00ff88;
+      }
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 600px) {
+  .file-upload-container {
+    padding: 16px;
+    
+    .status-indicator {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      padding: 6px 10px;
+      font-size: 11px;
+      min-width: 70px;
+      
+      &.online::after {
+        font-size: 11px;
+      }
+      
+      &.offline::after {
+        font-size: 11px;
+      }
+    }
+  }
+
+  .upload-area {
+    padding: 32px 16px;
+    
+    .upload-icon {
+      font-size: 48px;
+    }
+  }
+
+  .analysis-actions {
+    .action-buttons {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Large screen optimizations
+@media (min-width: 1200px) {
+  .file-upload-container {
+    padding: 40px;
+  }
+
+  .column-info {
+    .columns-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+
+  .analysis-actions {
+    .action-buttons {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+  }
+}
+
+@media (min-width: 1600px) {
+  .file-upload-container {
+    padding: 48px;
+  }
+
+  .table-container {
+    .preview-table {
+      td {
+        max-width: 200px;
+      }
+    }
+  }
+}
+
+/* Quick Summary Section Fixes */
+.quick-summary-section {
+  background: rgba(20, 20, 20, 0.8) !important;
+  border: 1px solid rgba(0, 255, 136, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  margin: 16px 0 !important;
+  
+  h4 {
+    color: #00ff88 !important;
+    margin-bottom: 16px !important;
+    font-weight: 600 !important;
+  }
+  
+  .summary-content {
+    color: #e0e0e0 !important;
+    
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .item-label {
+        color: #00ff88 !important;
+        font-weight: 600;
+        text-transform: capitalize;
+        min-width: 120px;
+        margin-right: 16px;
+      }
+      
+      .item-value {
+        color: #e0e0e0 !important;
+        font-weight: 500;
+        flex: 1;
+        text-align: right;
+        word-break: break-word;
+        
+        &.object-value {
+          background: rgba(0, 255, 136, 0.1) !important;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-family: 'Courier New', monospace;
+          font-size: 0.9em;
+          white-space: pre-wrap;
+          text-align: left;
+        }
+      }
+    }
+    
+    /* Handle pre-formatted text */
+    pre {
+      background: rgba(0, 255, 136, 0.1) !important;
+      color: #e0e0e0 !important;
+      padding: 12px !important;
+      border-radius: 6px !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      font-family: 'Courier New', monospace !important;
+      white-space: pre-wrap !important;
+      overflow-x: auto !important;
+      margin: 8px 0 !important;
+    }
+    
+    /* Style any direct text nodes */
+    p, span, div {
+      color: #e0e0e0 !important;
+    }
+    
+    /* Handle inline code */
+    code {
+      background: rgba(0, 255, 136, 0.1) !important;
+      color: #00ff88 !important;
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+      font-family: 'Courier New', monospace !important;
+    }
+  }
+}
+
+/* Global overrides for summary display */
+.mat-expansion-panel-body {
+  .summary-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    padding: 8px 0 !important;
+    color: #e0e0e0 !important;
+    
+    strong {
+      color: #00ff88 !important;
+      margin-right: 12px !important;
+    }
+    
+    span {
+      color: #e0e0e0 !important;
+    }
+  }
+}
+
+/* Aggressive Quick Summary Overrides */
+:host ::ng-deep {
+  .summary-card, .info-card, .details-card {
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(0, 255, 136, 0.2) !important;
+    border-radius: 8px !important;
+    
+    * {
+      color: #e0e0e0 !important;
+      background: transparent !important;
+    }
+  }
+  
+  /* Target any white background elements */
+  *[style*="background-color: white"],
+  *[style*="background: white"],
+  *[style*="background-color: #fff"],
+  *[style*="background: #fff"],
+  *[style*="background-color: #ffffff"],
+  *[style*="background: #ffffff"] {
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(0, 255, 136, 0.2) !important;
+  }
+  
+  /* Summary content styling */
+  .summary-content {
+    background: rgba(20, 20, 20, 0.8) !important;
+    
+    .summary-item {
+      background: rgba(0, 255, 136, 0.05) !important;
+      border: 1px solid rgba(0, 255, 136, 0.1) !important;
+      border-radius: 6px !important;
+      padding: 12px !important;
+      margin: 8px 0 !important;
+      color: #e0e0e0 !important;
+      
+      .label, .key {
+        color: #00ff88 !important;
+        font-weight: 600 !important;
+      }
+      
+      .value, .data {
+        color: #e0e0e0 !important;
+      }
+    }
+  }
+  
+  /* Mat expansion panel content */
+  .mat-expansion-panel-body {
+    background: rgba(20, 20, 20, 0.8) !important;
+    
+    * {
+      color: #e0e0e0 !important;
+      
+      &:not(.mat-icon) {
+        background: transparent !important;
+      }
+    }
+    
+    /* Target specific summary elements */
+    div, span, p {
+      color: #e0e0e0 !important;
+      
+      &[style*="color: black"],
+      &[style*="color: #000"],
+      &[style*="color: #000000"] {
+        color: #e0e0e0 !important;
+      }
+    }
+  }
+}
+
+/* Ultra-aggressive targeting for specific data cards */
+:host ::ng-deep {
+  /* Target memory usage and column types specifically */
+  div, span, p, section, article {
+    &[style*="background-color: white"],
+    &[style*="background: white"],
+    &[style*="background-color: #fff"],
+    &[style*="background: #fff"],
+    &[style*="background-color: #ffffff"],
+    &[style*="background: #ffffff"],
+    &[style*="background-color:white"],
+    &[style*="background:white"] {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      border-radius: 6px !important;
+      padding: 8px 12px !important;
+    }
+  }
+  
+  /* Nuclear option for any element with inline styles */
+  [style] {
+    &[style*="white"] {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      border-radius: 6px !important;
+      padding: 6px 10px !important;
+    }
+  }
+  
+  /* Target any computed white backgrounds */
+  * {
+    &[style*="background-color: rgb(255, 255, 255)"],
+    &[style*="background: rgb(255, 255, 255)"],
+    &[style*="background-color:rgb(255,255,255)"],
+    &[style*="background:rgb(255,255,255)"] {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+    }
+  }
+  
+  /* Specific targeting for data display containers */
+  .data-container, .info-container, .stats-container {
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(0, 255, 136, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    
+    * {
+      background: transparent !important;
+      color: #e0e0e0 !important;
+    }
+    
+    .label, .key, .title {
+      color: #00ff88 !important;
+    }
+    
+    .value, .data, .content {
+      color: #e0e0e0 !important;
+    }
+  }
+  
+  /* Override any Material component backgrounds */
+  .mat-card, .mat-card-content, .mat-expansion-panel-body {
+    div, span, p {
+      &[style*="background"] {
+        background: rgba(20, 20, 20, 0.8) !important;
+        color: #e0e0e0 !important;
+      }
+    }
+  }
+  
+  /* Distribution Analysis specific targeting */
+  *[class*="distribution"], *[class*="analysis"], *[class*="numeric"], *[class*="categorical"] {
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(0, 255, 136, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    
+    * {
+      background: transparent !important;
+      color: #e0e0e0 !important;
+    }
+    
+    .title, .header, .label, .key {
+      color: #00ff88 !important;
+      font-weight: 600 !important;
+    }
+    
+    .value, .data, .content, .result {
+      color: #e0e0e0 !important;
+    }
+  }
+  
+  /* Ultimate override for any remaining white backgrounds */
+  * {
+    &[style*="background-color: rgb(255, 255, 255)"],
+    &[style*="background: rgb(255, 255, 255)"],
+    &[style*="background-color:rgb(255,255,255)"],
+    &[style*="background:rgb(255,255,255)"],
+    &[style*="background-color: rgba(255, 255, 255"],
+    &[style*="background: rgba(255, 255, 255"] {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      border-radius: 6px !important;
+      padding: 8px 12px !important;
+    }
+  }
+  
+  /* Force all content to dark theme */
+  .mat-expansion-panel-body, .mat-card-content {
+    * {
+      &[style*="background"] {
+        background: rgba(20, 20, 20, 0.8) !important;
+        color: #e0e0e0 !important;
+      }
+      
+      &[style*="color"] {
+        color: #e0e0e0 !important;
+      }
+    }
+  }
+  
+  /* Missing Data Analysis specific targeting */
+  *[class*="missing"], *[class*="data"], *[class*="null"], *[class*="nan"] {
+    background: rgba(20, 20, 20, 0.8) !important;
+    color: #e0e0e0 !important;
+    border: 1px solid rgba(0, 255, 136, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    
+    * {
+      background: transparent !important;
+      color: #e0e0e0 !important;
+    }
+    
+    .title, .header, .label, .key {
+      color: #00ff88 !important;
+      font-weight: 600 !important;
+    }
+    
+    .value, .data, .content, .result {
+      color: #e0e0e0 !important;
+    }
+  }
+  
+  /* Final brute force override for this component */
+  * {
+    &[style*="background-color: white"],
+    &[style*="background: white"],
+    &[style*="background-color:#fff"],
+    &[style*="background:#fff"],
+    &[style*="background-color: #fff"],
+    &[style*="background: #fff"],
+    &[style*="background-color:#ffffff"],
+    &[style*="background:#ffffff"],
+    &[style*="background-color: #ffffff"],
+    &[style*="background: #ffffff"],
+    &[style*="background-color:white"],
+    &[style*="background:white"],
+    &[style*="rgb(255, 255, 255)"],
+    &[style*="rgb(255,255,255)"],
+    &[style*="rgba(255, 255, 255"],
+    &[style*="rgba(255,255,255"] {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      border-radius: 6px !important;
+      padding: 8px 12px !important;
+      
+      * {
+        color: #e0e0e0 !important;
+      }
+    }
+  }
+  
+  /* Override any remaining element with inline styles */
+  [style] {
+    &:not(.mat-icon):not(mat-icon):not([class*="icon"]) {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      border-radius: 6px !important;
+      padding: 6px 10px !important;
+    }
+  }
+}

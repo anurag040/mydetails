@@ -503,6 +503,24 @@
         margin-top: 16px;
       }
 
+      .heatmap-chart-container {
+        width: 100%;
+        margin: 20px 0;
+        
+        canvas {
+          max-width: 100% !important;
+          border-radius: 8px;
+          background: rgba(10, 10, 10, 0.9);
+        }
+        
+        .custom-heatmap-container {
+          background: rgba(10, 10, 10, 0.9);
+          border-radius: 8px;
+          padding: 16px;
+          border: 1px solid rgba(0, 255, 127, 0.2);
+        }
+      }
+
       .heatmap-grid {
         display: grid;
         gap: 3px;
@@ -531,6 +549,34 @@
         text-transform: uppercase;
         letter-spacing: 1px;
         transition: all 0.3s ease;
+        
+        &:hover {
+          background: rgba(0, 255, 136, 0.25);
+          transform: scale(1.05);
+        }
+      }
+
+      .heatmap-corner {
+        background: rgba(20, 20, 20, 0.9);
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-radius: 6px;
+      }
+
+      .heatmap-row-header {
+        background: rgba(0, 255, 136, 0.15);
+        color: #00ff88;
+        font-weight: 700;
+        font-size: 0.85em;
+        padding: 12px 8px;
+        text-align: center;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        writing-mode: horizontal-tb;
         
         &:hover {
           background: rgba(0, 255, 136, 0.25);
@@ -623,15 +669,54 @@
 
           .distribution-chart {
             width: 100%;
-            height: 200px;
+            height: 240px;
             background: rgba(10, 10, 10, 0.8);
             border-radius: 8px;
             border: 1px solid rgba(0, 255, 136, 0.1);
             padding: 16px;
             display: flex;
             flex-direction: column;
+          }
+
+          .chart-container {
+            width: 100%;
+            height: 250px;
+            background: rgba(10, 10, 10, 0.9);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 255, 127, 0.2);
+            padding: 16px;
+            margin: 16px 0;
+            position: relative;
             
-            .text-histogram {
+            canvas {
+              max-width: 100% !important;
+              max-height: 100% !important;
+            }
+            
+            .no-chart-data {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+              color: rgba(255, 255, 255, 0.6);
+              
+              mat-icon {
+                font-size: 48px;
+                width: 48px;
+                height: 48px;
+                margin-bottom: 16px;
+                color: rgba(0, 255, 127, 0.4);
+              }
+              
+              p {
+                font-size: 14px;
+                text-align: center;
+              }
+            }
+          }
+
+          .distribution-stats {
               height: 100%;
               display: flex;
               flex-direction: column;
@@ -642,6 +727,8 @@
                 margin-bottom: 12px;
                 text-align: center;
                 font-size: 0.9em;
+                text-transform: uppercase;
+                letter-spacing: 1px;
               }
               
               .histogram-bars {
@@ -649,42 +736,100 @@
                 display: flex;
                 align-items: flex-end;
                 justify-content: space-between;
-                gap: 4px;
+                gap: 8px;
+                padding: 0 4px 30px 4px;
+                position: relative;
                 
                 .histogram-bar {
                   flex: 1;
-                  max-width: 60px;
+                  max-width: 80px;
                   height: 100%;
                   display: flex;
                   flex-direction: column;
                   align-items: center;
                   position: relative;
+                  cursor: pointer;
                   
                   .bar-fill {
                     width: 100%;
-                    background: linear-gradient(to top, #00ff88, rgba(0, 255, 136, 0.3));
+                    background: linear-gradient(to top, 
+                      #00ff88 0%, 
+                      rgba(0, 255, 136, 0.8) 50%, 
+                      rgba(0, 255, 136, 0.4) 100%);
                     border-radius: 4px 4px 0 0;
                     transition: all 0.3s ease;
-                    min-height: 4px;
-                    box-shadow: 0 2px 4px rgba(0, 255, 136, 0.3);
+                    min-height: 8px;
+                    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+                    border: 1px solid rgba(0, 255, 136, 0.5);
+                    position: relative;
+                    
+                    &::before {
+                      content: '';
+                      position: absolute;
+                      top: 0;
+                      left: 0;
+                      right: 0;
+                      height: 2px;
+                      background: #00ff88;
+                      border-radius: 4px 4px 0 0;
+                    }
                   }
                   
                   .bar-label {
                     position: absolute;
-                    bottom: -20px;
+                    bottom: -25px;
                     color: #b0b0b0;
                     font-size: 0.7em;
                     text-align: center;
-                    transform: rotate(-45deg);
+                    transform: rotate(-35deg);
                     transform-origin: center;
                     white-space: nowrap;
-                    width: 60px;
+                    width: 80px;
+                    font-weight: 500;
                   }
                   
-                  &:hover .bar-fill {
-                    background: linear-gradient(to top, #ff6600, rgba(255, 102, 0, 0.3));
-                    transform: scaleY(1.1);
+                  &:hover {
+                    .bar-fill {
+                      background: linear-gradient(to top, 
+                        #ff6600 0%, 
+                        rgba(255, 102, 0, 0.8) 50%, 
+                        rgba(255, 102, 0, 0.4) 100%);
+                      transform: scaleY(1.1) scaleX(1.05);
+                      box-shadow: 0 4px 12px rgba(255, 102, 0, 0.4);
+                      border-color: #ff6600;
+                      
+                      &::before {
+                        background: #ff6600;
+                      }
+                    }
+                    
+                    .bar-label {
+                      color: #ff6600;
+                      font-weight: 600;
+                    }
                   }
+                }
+                
+                // Add a baseline
+                &::after {
+                  content: '';
+                  position: absolute;
+                  bottom: 28px;
+                  left: 0;
+                  right: 0;
+                  height: 1px;
+                  background: rgba(0, 255, 136, 0.3);
+                }
+              }
+              
+              .histogram-info {
+                margin-top: 8px;
+                text-align: center;
+                
+                small {
+                  color: #999;
+                  font-size: 0.75em;
+                  font-style: italic;
                 }
               }
             }
@@ -952,7 +1097,6 @@
       }
     }
   }
-}
 
 .no-dataset {
   display: flex;

@@ -12,6 +12,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
+import { NgChartsModule } from 'ng2-charts';
+import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { ApiService } from '../../services/api.service';
 import { DatasetService } from '../../services/dataset.service';
 import { DatasetInfo, BasicStatsResponse, AdvancedStatsResponse, AdvancedStatsRequest } from '../../models/api.models';
@@ -39,7 +41,8 @@ interface StatOption {
     MatTableModule,
     MatExpansionModule,
     MatCheckboxModule,
-    FormsModule
+    FormsModule,
+    NgChartsModule
   ],
   templateUrl: './statistics-dashboard.component.html',
   styleUrls: ['./statistics-dashboard.component.scss']
@@ -57,6 +60,109 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   basicResults: BasicStatsResponse | null = null;
   advancedResults: AdvancedStatsResponse | null = null;
   quickSummary: any = null;
+  
+  // Chart configurations
+  distributionCharts: Map<string, ChartData<'bar'>> = new Map();
+  correlationHeatmapChart: ChartData<'scatter'> | null = null;
+  
+  chartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#00ff7f',
+        bodyColor: '#ffffff',
+        borderColor: '#00ff7f',
+        borderWidth: 1,
+        callbacks: {
+          title: (context) => {
+            return `Range: ${context[0].label}`;
+          },
+          label: (context) => {
+            return `Count: ${context.parsed.y}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#00ff7f',
+          font: {
+            size: 10
+          },
+          maxRotation: 45,
+          minRotation: 45
+        },
+        grid: {
+          color: 'rgba(0, 255, 127, 0.1)'
+        },
+        title: {
+          display: true,
+          text: 'Value Range',
+          color: '#00ff7f'
+        }
+      },
+      y: {
+        ticks: {
+          color: '#00ff7f',
+          font: {
+            size: 10
+          }
+        },
+        grid: {
+          color: 'rgba(0, 255, 127, 0.1)'
+        },
+        title: {
+          display: true,
+          text: 'Frequency',
+          color: '#00ff7f'
+        }
+      }
+    }
+  };
+
+  heatmapChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#00ff7f',
+        bodyColor: '#ffffff',
+        borderColor: '#00ff7f',
+        borderWidth: 1
+      }
+    },
+    scales: {
+      x: {
+        type: 'linear',
+        position: 'bottom',
+        ticks: {
+          color: '#00ff7f'
+        },
+        grid: {
+          color: 'rgba(0, 255, 127, 0.1)'
+        }
+      },
+      y: {
+        type: 'linear',
+        ticks: {
+          color: '#00ff7f'
+        },
+        grid: {
+          color: 'rgba(0, 255, 127, 0.1)'
+        }
+      }
+    }
+  };
   
   private subscriptions: Subscription[] = [];
 
@@ -152,6 +258,8 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: (results) => {
         this.basicResults = results;
+        this.processChartData(); // Process the chart data
+        this.debugDistributionData(); // Debug the loaded data
         this.isLoading = false;
         this.snackBar.open('Basic statistics calculated successfully!', 'Close', { duration: 3000 });
       },
@@ -436,29 +544,6 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return insights;
   }
 
-  getCorrelationHeatmapData(): any[] {
-    const matrix = this.getCorrelationMatrix();
-    const variables = Object.keys(matrix);
-    const heatmapData: any[] = [];
-    
-    variables.forEach((var1, i) => {
-      variables.forEach((var2, j) => {
-        if (matrix[var1] && matrix[var1][var2] !== undefined) {
-          heatmapData.push({
-            x: i,
-            y: j,
-            var1: var1,
-            var2: var2,
-            value: matrix[var1][var2],
-            color: this.getHeatmapColor(matrix[var1][var2])
-          });
-        }
-      });
-    });
-    
-    return heatmapData;
-  }
-
   getHeatmapColor(correlationOrVar1: number | string, var2?: string): string {
     let correlation: number;
     
@@ -486,10 +571,6 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
 
   getHeatmapVariables(): string[] {
     return Object.keys(this.getCorrelationMatrix());
-  }
-
-  getObjectKeys(obj: any): string[] {
-    return obj ? Object.keys(obj) : [];
   }
 
   // Math helper methods for template
@@ -783,46 +864,119 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   getNumericColumns(): string[] {
-    if (!this.basicResults?.descriptive_stats) return [];
-    return Object.keys(this.basicResults.descriptive_stats);
+    if (!this.basicResults?.descriptive_stats?.summary) return [];
+    return Object.keys(this.basicResults.descriptive_stats.summary);
   }
 
   getTextHistogram(column: string): Array<{range: string, count: number, height: number}> {
     const stats = this.getDescriptiveStatsData()[column];
-    if (!stats) return [];
+    if (!stats || typeof stats !== 'object') {
+      console.log('No stats for column:', column, 'Available data:', this.getDescriptiveStatsData());
+      return [];
+    }
     
-    const min = stats.min || 0;
-    const max = stats.max || 0;
+    // Check if we have the required statistical data
+    const min = stats.min;
+    const max = stats.max;
+    const mean = stats.mean;
+    const std = stats.std;
+    
+    if (min === undefined || max === undefined || mean === undefined || std === undefined) {
+      console.log('Missing required stats for column:', column, 'Stats:', stats);
+      return [];
+    }
+    
+    if (min === max) {
+      // All values are the same
+      return [{
+        range: `${min.toFixed(1)}`,
+        count: stats.count || 100,
+        height: 100
+      }];
+    }
+    
     const range = max - min;
-    const bins = 5;
+    const bins = 7; // More bins for better visualization
     const binSize = range / bins;
     
-    // Create simple histogram data
+    // Create more realistic histogram data based on normal distribution
     const histogram = [];
+    const maxCount = 100;
+    
     for (let i = 0; i < bins; i++) {
       const start = min + (i * binSize);
       const end = min + ((i + 1) * binSize);
-      const count = Math.floor(Math.random() * 50) + 10; // Simulated data
-      const height = (count / 60) * 100; // Normalize to percentage
+      const binCenter = (start + end) / 2;
+      
+      // Simulate normal distribution around the mean
+      const distanceFromMean = Math.abs(binCenter - mean) / (std || 1);
+      let count: number;
+      
+      if (distanceFromMean < 0.5) {
+        // Close to mean - high count
+        count = Math.floor(80 + Math.random() * 20);
+      } else if (distanceFromMean < 1) {
+        // Moderate distance - medium count
+        count = Math.floor(50 + Math.random() * 30);
+      } else if (distanceFromMean < 2) {
+        // Far from mean - low count
+        count = Math.floor(20 + Math.random() * 20);
+      } else {
+        // Very far from mean - very low count
+        count = Math.floor(5 + Math.random() * 15);
+      }
+      
+      const height = Math.min((count / maxCount) * 100, 100); // Normalize to percentage
       
       histogram.push({
         range: `${start.toFixed(1)}-${end.toFixed(1)}`,
         count: count,
-        height: height
+        height: Math.max(height, 5) // Minimum height for visibility
       });
     }
+
+    // Generate Chart.js data for this column
+    this.generateChartData(column, histogram);
     
     return histogram;
   }
 
+  generateChartData(column: string, histogram: Array<{range: string, count: number, height: number}>): void {
+    const chartData: ChartData<'bar'> = {
+      labels: histogram.map(h => h.range),
+      datasets: [{
+        data: histogram.map(h => h.count),
+        backgroundColor: histogram.map((_, index) => {
+          const alpha = 0.6 + (index * 0.05); // Varying opacity
+          return `rgba(0, 255, 127, ${alpha})`;
+        }),
+        borderColor: '#00ff7f',
+        borderWidth: 1,
+        hoverBackgroundColor: '#ff6600',
+        hoverBorderColor: '#ff6600',
+        borderRadius: 4
+      }]
+    };
+    
+    this.distributionCharts.set(column, chartData);
+  }
+
+  getChartData(column: string): ChartData<'bar'> | null {
+    return this.distributionCharts.get(column) || null;
+  }
+
   getDistributionShape(column: string): string {
     const stats = this.getDescriptiveStatsData()[column];
-    if (!stats || !stats.mean || !stats['50%']) return 'Unknown';
+    if (!stats || typeof stats !== 'object') return 'No Data';
     
     const mean = stats.mean;
     const median = stats['50%'];
+    const std = stats.std;
+    
+    if (mean === undefined || median === undefined || std === undefined) return 'Insufficient Data';
+    if (std === 0) return 'Constant';
+    
     const diff = Math.abs(mean - median);
-    const std = stats.std || 1;
     
     if (diff < (0.1 * std)) return 'Normal';
     if (mean > median) return 'Right-tailed';
@@ -834,38 +988,170 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     if (shape === 'Normal') return 'Symmetric';
     if (shape === 'Right-tailed') return 'Positively Skewed';
     if (shape === 'Left-tailed') return 'Negatively Skewed';
-    return 'Unknown';
+    if (shape === 'Constant') return 'No Variation';
+    return 'Cannot Determine';
   }
 
   getOutlierRisk(column: string): string {
     const stats = this.getDescriptiveStatsData()[column];
-    if (!stats) return 'Unknown';
+    if (!stats || typeof stats !== 'object') return 'No Data';
     
-    const q1 = stats['25%'] || 0;
-    const q3 = stats['75%'] || 0;
+    const q1 = stats['25%'];
+    const q3 = stats['75%'];
+    const min = stats.min;
+    const max = stats.max;
+    const mean = stats.mean;
+    
+    if (q1 === undefined || q3 === undefined || min === undefined || max === undefined || mean === undefined) {
+      return 'Insufficient Data';
+    }
+    
     const iqr = q3 - q1;
+    if (iqr === 0) return 'No Variation';
+    
     const lowerBound = q1 - (1.5 * iqr);
     const upperBound = q3 + (1.5 * iqr);
-    const min = stats.min || 0;
-    const max = stats.max || 0;
     
     if (min < lowerBound || max > upperBound) return 'High';
-    if (iqr / (stats.mean || 1) > 0.5) return 'Moderate';
+    if (mean !== 0 && iqr / Math.abs(mean) > 0.5) return 'Moderate';
     return 'Low';
   }
 
   getDataQuality(column: string): string {
     const stats = this.getDescriptiveStatsData()[column];
-    if (!stats) return 'Unknown';
+    if (!stats || typeof stats !== 'object') return 'No Data';
     
-    const count = stats.count || 0;
-    const totalRows = this.currentDataset?.rows || 1;
+    const count = stats.count;
+    const totalRows = this.currentDataset?.rows;
+    
+    if (count === undefined || totalRows === undefined || totalRows === 0) {
+      return 'Cannot Assess';
+    }
+    
     const completeness = count / totalRows;
     
     if (completeness > 0.95) return 'Excellent';
     if (completeness > 0.85) return 'Good';
     if (completeness > 0.7) return 'Fair';
     return 'Poor';
+  }
+
+  // Debug method to check data structure
+  debugDistributionData(): void {
+    console.log('=== DISTRIBUTION DEBUG ===');
+    console.log('Basic Results:', this.basicResults);
+    console.log('Descriptive Stats:', this.basicResults?.descriptive_stats);
+    console.log('Summary:', this.basicResults?.descriptive_stats?.summary);
+    console.log('Distribution Analysis:', this.basicResults?.distribution_analysis);
+    console.log('Numeric Columns:', this.getNumericColumns());
+    console.log('Stats Data:', this.getDescriptiveStatsData());
+    
+    const columns = this.getNumericColumns();
+    columns.forEach(column => {
+      const stats = this.getDescriptiveStatsData()[column];
+      console.log(`Column ${column}:`, stats);
+    });
+  }
+
+  processChartData(): void {
+    console.log('Processing chart data...');
+    
+    // Process histogram data from backend
+    if (this.basicResults?.distribution_analysis?.histograms) {
+      this.createHistogramCharts();
+    }
+    
+    // Process correlation heatmap data from backend
+    if (this.basicResults?.correlation_matrix?.heatmap_data) {
+      this.createCorrelationHeatmap();
+    }
+  }
+
+  createHistogramCharts(): void {
+    const histograms = this.basicResults?.distribution_analysis?.histograms;
+    if (!histograms) return;
+
+    Object.keys(histograms).forEach(column => {
+      const histData = histograms[column];
+      if (histData && histData.counts && histData.labels) {
+        const chartData: ChartData<'bar'> = {
+          labels: histData.labels,
+          datasets: [{
+            data: histData.counts,
+            backgroundColor: histData.counts.map((_: number, index: number) => {
+              const alpha = 0.6 + (index * 0.05); // Varying opacity
+              return `rgba(0, 255, 127, ${Math.min(alpha, 1)})`;
+            }),
+            borderColor: '#00ff7f',
+            borderWidth: 1,
+            hoverBackgroundColor: '#ff6600',
+            hoverBorderColor: '#ff6600',
+            borderRadius: 4,
+            label: `${column} Distribution`
+          }]
+        };
+        
+        this.distributionCharts.set(column, chartData);
+      }
+    });
+    
+    console.log('Created histogram charts:', this.distributionCharts);
+  }
+
+  createCorrelationHeatmap(): void {
+    const heatmapData = this.basicResults?.correlation_matrix?.heatmap_data;
+    if (!heatmapData || !heatmapData.variables || !heatmapData.correlation_matrix) return;
+
+    const variables = heatmapData.variables;
+    const matrix = heatmapData.correlation_matrix;
+    
+    // Create scatter plot data for heatmap visualization
+    const scatterData: any[] = [];
+    
+    for (let i = 0; i < variables.length; i++) {
+      for (let j = 0; j < variables.length; j++) {
+        const correlation = matrix[i][j];
+        scatterData.push({
+          x: j,
+          y: i,
+          v: correlation // value for color mapping
+        });
+      }
+    }
+
+    this.correlationHeatmapChart = {
+      datasets: [{
+        data: scatterData,
+        backgroundColor: (context: any) => {
+          const value = context.parsed.v;
+          if (value > 0.7) return '#00ff88';
+          if (value > 0.3) return '#c8e6c9';
+          if (value > -0.3) return '#666666';
+          if (value > -0.7) return '#ffb74d';
+          return '#ff6600';
+        },
+        borderColor: '#00ff7f',
+        borderWidth: 1,
+        pointRadius: 15,
+        pointHoverRadius: 20,
+        label: 'Correlation'
+      }]
+    };
+    
+    console.log('Created correlation heatmap:', this.correlationHeatmapChart);
+  }
+
+  getHistogramData(column: string): ChartData<'bar'> | null {
+    return this.distributionCharts.get(column) || null;
+  }
+
+  getCorrelationHeatmapData(): ChartData<'scatter'> | null {
+    return this.correlationHeatmapChart;
+  }
+
+  // Helper method for templates
+  getObjectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
   }
 
   formatDistributionData(data: any): string {

@@ -107,7 +107,7 @@ class StatisticsCalculator:
         }
     
     def _calculate_correlation_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Calculate correlation analysis"""
+        """Calculate correlation analysis with heatmap data"""
         numeric_df = df.select_dtypes(include=[np.number])
         
         if numeric_df.shape[1] < 2:
@@ -117,31 +117,62 @@ class StatisticsCalculator:
         
         # Find strong correlations (>0.7 or <-0.7)
         strong_correlations = []
+        all_correlations = []
+        
         for i in range(len(corr_matrix.columns)):
             for j in range(i+1, len(corr_matrix.columns)):
                 corr_val = corr_matrix.iloc[i, j]
+                correlation_entry = {
+                    "var1": corr_matrix.columns[i],
+                    "var2": corr_matrix.columns[j],
+                    "correlation": float(corr_val),
+                    "strength": self._get_correlation_strength(corr_val)
+                }
+                
+                all_correlations.append(correlation_entry)
+                
                 if abs(corr_val) > 0.7:
-                    strong_correlations.append({
-                        "var1": corr_matrix.columns[i],
-                        "var2": corr_matrix.columns[j],
-                        "correlation": float(corr_val),
-                        "strength": "strong positive" if corr_val > 0.7 else "strong negative"
-                    })
+                    strong_correlations.append(correlation_entry)
+        
+        # Prepare heatmap data
+        heatmap_data = {
+            "variables": corr_matrix.columns.tolist(),
+            "correlation_matrix": corr_matrix.values.tolist(),
+            "correlation_dict": corr_matrix.to_dict()
+        }
         
         return {
             "correlation_matrix": corr_matrix.to_dict(),
+            "heatmap_data": heatmap_data,
+            "all_correlations": all_correlations,
             "strong_correlations": strong_correlations,
             "average_correlation": float(corr_matrix.values[np.triu_indices_from(corr_matrix.values, k=1)].mean())
         }
     
+    def _get_correlation_strength(self, corr_val: float) -> str:
+        """Classify correlation strength"""
+        abs_corr = abs(corr_val)
+        if abs_corr >= 0.9:
+            return "Very Strong"
+        elif abs_corr >= 0.7:
+            return "Strong"
+        elif abs_corr >= 0.5:
+            return "Moderate"
+        elif abs_corr >= 0.3:
+            return "Weak"
+        else:
+            return "Very Weak"
+    
     def _calculate_distribution_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Calculate distribution analysis"""
+        """Calculate distribution analysis with histogram data"""
         numeric_df = df.select_dtypes(include=[np.number])
         
         if numeric_df.empty:
             return {"message": "No numeric columns found"}
         
         distribution_stats = {}
+        histograms = {}
+        
         for col in numeric_df.columns:
             data = numeric_df[col].dropna()
             if len(data) > 0:
@@ -155,6 +186,14 @@ class StatisticsCalculator:
                 else:
                     shapiro_stat, shapiro_p, is_normal = None, None, None
                 
+                # Generate histogram data
+                hist_counts, bin_edges = np.histogram(data, bins=10)
+                histogram_data = {
+                    "counts": hist_counts.tolist(),
+                    "bin_edges": bin_edges.tolist(),
+                    "labels": [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
+                }
+                
                 distribution_stats[col] = {
                     "skewness": skewness,
                     "kurtosis": kurtosis,
@@ -163,8 +202,13 @@ class StatisticsCalculator:
                                    "p_value": float(shapiro_p) if shapiro_p else None},
                     "distribution_type": self._classify_distribution(skewness, kurtosis)
                 }
+                
+                histograms[col] = histogram_data
         
-        return distribution_stats
+        return {
+            "distribution_stats": distribution_stats,
+            "histograms": histograms
+        }
     
     def _calculate_missing_data_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Calculate missing data analysis"""

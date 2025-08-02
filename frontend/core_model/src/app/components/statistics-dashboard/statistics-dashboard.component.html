@@ -282,56 +282,75 @@
               </div>
 
               <!-- Correlation Heatmap Visualization -->
-              <div class="heatmap-section" *ngIf="getHeatmapVariables().length > 0">
+              <div class="heatmap-section" *ngIf="getHeatmapVariables().length > 1">
                 <h3 class="section-title">
                   <mat-icon>grid_on</mat-icon>
-                  Correlation Heatmap
+                  Interactive Correlation Heatmap
                 </h3>
+                <p class="section-description">
+                  Visual correlation matrix showing relationships between variables. 
+                  <strong>Green</strong> indicates positive correlation, <strong>Orange</strong> indicates negative correlation.
+                </p>
                 
-                <div class="heatmap-container">
-                  <div class="heatmap-grid" 
-                       [style.grid-template-columns]="'auto repeat(' + getHeatmapVariables().length + ', 1fr)'">
-                    <!-- Empty corner cell -->
-                    <div class="heatmap-corner"></div>
-                    
-                    <!-- Column Headers -->
-                    <div class="heatmap-header" *ngFor="let variable of getHeatmapVariables()">
-                      {{ variable }}
-                    </div>
-                    
-                    <!-- Row Headers and Heatmap Cells -->
-                    <ng-container *ngFor="let rowVar of getHeatmapVariables()">
-                      <!-- Row Header -->
-                      <div class="heatmap-row-header">{{ rowVar }}</div>
-                      
-                      <!-- Correlation Cells for this row -->
-                      <div *ngFor="let colVar of getHeatmapVariables()" 
-                           class="heatmap-cell"
-                           [style.background-color]="getHeatmapColor(rowVar, colVar)"
-                           [title]="rowVar + ' vs ' + colVar + ': ' + formatNumber(getCorrelationValue(rowVar, colVar))">
-                        <span class="cell-value">{{ formatNumber(getCorrelationValue(rowVar, colVar)) }}</span>
-                      </div>
-                    </ng-container>
-                  </div>
+                <!-- Chart.js Heatmap -->
+                <div class="heatmap-chart-container">
+                  <canvas 
+                    #correlationHeatmap
+                    baseChart
+                    *ngIf="getCorrelationHeatmapData()"
+                    [data]="getCorrelationHeatmapData()!"
+                    [options]="heatmapChartOptions"
+                    [type]="'scatter'"
+                    [width]="600"
+                    [height]="400">
+                  </canvas>
                   
-                  <!-- Heatmap Legend -->
-                  <div class="heatmap-legend">
-                    <div class="legend-item">
-                      <div class="legend-color" style="background: #ff6600;"></div>
-                      <span>Strong Negative (-1.0 to -0.7)</span>
+                  <!-- Fallback: Custom Grid Heatmap -->
+                  <div *ngIf="!getCorrelationHeatmapData()" class="custom-heatmap-container">
+                    <div class="heatmap-grid" 
+                         [style.grid-template-columns]="'120px repeat(' + getHeatmapVariables().length + ', minmax(60px, 1fr))'">
+                      <!-- Empty corner cell -->
+                      <div class="heatmap-corner"></div>
+                      
+                      <!-- Column Headers -->
+                      <div class="heatmap-header" *ngFor="let variable of getHeatmapVariables()">
+                        {{ variable }}
+                      </div>
+                      
+                      <!-- Row Headers and Heatmap Cells -->
+                      <ng-container *ngFor="let rowVar of getHeatmapVariables()">
+                        <!-- Row Header -->
+                        <div class="heatmap-row-header">{{ rowVar }}</div>
+                        
+                        <!-- Correlation Cells for this row -->
+                        <div *ngFor="let colVar of getHeatmapVariables()" 
+                             class="heatmap-cell"
+                             [style.background-color]="getHeatmapColor(rowVar, colVar)"
+                             [title]="rowVar + ' ↔ ' + colVar + ': ' + formatNumber(getCorrelationValue(rowVar, colVar))">
+                          <span class="cell-value">{{ formatNumber(getCorrelationValue(rowVar, colVar)) }}</span>
+                        </div>
+                      </ng-container>
                     </div>
-                    <div class="legend-item">
-                      <div class="legend-color" style="background: #ffb74d;"></div>
-                      <span>Weak Negative (-0.7 to 0)</span>
-                    </div>
-                    <div class="legend-item">
-                      <div class="legend-color" style="background: #c8e6c9;"></div>
-                      <span>Weak Positive (0 to 0.7)</span>
-                    </div>
-                    <div class="legend-item">
-                      <div class="legend-color" style="background: #00ff88;"></div>
-                      <span>Strong Positive (0.7 to 1.0)</span>
-                    </div>
+                  </div>
+                </div>
+                
+                <!-- Heatmap Legend -->
+                <div class="heatmap-legend">
+                  <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6600;"></div>
+                    <span>Strong Negative (-1.0 to -0.7)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color" style="background: #ffb74d;"></div>
+                    <span>Weak Negative (-0.7 to 0)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color" style="background: #c8e6c9;"></div>
+                    <span>Weak Positive (0 to 0.7)</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color" style="background: #00ff88;"></div>
+                    <span>Strong Positive (0.7 to 1.0)</span>
                   </div>
                 </div>
               </div>
@@ -483,19 +502,23 @@
                       {{ column }} Distribution
                     </h4>
                     
-                    <!-- Simple Text-based Histogram -->
-                    <div class="distribution-chart">
-                      <div class="text-histogram">
-                        <div class="histogram-title">Distribution Pattern</div>
-                        <div class="histogram-bars">
-                          <div *ngFor="let bar of getTextHistogram(column)" 
-                               class="histogram-bar"
-                               [style.height.%]="bar.height"
-                               [title]="'Range: ' + bar.range + ', Count: ' + bar.count">
-                            <div class="bar-fill" [style.height.%]="bar.height"></div>
-                            <div class="bar-label">{{ bar.range }}</div>
-                          </div>
-                        </div>
+                    <!-- Real Chart.js Histogram -->
+                    <div class="chart-container">
+                      <canvas 
+                        #distributionChart
+                        baseChart
+                        *ngIf="getHistogramData(column)"
+                        [data]="getHistogramData(column)!"
+                        [options]="chartOptions"
+                        [type]="'bar'"
+                        [width]="400"
+                        [height]="200">
+                      </canvas>
+                      
+                      <!-- Fallback message if no data -->
+                      <div *ngIf="!getHistogramData(column)" class="no-chart-data">
+                        <mat-icon>info</mat-icon>
+                        <p>No histogram data available for {{ column }}</p>
                       </div>
                     </div>
                     

@@ -196,12 +196,295 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   getDescriptiveStatsKeys(): string[] {
-    return this.basicResults?.descriptive_stats ? Object.keys(this.basicResults.descriptive_stats) : [];
+    // Access the summary object from descriptive_stats
+    return this.basicResults?.descriptive_stats?.summary ? Object.keys(this.basicResults.descriptive_stats.summary) : [];
+  }
+
+  getDescriptiveStatsData(): any {
+    return this.basicResults?.descriptive_stats?.summary || {};
+  }
+
+  getAdditionalStatsData(): any {
+    return this.basicResults?.descriptive_stats?.additional_stats || {};
+  }
+
+  getDescriptiveInsights(): any[] {
+    if (!this.basicResults?.descriptive_stats?.summary) return [];
+    
+    const summary = this.basicResults.descriptive_stats.summary;
+    const additional = this.basicResults.descriptive_stats.additional_stats || {};
+    const insights: any[] = [];
+    
+    Object.keys(summary).forEach(column => {
+      const stats = summary[column];
+      const extraStats = additional[column] || {};
+      
+      // Generate insights for each column
+      const columnInsights = {
+        column: column,
+        dataDistribution: this.analyzeDataDistribution(stats),
+        variability: this.analyzeVariability(stats, extraStats),
+        outlierRisk: this.analyzeOutlierRisk(stats),
+        businessImplication: this.generateBusinessImplication(column, stats, extraStats)
+      };
+      
+      insights.push(columnInsights);
+    });
+    
+    return insights;
+  }
+
+  private analyzeDataDistribution(stats: any): string {
+    const mean = stats.mean || 0;
+    const median = stats['50%'] || 0;
+    const skewness = Math.abs(mean - median) / (stats.std || 1);
+    
+    if (skewness < 0.1) {
+      return "📊 Normally distributed - data is well-balanced around the center";
+    } else if (mean > median) {
+      return "📈 Right-skewed - has some unusually high values pulling the average up";
+    } else {
+      return "📉 Left-skewed - has some unusually low values pulling the average down";
+    }
+  }
+
+  private analyzeVariability(stats: any, extraStats: any): string {
+    const cv = extraStats.coefficient_of_variation;
+    
+    if (!cv || cv === null) {
+      return "📏 Variability cannot be assessed (mean is zero)";
+    }
+    
+    if (cv < 0.1) {
+      return "🎯 Low variability - values are tightly clustered around the mean";
+    } else if (cv < 0.3) {
+      return "📊 Moderate variability - reasonable spread of values";
+    } else {
+      return "🌊 High variability - values are widely dispersed";
+    }
+  }
+
+  private analyzeOutlierRisk(stats: any): string {
+    const q1 = stats['25%'] || 0;
+    const q3 = stats['75%'] || 0;
+    const iqr = q3 - q1;
+    const lowerBound = q1 - 1.5 * iqr;
+    const upperBound = q3 + 1.5 * iqr;
+    const min = stats.min || 0;
+    const max = stats.max || 0;
+    
+    const hasOutliers = min < lowerBound || max > upperBound;
+    
+    if (hasOutliers) {
+      return "⚠️ Potential outliers detected - may need data cleaning or special attention";
+    } else {
+      return "✅ No significant outliers - data appears clean and consistent";
+    }
+  }
+
+  private generateBusinessImplication(column: string, stats: any, extraStats: any): string {
+    const range = extraStats.range || 0;
+    const mean = stats.mean || 0;
+    const std = stats.std || 0;
+    
+    // Generic business insights based on statistical properties
+    const insights = [];
+    
+    if (std / mean > 0.5) {
+      insights.push("High volatility indicates need for risk management");
+    }
+    
+    if (range > mean * 3) {
+      insights.push("Wide range suggests diverse scenarios to consider");
+    }
+    
+    if (stats['50%'] && Math.abs(stats.mean - stats['50%']) / stats.mean > 0.2) {
+      insights.push("Asymmetric distribution may affect forecasting accuracy");
+    }
+    
+    if (insights.length === 0) {
+      insights.push("Stable and predictable pattern suitable for modeling");
+    }
+    
+    return "💡 " + insights.join("; ");
   }
 
   getCorrelationPairs(): any[] {
-    if (!this.basicResults?.correlation_matrix?.correlation_pairs) return [];
-    return this.basicResults.correlation_matrix.correlation_pairs;
+    if (!this.basicResults?.correlation_matrix?.strong_correlations) return [];
+    return this.basicResults.correlation_matrix.strong_correlations;
+  }
+
+  getCorrelationMatrix(): any {
+    return this.basicResults?.correlation_matrix?.correlation_matrix || {};
+  }
+
+  getCorrelationMatrixEntries(): any[] {
+    const matrix = this.getCorrelationMatrix();
+    const entries: any[] = [];
+    
+    Object.keys(matrix).forEach(var1 => {
+      Object.keys(matrix[var1]).forEach(var2 => {
+        if (var1 !== var2) {
+          entries.push({
+            var1: var1,
+            var2: var2,
+            correlation: matrix[var1][var2],
+            strength: this.getCorrelationStrength(matrix[var1][var2]),
+            interpretation: this.getCorrelationInterpretation(var1, var2, matrix[var1][var2])
+          });
+        }
+      });
+    });
+    
+    // Remove duplicates and sort by absolute correlation value
+    const uniqueEntries = entries.filter((entry, index, self) => 
+      index === self.findIndex(e => 
+        (e.var1 === entry.var1 && e.var2 === entry.var2) || 
+        (e.var1 === entry.var2 && e.var2 === entry.var1)
+      )
+    );
+    
+    return uniqueEntries.sort((a, b) => Math.abs(b.correlation) - Math.abs(a.correlation));
+  }
+
+  getCorrelationStrength(correlation: number): string {
+    const abs_corr = Math.abs(correlation);
+    if (abs_corr >= 0.9) return 'Very Strong';
+    if (abs_corr >= 0.7) return 'Strong';
+    if (abs_corr >= 0.5) return 'Moderate';
+    if (abs_corr >= 0.3) return 'Weak';
+    return 'Very Weak';
+  }
+
+  getCorrelationInterpretation(var1: string, var2: string, correlation: number): string {
+    const strength = this.getCorrelationStrength(correlation);
+    const direction = correlation > 0 ? 'positive' : 'negative';
+    const abs_corr = Math.abs(correlation);
+    
+    let interpretation = `${strength} ${direction} relationship. `;
+    
+    if (abs_corr >= 0.7) {
+      interpretation += direction === 'positive' ? 
+        `As ${var1} increases, ${var2} tends to increase significantly.` :
+        `As ${var1} increases, ${var2} tends to decrease significantly.`;
+    } else if (abs_corr >= 0.5) {
+      interpretation += direction === 'positive' ? 
+        `${var1} and ${var2} show a noticeable tendency to move together.` :
+        `${var1} and ${var2} show a noticeable tendency to move in opposite directions.`;
+    } else if (abs_corr >= 0.3) {
+      interpretation += `There is a weak relationship between ${var1} and ${var2}.`;
+    } else {
+      interpretation += `${var1} and ${var2} show little to no linear relationship.`;
+    }
+    
+    return interpretation;
+  }
+
+  getCorrelationInsights(): any[] {
+    const matrix = this.getCorrelationMatrix();
+    if (!Object.keys(matrix).length) return [];
+    
+    const insights: any[] = [];
+    const entries = this.getCorrelationMatrixEntries();
+    
+    // Overall correlation summary
+    const avgCorrelation = this.basicResults?.correlation_matrix?.average_correlation || 0;
+    insights.push({
+      type: 'overview',
+      title: 'Dataset Correlation Overview',
+      description: `Average correlation strength: ${Math.abs(avgCorrelation).toFixed(3)}. ${
+        Math.abs(avgCorrelation) > 0.5 ? 
+        'Variables show strong interconnections - consider multicollinearity.' :
+        Math.abs(avgCorrelation) > 0.3 ?
+        'Variables show moderate relationships - good for predictive modeling.' :
+        'Variables are relatively independent - diverse feature set.'
+      }`,
+      icon: 'analytics',
+      color: Math.abs(avgCorrelation) > 0.7 ? 'warn' : Math.abs(avgCorrelation) > 0.3 ? 'primary' : 'accent'
+    });
+    
+    // Strong correlations insight
+    const strongCorrelations = entries.filter(e => Math.abs(e.correlation) >= 0.7);
+    if (strongCorrelations.length > 0) {
+      insights.push({
+        type: 'strong',
+        title: `${strongCorrelations.length} Strong Relationship${strongCorrelations.length > 1 ? 's' : ''} Found`,
+        description: `Strong correlations may indicate redundant features or important relationships for prediction.`,
+        icon: 'link',
+        color: 'warn'
+      });
+    }
+    
+    // Feature importance insight
+    const correlationCounts = Object.keys(matrix).map(variable => ({
+      variable,
+      strongConnections: entries.filter(e => 
+        (e.var1 === variable || e.var2 === variable) && Math.abs(e.correlation) >= 0.5
+      ).length
+    })).sort((a, b) => b.strongConnections - a.strongConnections);
+    
+    if (correlationCounts.length > 0 && correlationCounts[0].strongConnections > 0) {
+      insights.push({
+        type: 'importance',
+        title: `${correlationCounts[0].variable} - Most Connected Variable`,
+        description: `Has ${correlationCounts[0].strongConnections} strong relationship${correlationCounts[0].strongConnections > 1 ? 's' : ''} with other variables. Key feature for analysis.`,
+        icon: 'hub',
+        color: 'primary'
+      });
+    }
+    
+    return insights;
+  }
+
+  getCorrelationHeatmapData(): any[] {
+    const matrix = this.getCorrelationMatrix();
+    const variables = Object.keys(matrix);
+    const heatmapData: any[] = [];
+    
+    variables.forEach((var1, i) => {
+      variables.forEach((var2, j) => {
+        if (matrix[var1] && matrix[var1][var2] !== undefined) {
+          heatmapData.push({
+            x: i,
+            y: j,
+            var1: var1,
+            var2: var2,
+            value: matrix[var1][var2],
+            color: this.getHeatmapColor(matrix[var1][var2])
+          });
+        }
+      });
+    });
+    
+    return heatmapData;
+  }
+
+  getHeatmapColor(correlation: number): string {
+    const abs_corr = Math.abs(correlation);
+    if (correlation > 0) {
+      if (abs_corr >= 0.8) return '#00ff88'; // Strong positive - neon green
+      if (abs_corr >= 0.6) return '#4caf50'; // Moderate positive - green
+      if (abs_corr >= 0.3) return '#8bc34a'; // Weak positive - light green
+      return '#c8e6c9'; // Very weak positive - pale green
+    } else {
+      if (abs_corr >= 0.8) return '#ff6600'; // Strong negative - neon orange
+      if (abs_corr >= 0.6) return '#ff9800'; // Moderate negative - orange
+      if (abs_corr >= 0.3) return '#ffb74d'; // Weak negative - light orange
+      return '#ffe0b2'; // Very weak negative - pale orange
+    }
+  }
+
+  getHeatmapVariables(): string[] {
+    return Object.keys(this.getCorrelationMatrix());
+  }
+
+  getObjectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
+
+  // Math helper methods for template
+  abs(value: number): number {
+    return Math.abs(value);
   }
 
   formatNumber(value: any): string {
@@ -209,6 +492,198 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       return value.toFixed(4);
     }
     return value?.toString() || '';
+  }
+
+  formatSummaryValue(value: any): string {
+    if (value === null || value === undefined) {
+      return 'N/A';
+    }
+    
+    if (typeof value === 'number') {
+      return value.toFixed(4);
+    }
+    
+    if (typeof value === 'string') {
+      return value;
+    }
+    
+    if (typeof value === 'object') {
+      // For objects, create a formatted display
+      if (Array.isArray(value)) {
+        return value.join(', ');
+      } else {
+        // For objects like column_types or missing_data, format as key-value pairs
+        const entries = Object.entries(value);
+        if (entries.length <= 3) {
+          // Show all if 3 or fewer entries
+          return entries.map(([k, v]) => `${k}: ${v}`).join(', ');
+        } else {
+          // Show first 3 and count
+          const displayed = entries.slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(', ');
+          return `${displayed} (+${entries.length - 3} more)`;
+        }
+      }
+    }
+    
+    return value.toString();
+  }
+
+  // Enhanced AI-driven summary interpretation
+  getAIInsights(): any[] {
+    if (!this.quickSummary) return [];
+    
+    const insights: any[] = [];
+    
+    // Dataset size insights
+    if (this.currentDataset) {
+      const totalCells = this.currentDataset.rows * this.currentDataset.columns;
+      const sizeCategory = totalCells > 1000000 ? 'large' : totalCells > 100000 ? 'medium' : 'small';
+      
+      insights.push({
+        type: 'dataset_size',
+        title: 'Dataset Overview',
+        description: this.getDatasetSizeInsight(sizeCategory, totalCells),
+        icon: 'storage',
+        color: 'primary'
+      });
+    }
+
+    // Memory usage insights
+    if (this.quickSummary.memory_usage) {
+      const memoryMB = parseFloat(this.quickSummary.memory_usage.toString().replace(' MB', ''));
+      insights.push({
+        type: 'memory',
+        title: 'Memory Efficiency',
+        description: this.getMemoryInsight(memoryMB),
+        icon: 'memory',
+        color: memoryMB > 100 ? 'warn' : 'accent'
+      });
+    }
+
+    // Column types insights
+    if (this.quickSummary.column_types) {
+      const columnTypes = this.quickSummary.column_types;
+      insights.push({
+        type: 'data_types',
+        title: 'Data Type Analysis',
+        description: this.getColumnTypesInsight(columnTypes),
+        icon: 'category',
+        color: 'primary'
+      });
+    }
+
+    // Missing data insights
+    if (this.quickSummary.missing_data) {
+      const missingData = this.quickSummary.missing_data;
+      insights.push({
+        type: 'data_quality',
+        title: 'Data Quality Assessment',
+        description: this.getMissingDataInsight(missingData),
+        icon: 'error_outline',
+        color: this.hasCriticalMissingData(missingData) ? 'warn' : 'accent'
+      });
+    }
+
+    return insights;
+  }
+
+  private getDatasetSizeInsight(category: string, totalCells: number): string {
+    const formattedCells = this.formatLargeNumber(totalCells);
+    
+    switch (category) {
+      case 'large':
+        return `This is a substantial dataset with ${formattedCells} data points. Perfect for advanced analytics, machine learning models, and comprehensive statistical analysis. Processing may take longer but will yield robust insights.`;
+      case 'medium':
+        return `A well-sized dataset with ${formattedCells} data points. Ideal for detailed analysis, pattern recognition, and reliable statistical inference. Good balance between depth and processing efficiency.`;
+      default:
+        return `A compact dataset with ${formattedCells} data points. Great for quick exploration, prototyping, and initial analysis. Fast processing enables rapid iteration and testing.`;
+    }
+  }
+
+  private getMemoryInsight(memoryMB: number): string {
+    if (memoryMB > 500) {
+      return `High memory usage (${memoryMB.toFixed(1)} MB). This dataset contains substantial information. Consider data optimization techniques for better performance, or ensure adequate system resources for analysis.`;
+    } else if (memoryMB > 100) {
+      return `Moderate memory footprint (${memoryMB.toFixed(1)} MB). This dataset is reasonably sized for most analytical operations. Good balance between data richness and computational efficiency.`;
+    } else if (memoryMB > 10) {
+      return `Efficient memory usage (${memoryMB.toFixed(1)} MB). This lightweight dataset allows for rapid processing and analysis. Ideal for quick insights and exploratory data analysis.`;
+    } else {
+      return `Very efficient memory usage (${memoryMB.toFixed(1)} MB). This compact dataset enables instant processing and real-time analysis capabilities.`;
+    }
+  }
+
+  private getColumnTypesInsight(columnTypes: any): string {
+    const types = Object.values(columnTypes);
+    const typeCount = Object.keys(columnTypes).length;
+    const numerics = types.filter(t => t === 'int64' || t === 'float64').length;
+    const categoricals = types.filter(t => t === 'object').length;
+    const others = typeCount - numerics - categoricals;
+
+    let insight = `Your dataset contains ${typeCount} columns with diverse data types: `;
+    
+    if (numerics > 0) {
+      insight += `${numerics} numerical columns (perfect for statistical analysis and ML models)`;
+    }
+    
+    if (categoricals > 0) {
+      insight += numerics > 0 ? `, ${categoricals} categorical columns (great for segmentation and classification)` : `${categoricals} categorical columns (ideal for grouping and pattern analysis)`;
+    }
+    
+    if (others > 0) {
+      insight += `, and ${others} specialized columns (dates, booleans, or complex types)`;
+    }
+    
+    insight += '. This mixed structure enables comprehensive analysis across multiple dimensions.';
+    
+    return insight;
+  }
+
+  private getMissingDataInsight(missingData: any): string {
+    const columns = Object.keys(missingData);
+    const totalMissing = Object.values(missingData).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+    const columnsWithMissing = columns.filter(col => Number(missingData[col]) > 0);
+    
+    if (totalMissing === 0) {
+      return `Excellent data quality! No missing values detected across all ${columns.length} columns. Your dataset is complete and ready for immediate analysis without preprocessing concerns.`;
+    }
+    
+    const missingPercentage = columnsWithMissing.length / columns.length * 100;
+    
+    if (missingPercentage > 50) {
+      return `Significant data gaps detected in ${columnsWithMissing.length} of ${columns.length} columns (${totalMissing} missing values total). Recommend thorough data cleaning and imputation strategies before analysis.`;
+    } else if (missingPercentage > 20) {
+      return `Moderate missing data found in ${columnsWithMissing.length} columns (${totalMissing} total gaps). Consider data imputation or removal strategies. Most columns remain complete for reliable analysis.`;
+    } else {
+      return `Minor data gaps in ${columnsWithMissing.length} columns (${totalMissing} missing values). Generally good data quality with isolated missing values that can be easily addressed through standard preprocessing.`;
+    }
+  }
+
+  private hasCriticalMissingData(missingData: any): boolean {
+    const columns = Object.keys(missingData);
+    const columnsWithMissing = columns.filter(col => Number(missingData[col]) > 0);
+    return columnsWithMissing.length / columns.length > 0.3; // More than 30% of columns have missing data
+  }
+
+  private formatLargeNumber(num: number): string {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString();
+  }
+
+  // Helper method to get properly typed summary entries
+  getSummaryEntries(): Array<{key: string, value: any}> {
+    if (!this.quickSummary) return [];
+    return Object.entries(this.quickSummary).map(([key, value]) => ({ key, value }));
+  }
+
+  // Helper method to format key names
+  formatKeyName(key: string): string {
+    return key.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
   }
 
   getFeatureImportanceEntries(): Array<{key: string, value: number}> {

@@ -988,13 +988,98 @@ html * {
   }
 }
 
+/* Ultimate Quick Summary Fix */
+.quick-summary, *[class*="quick"], *[class*="summary"] {
+  background: rgba(20, 20, 20, 0.8) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(0, 255, 136, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  
+  * {
+    background: transparent !important;
+    color: #e0e0e0 !important;
+    
+    &[style*="background"] {
+      background: transparent !important;
+    }
+    
+    &[style*="color"] {
+      color: #e0e0e0 !important;
+    }
+  }
+  
+  .label, .key, .name, strong {
+    color: #00ff88 !important;
+    font-weight: 600 !important;
+  }
+  
+  .value, .data, .content, .info {
+    color: #e0e0e0 !important;
+  }
+  
+  /* Target any nested elements */
+  div, span, p, pre, code {
+    background: transparent !important;
+    color: #e0e0e0 !important;
+    
+    &[style*="background-color"],
+    &[style*="background:"] {
+      background: transparent !important;
+    }
+  }
+}
+
+/* Extreme override for all white elements */
+body {
+  * {
+    &[style*="background"],
+    &[class*="white"],
+    &[class*="light"],
+    &[class*="bg-white"] {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 255, 136, 0.2) !important;
+      border-radius: 6px !important;
+      padding: 4px 8px !important;
+      
+      * {
+        color: #e0e0e0 !important;
+      }
+    }
+  }
+}
+
+/* Memory Usage and Column Types Specific Fix */
+*[class*="memory"], *[class*="column"], *[class*="type"], *[class*="usage"],
+*[class*="Memory"], *[class*="Column"], *[class*="Type"], *[class*="Usage"] {
+  background: rgba(20, 20, 20, 0.8) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(0, 255, 136, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  
+  * {
+    background: transparent !important;
+    color: #e0e0e0 !important;
+  }
+  
+  .title, .header, .label, .key {
+    color: #00ff88 !important;
+    font-weight: 600 !important;
+  }
+  
+  .value, .data, .content, .result {
+    color: #e0e0e0 !important;
+  }
+}
+
 /* Brute force override for ANY background property */
 * {
   &[style] {
-    background: rgba(20, 20, 20, 0.8) !important;
-    color: #e0e0e0 !important;
-    
-    &:not(.mat-icon):not(mat-icon):not([class*="icon"]) {
+    &:not(.mat-icon):not(mat-icon):not([class*="icon"]):not([class*="button"]):not([class*="fab"]) {
+      background: rgba(20, 20, 20, 0.8) !important;
+      color: #e0e0e0 !important;
       border: 1px solid rgba(0, 255, 136, 0.2) !important;
       border-radius: 6px !important;
       padding: 6px 10px !important;

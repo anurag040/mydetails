@@ -17,21 +17,45 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Quick Summary -->
+  <!-- AI-Powered Quick Summary -->
   <mat-card class="summary-card" *ngIf="quickSummary">
     <mat-card-header>
       <mat-card-title>
-        <mat-icon>summarize</mat-icon>
-        Quick Summary
+        <mat-icon>psychology</mat-icon>
+        AI-Powered Dataset Insights
       </mat-card-title>
+      <mat-card-subtitle>Intelligent analysis of your data characteristics</mat-card-subtitle>
     </mat-card-header>
     
     <mat-card-content>
-      <div class="summary-grid">
-        <div class="summary-item" *ngFor="let item of quickSummary | keyvalue">
-          <span class="summary-label">{{ item.key }}</span>
-          <span class="summary-value">{{ formatNumber(item.value) }}</span>
+      <div class="ai-insights-container">
+        <div class="insight-card" *ngFor="let insight of getAIInsights()">
+          <div class="insight-header">
+            <mat-icon [ngClass]="'insight-icon-' + insight.color">{{ insight.icon }}</mat-icon>
+            <h4 class="insight-title">{{ insight.title }}</h4>
+          </div>
+          <p class="insight-description">{{ insight.description }}</p>
         </div>
+        
+        <!-- Raw Data Toggle (for advanced users) -->
+        <mat-expansion-panel class="raw-data-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>code</mat-icon>
+              Technical Details
+            </mat-panel-title>
+            <mat-panel-description>
+              View raw data metrics for advanced analysis
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+          
+          <div class="summary-grid">
+            <div class="summary-item" *ngFor="let item of getSummaryEntries()">
+              <span class="summary-label">{{ formatKeyName(item.key) }}</span>
+              <span class="summary-value">{{ formatSummaryValue(item.value) }}</span>
+            </div>
+          </div>
+        </mat-expansion-panel>
       </div>
     </mat-card-content>
   </mat-card>
@@ -82,46 +106,135 @@
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>bar_chart</mat-icon>
-                Descriptive Statistics
+                Descriptive Statistics & AI Insights
               </mat-card-title>
+              <mat-card-subtitle>
+                Statistical summary with intelligent analysis and business implications
+              </mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
-              <div class="table-container">
-                <table mat-table [dataSource]="getDescriptiveStatsKeys()" class="descriptive-table">
-                  <ng-container matColumnDef="column">
-                    <th mat-header-cell *matHeaderCellDef>Column</th>
-                    <td mat-cell *matCellDef="let column">{{ column }}</td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="mean">
-                    <th mat-header-cell *matHeaderCellDef>Mean</th>
-                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.mean) }}</td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="median">
-                    <th mat-header-cell *matHeaderCellDef>Median</th>
-                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.median) }}</td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="std">
-                    <th mat-header-cell *matHeaderCellDef>Std Dev</th>
-                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.std) }}</td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="min">
-                    <th mat-header-cell *matHeaderCellDef>Min</th>
-                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.min) }}</td>
-                  </ng-container>
-                  
-                  <ng-container matColumnDef="max">
-                    <th mat-header-cell *matHeaderCellDef>Max</th>
-                    <td mat-cell *matCellDef="let column">{{ formatNumber(basicResults.descriptive_stats[column]?.max) }}</td>
-                  </ng-container>
-                  
-                  <tr mat-header-row *matHeaderRowDef="['column', 'mean', 'median', 'std', 'min', 'max']"></tr>
-                  <tr mat-row *matRowDef="let row; columns: ['column', 'mean', 'median', 'std', 'min', 'max']"></tr>
-                </table>
+              <!-- AI-Driven Insights Section -->
+              <div class="insights-section" *ngIf="getDescriptiveInsights().length > 0">
+                <h3 class="insights-title">
+                  <mat-icon>psychology</mat-icon>
+                  AI-Powered Statistical Insights
+                </h3>
+                
+                <div class="insights-grid">
+                  <div *ngFor="let insight of getDescriptiveInsights()" class="insight-card">
+                    <div class="insight-header">
+                      <h4>{{ insight.column }}</h4>
+                      <mat-icon>trending_up</mat-icon>
+                    </div>
+                    
+                    <div class="insight-content">
+                      <div class="insight-item">
+                        <strong>Distribution:</strong>
+                        <span [innerHTML]="insight.dataDistribution"></span>
+                      </div>
+                      
+                      <div class="insight-item">
+                        <strong>Variability:</strong>
+                        <span [innerHTML]="insight.variability"></span>
+                      </div>
+                      
+                      <div class="insight-item">
+                        <strong>Data Quality:</strong>
+                        <span [innerHTML]="insight.outlierRisk"></span>
+                      </div>
+                      
+                      <div class="insight-item business-insight">
+                        <strong>Business Impact:</strong>
+                        <span [innerHTML]="insight.businessImplication"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Technical Statistics Table -->
+              <div class="technical-section">
+                <h3 class="technical-title">
+                  <mat-icon>analytics</mat-icon>
+                  Technical Statistics
+                </h3>
+                
+                <div class="table-container">
+                  <table mat-table [dataSource]="getDescriptiveStatsKeys()" class="descriptive-table">
+                    <ng-container matColumnDef="column">
+                      <th mat-header-cell *matHeaderCellDef>Column</th>
+                      <td mat-cell *matCellDef="let column">
+                        <strong>{{ column }}</strong>
+                      </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="count">
+                      <th mat-header-cell *matHeaderCellDef>Count</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.count) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="mean">
+                      <th mat-header-cell *matHeaderCellDef>Mean</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.mean) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="median">
+                      <th mat-header-cell *matHeaderCellDef>Median</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.['50%']) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="std">
+                      <th mat-header-cell *matHeaderCellDef>Std Dev</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.std) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="min">
+                      <th mat-header-cell *matHeaderCellDef>Min</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.min) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="q25">
+                      <th mat-header-cell *matHeaderCellDef>Q1 (25%)</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.['25%']) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="q75">
+                      <th mat-header-cell *matHeaderCellDef>Q3 (75%)</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.['75%']) }}</td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="max">
+                      <th mat-header-cell *matHeaderCellDef>Max</th>
+                      <td mat-cell *matCellDef="let column">{{ formatNumber(getDescriptiveStatsData()[column]?.max) }}</td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="['column', 'count', 'mean', 'median', 'std', 'min', 'q25', 'q75', 'max']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['column', 'count', 'mean', 'median', 'std', 'min', 'q25', 'q75', 'max']"></tr>
+                  </table>
+                </div>
+
+                <!-- Additional Statistics -->
+                <div class="additional-stats" *ngIf="getAdditionalStatsData() && getObjectKeys(getAdditionalStatsData()).length > 0">
+                  <h4>Advanced Metrics</h4>
+                  <div class="advanced-metrics-grid">
+                    <div *ngFor="let column of getDescriptiveStatsKeys()" class="metric-card">
+                      <h5>{{ column }}</h5>
+                      <div class="metric-row">
+                        <span class="metric-label">Variance:</span>
+                        <span class="metric-value">{{ formatNumber(getAdditionalStatsData()[column]?.variance) }}</span>
+                      </div>
+                      <div class="metric-row">
+                        <span class="metric-label">CV:</span>
+                        <span class="metric-value">{{ formatNumber(getAdditionalStatsData()[column]?.coefficient_of_variation) }}</span>
+                      </div>
+                      <div class="metric-row">
+                        <span class="metric-label">Range:</span>
+                        <span class="metric-value">{{ formatNumber(getAdditionalStatsData()[column]?.range) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </mat-card-content>
           </mat-card>
@@ -131,20 +244,180 @@
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>device_hub</mat-icon>
-                Correlation Analysis
+                Correlation Analysis & Relationship Insights
               </mat-card-title>
+              <mat-card-subtitle>
+                Discover relationships between variables with AI-powered insights and interactive visualizations
+              </mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
-              <div class="correlation-content">
-                <p><strong>Strong Correlations Found:</strong></p>
-                <div class="correlation-pairs">
-                  <mat-chip 
-                    *ngFor="let pair of getCorrelationPairs()" 
-                    [color]="pair.strength === 'strong' ? 'warn' : 'primary'"
-                    class="correlation-chip">
-                    {{ pair.variable1 }} ↔ {{ pair.variable2 }}: {{ formatNumber(pair.correlation) }}
-                  </mat-chip>
+              <!-- AI-Driven Correlation Insights -->
+              <div class="correlation-insights" *ngIf="getCorrelationInsights().length > 0">
+                <h3 class="insights-title">
+                  <mat-icon>psychology</mat-icon>
+                  Relationship Intelligence
+                </h3>
+                
+                <div class="insights-grid">
+                  <div *ngFor="let insight of getCorrelationInsights()" class="insight-card">
+                    <div class="insight-header">
+                      <mat-icon [ngClass]="'insight-icon-' + insight.color">{{ insight.icon }}</mat-icon>
+                      <h4>{{ insight.title }}</h4>
+                    </div>
+                    <p class="insight-description">{{ insight.description }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Correlation Heatmap Visualization -->
+              <div class="heatmap-section" *ngIf="getHeatmapVariables().length > 0">
+                <h3 class="section-title">
+                  <mat-icon>grid_on</mat-icon>
+                  Correlation Heatmap
+                </h3>
+                
+                <div class="heatmap-container">
+                  <div class="heatmap-grid" 
+                       [style.grid-template-columns]="'repeat(' + getHeatmapVariables().length + ', 1fr)'">
+                    <!-- Column Headers -->
+                    <div class="heatmap-header" *ngFor="let variable of getHeatmapVariables()">
+                      {{ variable }}
+                    </div>
+                    
+                    <!-- Heatmap Cells -->
+                    <div *ngFor="let cell of getCorrelationHeatmapData()" 
+                         class="heatmap-cell"
+                         [style.background-color]="cell.color"
+                         [title]="cell.var1 + ' vs ' + cell.var2 + ': ' + formatNumber(cell.value)">
+                      <span class="cell-value">{{ formatNumber(cell.value) }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Heatmap Legend -->
+                  <div class="heatmap-legend">
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #ff6600;"></div>
+                      <span>Strong Negative (-1.0 to -0.7)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #ffb74d;"></div>
+                      <span>Weak Negative (-0.7 to 0)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #c8e6c9;"></div>
+                      <span>Weak Positive (0 to 0.7)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #00ff88;"></div>
+                      <span>Strong Positive (0.7 to 1.0)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interactive Correlation Matrix -->
+              <div class="correlation-matrix-section" *ngIf="getCorrelationMatrixEntries().length > 0">
+                <h3 class="section-title">
+                  <mat-icon>table_chart</mat-icon>
+                  Detailed Correlation Matrix
+                </h3>
+                
+                <div class="matrix-table-container">
+                  <table mat-table [dataSource]="getCorrelationMatrixEntries()" class="correlation-table">
+                    <ng-container matColumnDef="variables">
+                      <th mat-header-cell *matHeaderCellDef>Variable Pair</th>
+                      <td mat-cell *matCellDef="let element">
+                        <div class="variable-pair">
+                          <strong>{{ element.var1 }}</strong>
+                          <mat-icon>arrow_right_alt</mat-icon>
+                          <strong>{{ element.var2 }}</strong>
+                        </div>
+                      </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="correlation">
+                      <th mat-header-cell *matHeaderCellDef>Correlation</th>
+                      <td mat-cell *matCellDef="let element">
+                        <div class="correlation-value" 
+                             [ngClass]="{'positive': element.correlation > 0, 'negative': element.correlation < 0}">
+                          {{ formatNumber(element.correlation) }}
+                        </div>
+                      </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="strength">
+                      <th mat-header-cell *matHeaderCellDef>Strength</th>
+                      <td mat-cell *matCellDef="let element">
+                        <mat-chip [color]="element.strength === 'Very Strong' || element.strength === 'Strong' ? 'warn' : 'primary'">
+                          {{ element.strength }}
+                        </mat-chip>
+                      </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="interpretation">
+                      <th mat-header-cell *matHeaderCellDef>Business Interpretation</th>
+                      <td mat-cell *matCellDef="let element">
+                        <div class="interpretation-text">
+                          {{ element.interpretation }}
+                        </div>
+                      </td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="['variables', 'correlation', 'strength', 'interpretation']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['variables', 'correlation', 'strength', 'interpretation']"></tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Strong Correlations Summary -->
+              <div class="strong-correlations-section" *ngIf="getCorrelationPairs().length > 0">
+                <h3 class="section-title">
+                  <mat-icon>link</mat-icon>
+                  Key Relationships (|r| ≥ 0.7)
+                </h3>
+                
+                <div class="strong-correlations-grid">
+                  <div *ngFor="let pair of getCorrelationPairs()" class="correlation-card">
+                    <div class="correlation-header">
+                      <div class="variable-names">
+                        <span class="var1">{{ pair.var1 }}</span>
+                        <mat-icon>{{ pair.correlation > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                        <span class="var2">{{ pair.var2 }}</span>
+                      </div>
+                      <div class="correlation-badge" 
+                           [ngClass]="{'positive': pair.correlation > 0, 'negative': pair.correlation < 0}">
+                        {{ formatNumber(pair.correlation) }}
+                      </div>
+                    </div>
+                    
+                    <div class="correlation-description">
+                      <p><strong>{{ pair.strength | titlecase }}</strong> correlation indicates:</p>
+                      <ul>
+                        <li *ngIf="pair.correlation > 0">These variables move together in the same direction</li>
+                        <li *ngIf="pair.correlation < 0">These variables move in opposite directions</li>
+                        <li>{{ (abs(pair.correlation) * 100).toFixed(1) }}% of variation is shared</li>
+                        <li *ngIf="abs(pair.correlation) > 0.8">Consider potential multicollinearity</li>
+                        <li *ngIf="abs(pair.correlation) > 0.7 && abs(pair.correlation) <= 0.8">Strong predictive relationship</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Strong Correlations Message -->
+              <div class="no-correlations" *ngIf="getCorrelationPairs().length === 0 && getCorrelationMatrixEntries().length > 0">
+                <div class="info-card">
+                  <mat-icon>info</mat-icon>
+                  <div class="info-content">
+                    <h4>No Strong Correlations Detected</h4>
+                    <p>All correlations are below 0.7, indicating that variables are relatively independent. This suggests:</p>
+                    <ul>
+                      <li>Good feature diversity for machine learning models</li>
+                      <li>Lower risk of multicollinearity</li>
+                      <li>Each variable contributes unique information</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </mat-card-content>

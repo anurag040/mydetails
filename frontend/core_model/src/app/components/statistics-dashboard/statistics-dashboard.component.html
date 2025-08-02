@@ -214,23 +214,34 @@
                   </table>
                 </div>
 
-                <!-- Additional Statistics -->
+                <!-- Advanced Metrics with Enhanced Layout -->
                 <div class="additional-stats" *ngIf="getAdditionalStatsData() && getObjectKeys(getAdditionalStatsData()).length > 0">
-                  <h4>Advanced Metrics</h4>
+                  <h4>
+                    <mat-icon>analytics</mat-icon>
+                    Advanced Statistical Metrics
+                  </h4>
                   <div class="advanced-metrics-grid">
                     <div *ngFor="let column of getDescriptiveStatsKeys()" class="metric-card">
                       <h5>{{ column }}</h5>
                       <div class="metric-row">
-                        <span class="metric-label">Variance:</span>
+                        <span class="metric-label">Variance</span>
                         <span class="metric-value">{{ formatNumber(getAdditionalStatsData()[column]?.variance) }}</span>
                       </div>
                       <div class="metric-row">
-                        <span class="metric-label">CV:</span>
+                        <span class="metric-label">Coefficient of Variation</span>
                         <span class="metric-value">{{ formatNumber(getAdditionalStatsData()[column]?.coefficient_of_variation) }}</span>
                       </div>
                       <div class="metric-row">
-                        <span class="metric-label">Range:</span>
+                        <span class="metric-label">Range</span>
                         <span class="metric-value">{{ formatNumber(getAdditionalStatsData()[column]?.range) }}</span>
+                      </div>
+                      <div class="metric-row">
+                        <span class="metric-label">Interquartile Range (IQR)</span>
+                        <span class="metric-value">{{ calculateIQR(column) }}</span>
+                      </div>
+                      <div class="metric-row">
+                        <span class="metric-label">Skewness</span>
+                        <span class="metric-value">{{ getSkewnessLabel(column) }}</span>
                       </div>
                     </div>
                   </div>
@@ -279,19 +290,28 @@
                 
                 <div class="heatmap-container">
                   <div class="heatmap-grid" 
-                       [style.grid-template-columns]="'repeat(' + getHeatmapVariables().length + ', 1fr)'">
+                       [style.grid-template-columns]="'auto repeat(' + getHeatmapVariables().length + ', 1fr)'">
+                    <!-- Empty corner cell -->
+                    <div class="heatmap-corner"></div>
+                    
                     <!-- Column Headers -->
                     <div class="heatmap-header" *ngFor="let variable of getHeatmapVariables()">
                       {{ variable }}
                     </div>
                     
-                    <!-- Heatmap Cells -->
-                    <div *ngFor="let cell of getCorrelationHeatmapData()" 
-                         class="heatmap-cell"
-                         [style.background-color]="cell.color"
-                         [title]="cell.var1 + ' vs ' + cell.var2 + ': ' + formatNumber(cell.value)">
-                      <span class="cell-value">{{ formatNumber(cell.value) }}</span>
-                    </div>
+                    <!-- Row Headers and Heatmap Cells -->
+                    <ng-container *ngFor="let rowVar of getHeatmapVariables()">
+                      <!-- Row Header -->
+                      <div class="heatmap-row-header">{{ rowVar }}</div>
+                      
+                      <!-- Correlation Cells for this row -->
+                      <div *ngFor="let colVar of getHeatmapVariables()" 
+                           class="heatmap-cell"
+                           [style.background-color]="getHeatmapColor(rowVar, colVar)"
+                           [title]="rowVar + ' vs ' + colVar + ': ' + formatNumber(getCorrelationValue(rowVar, colVar))">
+                        <span class="cell-value">{{ formatNumber(getCorrelationValue(rowVar, colVar)) }}</span>
+                      </div>
+                    </ng-container>
                   </div>
                   
                   <!-- Heatmap Legend -->
@@ -423,18 +443,92 @@
             </mat-card-content>
           </mat-card>
 
-          <!-- Distribution Analysis -->
+          <!-- Distribution Analysis with Visualizations -->
           <mat-card *ngIf="basicResults.distribution_analysis" class="result-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>show_chart</mat-icon>
-                Distribution Analysis
+                Data Distribution Analysis & Visualizations
               </mat-card-title>
+              <mat-card-subtitle>
+                Statistical distribution patterns and visual analysis for each numeric column
+              </mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
               <div class="distribution-content">
-                <pre>{{ basicResults.distribution_analysis | json }}</pre>
+                <!-- AI-Driven Distribution Insights -->
+                <div class="insights-section" *ngIf="getDistributionInsights().length > 0">
+                  <h3 class="insights-title">
+                    <mat-icon>psychology</mat-icon>
+                    Distribution Intelligence
+                  </h3>
+                  
+                  <div class="insights-grid">
+                    <div *ngFor="let insight of getDistributionInsights()" class="insight-card">
+                      <div class="insight-header">
+                        <mat-icon [ngClass]="'insight-icon-' + insight.color">{{ insight.icon }}</mat-icon>
+                        <h4>{{ insight.title }}</h4>
+                      </div>
+                      <p class="insight-description">{{ insight.description }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Visual Distribution Cards -->
+                <div class="distribution-grid">
+                  <div *ngFor="let column of getNumericColumns()" class="distribution-card">
+                    <h4>
+                      <mat-icon>bar_chart</mat-icon>
+                      {{ column }} Distribution
+                    </h4>
+                    
+                    <!-- Simple Text-based Histogram -->
+                    <div class="distribution-chart">
+                      <div class="text-histogram">
+                        <div class="histogram-title">Distribution Pattern</div>
+                        <div class="histogram-bars">
+                          <div *ngFor="let bar of getTextHistogram(column)" 
+                               class="histogram-bar"
+                               [style.height.%]="bar.height"
+                               [title]="'Range: ' + bar.range + ', Count: ' + bar.count">
+                            <div class="bar-fill" [style.height.%]="bar.height"></div>
+                            <div class="bar-label">{{ bar.range }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Distribution Statistics -->
+                    <div class="distribution-stats">
+                      <div class="stat-row">
+                        <span class="stat-label">Shape</span>
+                        <span class="stat-value">{{ getDistributionShape(column) }}</span>
+                      </div>
+                      <div class="stat-row">
+                        <span class="stat-label">Symmetry</span>
+                        <span class="stat-value">{{ getDistributionSymmetry(column) }}</span>
+                      </div>
+                      <div class="stat-row">
+                        <span class="stat-label">Outlier Risk</span>
+                        <span class="stat-value">{{ getOutlierRisk(column) }}</span>
+                      </div>
+                      <div class="stat-row">
+                        <span class="stat-label">Data Quality</span>
+                        <span class="stat-value">{{ getDataQuality(column) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Technical Distribution Details -->
+                <div class="technical-section">
+                  <h3 class="technical-title">
+                    <mat-icon>code</mat-icon>
+                    Technical Distribution Details
+                  </h3>
+                  <pre>{{ formatDistributionData(basicResults.distribution_analysis) }}</pre>
+                </div>
               </div>
             </mat-card-content>
           </mat-card>

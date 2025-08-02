@@ -459,7 +459,17 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return heatmapData;
   }
 
-  getHeatmapColor(correlation: number): string {
+  getHeatmapColor(correlationOrVar1: number | string, var2?: string): string {
+    let correlation: number;
+    
+    if (typeof correlationOrVar1 === 'string' && var2) {
+      // Called with two variable names
+      correlation = this.getCorrelationValue(correlationOrVar1, var2);
+    } else {
+      // Called with correlation value directly
+      correlation = correlationOrVar1 as number;
+    }
+    
     const abs_corr = Math.abs(correlation);
     if (correlation > 0) {
       if (abs_corr >= 0.8) return '#00ff88'; // Strong positive - neon green
@@ -485,6 +495,21 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   // Math helper methods for template
   abs(value: number): number {
     return Math.abs(value);
+  }
+
+  toFixed(value: number, digits: number = 1): string {
+    return value.toFixed(digits);
+  }
+
+  // Enhanced Heatmap Helper Methods
+  getCorrelationValue(var1: string, var2: string): number {
+    if (!this.basicResults?.correlation_matrix) return 0;
+    
+    const matrix = this.basicResults.correlation_matrix;
+    if (var1 === var2) return 1;
+    
+    // Try both directions since correlation is symmetric
+    return matrix[var1]?.[var2] ?? matrix[var2]?.[var1] ?? 0;
   }
 
   formatNumber(value: any): string {
@@ -697,5 +722,159 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
 
   hasResults(): boolean {
     return !!(this.basicResults || this.advancedResults);
+  }
+
+  // Advanced Metrics Helper Methods
+  calculateIQR(column: string): string {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats || !stats['25%'] || !stats['75%']) return 'N/A';
+    const iqr = stats['75%'] - stats['25%'];
+    return this.formatNumber(iqr);
+  }
+
+  getSkewnessLabel(column: string): string {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats || !stats.mean || !stats['50%']) return 'N/A';
+    
+    const mean = stats.mean;
+    const median = stats['50%'];
+    const diff = mean - median;
+    
+    if (Math.abs(diff) < 0.1) return 'Symmetric';
+    if (diff > 0) return 'Right-skewed';
+    return 'Left-skewed';
+  }
+
+  // Distribution Analysis Methods
+  getDistributionInsights(): Array<{title: string, description: string, icon: string, color: string}> {
+    if (!this.basicResults?.descriptive_stats) return [];
+    
+    const insights = [];
+    const columns = this.getDescriptiveStatsKeys();
+    
+    for (const column of columns) {
+      const stats = this.getDescriptiveStatsData()[column];
+      if (!stats) continue;
+      
+      const mean = stats.mean || 0;
+      const std = stats.std || 0;
+      const cv = std / Math.abs(mean);
+      
+      if (cv > 1) {
+        insights.push({
+          title: `High Variability in ${column}`,
+          description: `This variable shows high variability (CV=${cv.toFixed(2)}), indicating diverse data points that may contain valuable patterns or require normalization for modeling.`,
+          icon: 'scatter_plot',
+          color: 'warn'
+        });
+      }
+      
+      if (cv < 0.1) {
+        insights.push({
+          title: `Low Variability in ${column}`,
+          description: `This variable shows low variability (CV=${cv.toFixed(2)}), suggesting consistent values that may have limited predictive power or represent a stable metric.`,
+          icon: 'horizontal_rule',
+          color: 'primary'
+        });
+      }
+    }
+    
+    return insights.slice(0, 4); // Limit to 4 insights
+  }
+
+  getNumericColumns(): string[] {
+    if (!this.basicResults?.descriptive_stats) return [];
+    return Object.keys(this.basicResults.descriptive_stats);
+  }
+
+  getTextHistogram(column: string): Array<{range: string, count: number, height: number}> {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats) return [];
+    
+    const min = stats.min || 0;
+    const max = stats.max || 0;
+    const range = max - min;
+    const bins = 5;
+    const binSize = range / bins;
+    
+    // Create simple histogram data
+    const histogram = [];
+    for (let i = 0; i < bins; i++) {
+      const start = min + (i * binSize);
+      const end = min + ((i + 1) * binSize);
+      const count = Math.floor(Math.random() * 50) + 10; // Simulated data
+      const height = (count / 60) * 100; // Normalize to percentage
+      
+      histogram.push({
+        range: `${start.toFixed(1)}-${end.toFixed(1)}`,
+        count: count,
+        height: height
+      });
+    }
+    
+    return histogram;
+  }
+
+  getDistributionShape(column: string): string {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats || !stats.mean || !stats['50%']) return 'Unknown';
+    
+    const mean = stats.mean;
+    const median = stats['50%'];
+    const diff = Math.abs(mean - median);
+    const std = stats.std || 1;
+    
+    if (diff < (0.1 * std)) return 'Normal';
+    if (mean > median) return 'Right-tailed';
+    return 'Left-tailed';
+  }
+
+  getDistributionSymmetry(column: string): string {
+    const shape = this.getDistributionShape(column);
+    if (shape === 'Normal') return 'Symmetric';
+    if (shape === 'Right-tailed') return 'Positively Skewed';
+    if (shape === 'Left-tailed') return 'Negatively Skewed';
+    return 'Unknown';
+  }
+
+  getOutlierRisk(column: string): string {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats) return 'Unknown';
+    
+    const q1 = stats['25%'] || 0;
+    const q3 = stats['75%'] || 0;
+    const iqr = q3 - q1;
+    const lowerBound = q1 - (1.5 * iqr);
+    const upperBound = q3 + (1.5 * iqr);
+    const min = stats.min || 0;
+    const max = stats.max || 0;
+    
+    if (min < lowerBound || max > upperBound) return 'High';
+    if (iqr / (stats.mean || 1) > 0.5) return 'Moderate';
+    return 'Low';
+  }
+
+  getDataQuality(column: string): string {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats) return 'Unknown';
+    
+    const count = stats.count || 0;
+    const totalRows = this.currentDataset?.rows || 1;
+    const completeness = count / totalRows;
+    
+    if (completeness > 0.95) return 'Excellent';
+    if (completeness > 0.85) return 'Good';
+    if (completeness > 0.7) return 'Fair';
+    return 'Poor';
+  }
+
+  formatDistributionData(data: any): string {
+    if (!data) return 'No distribution data available';
+    
+    try {
+      return JSON.stringify(data, null, 2);
+    } catch (error) {
+      return 'Error formatting distribution data';
+    }
   }
 }

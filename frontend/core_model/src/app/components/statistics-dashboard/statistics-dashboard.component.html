@@ -762,33 +762,97 @@
           </mat-card>
 
           <!-- Missing Data Analysis -->
-          <mat-card *ngIf="basicResults.missing_data_summary" class="result-card">
+          <mat-card *ngIf="basicResults.missing_data_summary" class="result-card missing-data-overview-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon>error_outline</mat-icon>
-                Missing Data Analysis
+                <mat-icon>visibility_off</mat-icon>
+                Data Completeness Overview
               </mat-card-title>
-              <mat-card-subtitle>Overview of missing values across all columns</mat-card-subtitle>
+              <mat-card-subtitle>Quick assessment of missing values and data completeness</mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
-              <div class="missing-data-content">
-                <div class="info-grid">
-                  <div class="info-item">
-                    <span class="info-label">Total Missing:</span>
-                    <span class="info-value">{{ basicResults.missing_data_summary?.total_missing || 0 | number }}</span>
+              <div class="missing-data-overview">
+                <!-- Data Completeness Score -->
+                <div class="completeness-score-section">
+                  <div class="score-display">
+                    <div class="score-circle" [ngClass]="getCompletenessScoreClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
+                      <span class="score-value">{{ basicResults.missing_data_summary?.complete_rows_percentage || 0 | number:'1.0-0' }}%</span>
+                      <span class="score-label">Complete</span>
+                    </div>
                   </div>
-                  <div class="info-item">
-                    <span class="info-label">Missing Percentage:</span>
-                    <span class="info-value">{{ basicResults.missing_data_summary?.total_percentage || 0 | number:'1.2-2' }}%</span>
+                  
+                  <div class="completeness-details">
+                    <h4>Data Quality Assessment</h4>
+                    <p class="assessment-text" [ngClass]="getCompletenessTextClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
+                      {{ getCompletenessAssessment(basicResults.missing_data_summary?.complete_rows_percentage || 0) }}
+                    </p>
                   </div>
-                  <div class="info-item">
-                    <span class="info-label">Complete Rows:</span>
-                    <span class="info-value">{{ basicResults.missing_data_summary?.complete_rows || 0 | number }}</span>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="missing-metrics-grid">
+                  <div class="metric-card total-missing">
+                    <div class="metric-icon">
+                      <mat-icon>error_outline</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                      <span class="metric-value" [ngClass]="{'critical': (basicResults.missing_data_summary?.total_missing || 0) > 1000}">
+                        {{ basicResults.missing_data_summary?.total_missing || 0 | number }}
+                      </span>
+                      <span class="metric-label">Missing Values</span>
+                      <div class="metric-bar">
+                        <div class="metric-fill missing-fill" [style.width.%]="basicResults.missing_data_summary?.total_percentage || 0"></div>
+                      </div>
+                      <span class="metric-percentage">{{ basicResults.missing_data_summary?.total_percentage || 0 | number:'1.1-1' }}%</span>
+                    </div>
                   </div>
-                  <div class="info-item">
-                    <span class="info-label">Complete Percentage:</span>
-                    <span class="info-value">{{ basicResults.missing_data_summary?.complete_rows_percentage || 0 | number:'1.1-1' }}%</span>
+
+                  <div class="metric-card complete-rows">
+                    <div class="metric-icon">
+                      <mat-icon>check_circle</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                      <span class="metric-value success">
+                        {{ basicResults.missing_data_summary?.complete_rows || 0 | number }}
+                      </span>
+                      <span class="metric-label">Complete Rows</span>
+                      <div class="metric-bar">
+                        <div class="metric-fill complete-fill" [style.width.%]="basicResults.missing_data_summary?.complete_rows_percentage || 0"></div>
+                      </div>
+                      <span class="metric-percentage">{{ basicResults.missing_data_summary?.complete_rows_percentage || 0 | number:'1.1-1' }}%</span>
+                    </div>
+                  </div>
+
+                  <div class="metric-card data-usability">
+                    <div class="metric-icon">
+                      <mat-icon>analytics</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                      <span class="metric-value" [ngClass]="getUsabilityClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
+                        {{ getUsabilityRating(basicResults.missing_data_summary?.complete_rows_percentage || 0) }}
+                      </span>
+                      <span class="metric-label">Data Usability</span>
+                      <div class="usability-indicator">
+                        <mat-icon [ngClass]="getUsabilityIconClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
+                          {{ getUsabilityIcon(basicResults.missing_data_summary?.complete_rows_percentage || 0) }}
+                        </mat-icon>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Insights -->
+                <div class="quick-insights" *ngIf="getQuickMissingInsights(basicResults.missing_data_summary).length > 0">
+                  <h4>
+                    <mat-icon>insights</mat-icon>
+                    Quick Insights
+                  </h4>
+                  <div class="insights-list">
+                    <div *ngFor="let insight of getQuickMissingInsights(basicResults.missing_data_summary)" class="insight-item">
+                      <mat-icon [ngClass]="insight.type">{{ insight.icon }}</mat-icon>
+                      <span>{{ insight.message }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -796,111 +860,189 @@
           </mat-card>
 
           <!-- Missing Value Report & Strategy -->
-          <mat-card *ngIf="basicResults.missing_value_analysis" class="result-card">
+          <mat-card *ngIf="basicResults.missing_value_analysis" class="result-card missing-analysis-detailed-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>assessment</mat-icon>
-                Missing Value Report & Strategy
+                Detailed Missing Value Analysis
               </mat-card-title>
-              <mat-card-subtitle>Comprehensive missing value analysis with recommended handling strategies</mat-card-subtitle>
+              <mat-card-subtitle>Comprehensive missing value patterns and AI-powered handling strategies</mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
-              <!-- Overall Summary -->
-              <div class="missing-analysis-section" *ngIf="basicResults.missing_value_analysis.overall_summary">
+              <!-- Enhanced Overall Summary -->
+              <div class="missing-analysis-section overall-summary-enhanced" *ngIf="basicResults.missing_value_analysis.overall_summary">
                 <h3>
-                  <mat-icon>summarize</mat-icon>
-                  Overall Missing Data Summary
+                  <mat-icon>dashboard</mat-icon>
+                  Missing Data Dashboard
                 </h3>
                 
-                <div class="info-grid">
-                  <div class="info-item">
-                    <span class="info-label">Total Missing Values:</span>
-                    <span class="info-value" [ngClass]="{'warning': basicResults.missing_value_analysis.overall_summary.total_missing_values > 0}">
-                      {{ basicResults.missing_value_analysis.overall_summary.total_missing_values | number }}
-                    </span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Overall Missing Percentage:</span>
-                    <span class="info-value" [ngClass]="{'warning': basicResults.missing_value_analysis.overall_summary.overall_missing_percentage > 10}">
-                      {{ basicResults.missing_value_analysis.overall_summary.overall_missing_percentage | number:'1.2-2' }}%
-                    </span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Columns with Missing Data:</span>
-                    <span class="info-value">
-                      {{ basicResults.missing_value_analysis.overall_summary.columns_with_missing | number }}
-                    </span>
-                  </div>
-                  <div class="info-item">
-                    <span class="info-label">Complete Rows:</span>
-                    <span class="info-value highlight">
-                      {{ basicResults.missing_value_analysis.overall_summary.complete_rows | number }} 
-                      ({{ basicResults.missing_value_analysis.overall_summary.complete_rows_percentage | number:'1.1-1' }}%)
-                    </span>
+                <div class="summary-dashboard">
+                  <div class="summary-cards-grid">
+                    <div class="summary-card total-values">
+                      <div class="card-header">
+                        <mat-icon>storage</mat-icon>
+                        <span>Total Missing Values</span>
+                      </div>
+                      <div class="card-content">
+                        <div class="large-number" [ngClass]="{'warning': basicResults.missing_value_analysis.overall_summary.total_missing_values > 0}">
+                          {{ basicResults.missing_value_analysis.overall_summary.total_missing_values | number }}
+                        </div>
+                        <div class="percentage-bar">
+                          <div class="bar-fill missing-bar" [style.width.%]="basicResults.missing_value_analysis.overall_summary.overall_missing_percentage"></div>
+                        </div>
+                        <div class="percentage-text">
+                          {{ basicResults.missing_value_analysis.overall_summary.overall_missing_percentage | number:'1.2-2' }}% of all values
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="summary-card affected-columns">
+                      <div class="card-header">
+                        <mat-icon>view_column</mat-icon>
+                        <span>Affected Columns</span>
+                      </div>
+                      <div class="card-content">
+                        <div class="large-number" [ngClass]="{'warning': basicResults.missing_value_analysis.overall_summary.columns_with_missing > 0}">
+                          {{ basicResults.missing_value_analysis.overall_summary.columns_with_missing | number }}
+                        </div>
+                        <div class="impact-indicator">
+                          <mat-chip [color]="getColumnImpactColor(basicResults.missing_value_analysis.overall_summary.columns_with_missing)" selected>
+                            {{ getColumnImpactLevel(basicResults.missing_value_analysis.overall_summary.columns_with_missing) }}
+                          </mat-chip>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="summary-card complete-data">
+                      <div class="card-header">
+                        <mat-icon>check_circle_outline</mat-icon>
+                        <span>Complete Records</span>
+                      </div>
+                      <div class="card-content">
+                        <div class="large-number success">
+                          {{ basicResults.missing_value_analysis.overall_summary.complete_rows | number }}
+                        </div>
+                        <div class="percentage-bar">
+                          <div class="bar-fill complete-bar" [style.width.%]="basicResults.missing_value_analysis.overall_summary.complete_rows_percentage"></div>
+                        </div>
+                        <div class="percentage-text">
+                          {{ basicResults.missing_value_analysis.overall_summary.complete_rows_percentage | number:'1.1-1' }}% complete rows
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="summary-card data-quality">
+                      <div class="card-header">
+                        <mat-icon>verified</mat-icon>
+                        <span>Data Quality Score</span>
+                      </div>
+                      <div class="card-content">
+                        <div class="quality-score-display">
+                          <div class="score-gauge" [ngClass]="getQualityScoreClass(basicResults.missing_value_analysis.overall_summary.complete_rows_percentage)">
+                            <span class="score">{{ basicResults.missing_value_analysis.overall_summary.complete_rows_percentage | number:'1.0-0' }}</span>
+                          </div>
+                        </div>
+                        <div class="quality-label">
+                          {{ getQualityLabel(basicResults.missing_value_analysis.overall_summary.complete_rows_percentage) }}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Column-wise Missing Value Analysis -->
-              <div class="missing-analysis-section" *ngIf="basicResults.missing_value_analysis.column_analysis">
+              <!-- Enhanced Column-wise Analysis -->
+              <div class="missing-analysis-section column-analysis-enhanced" *ngIf="basicResults.missing_value_analysis.column_analysis">
                 <h3>
-                  <mat-icon>view_column</mat-icon>
+                  <mat-icon>analytics</mat-icon>
                   Column-wise Missing Value Analysis
                 </h3>
                 
-                <div class="missing-table-container">
-                  <table mat-table [dataSource]="getMissingValueTableData()" class="missing-table">
-                    <ng-container matColumnDef="column">
-                      <th mat-header-cell *matHeaderCellDef>Column</th>
-                      <td mat-cell *matCellDef="let element">
-                        <strong>{{ element.name }}</strong>
-                      </td>
-                    </ng-container>
+                <div class="columns-analysis-container">
+                  <div class="analysis-filters">
+                    <mat-chip-listbox aria-label="Filter columns">
+                      <mat-chip-option selected>All Columns</mat-chip-option>
+                      <mat-chip-option>Missing Data Only</mat-chip-option>
+                      <mat-chip-option>High Missing (&gt;20%)</mat-chip-option>
+                      <mat-chip-option>Critical (&gt;50%)</mat-chip-option>
+                    </mat-chip-listbox>
+                  </div>
 
-                    <ng-container matColumnDef="missing">
-                      <th mat-header-cell *matHeaderCellDef>Missing Count</th>
-                      <td mat-cell *matCellDef="let element">
-                        {{ element.missing_count | number }} ({{ element.missing_percentage | number:'1.1-1' }}%)
-                      </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="pattern">
-                      <th mat-header-cell *matHeaderCellDef>Pattern</th>
-                      <td mat-cell *matCellDef="let element">
-                        <mat-chip [color]="getPatternColor(element.pattern)" selected>
-                          {{ element.pattern }}
-                        </mat-chip>
-                      </td>
-                    </ng-container>
-
-                    <ng-container matColumnDef="strategy">
-                      <th mat-header-cell *matHeaderCellDef>Suggested Strategy</th>
-                      <td mat-cell *matCellDef="let element">
-                        <span class="strategy-primary">{{ element.suggested_strategy.primary }}</span>
-                        <div class="strategy-alternatives" *ngIf="element.suggested_strategy.alternatives?.length > 0">
-                          <small>Alternatives: {{ element.suggested_strategy.alternatives.join(', ') }}</small>
+                  <div class="columns-grid">
+                    <div *ngFor="let column of getMissingValueTableData()" class="column-analysis-card">
+                      <div class="column-header">
+                        <div class="column-name">
+                          <mat-icon>{{ getColumnTypeIcon(column.type) }}</mat-icon>
+                          <strong>{{ column.name }}</strong>
                         </div>
-                      </td>
-                    </ng-container>
+                        <div class="missing-severity">
+                          <mat-chip [color]="getMissingSeverityColor(column.missing_percentage)" selected>
+                            {{ getMissingSeverityLabel(column.missing_percentage) }}
+                          </mat-chip>
+                        </div>
+                      </div>
 
-                    <tr mat-header-row *matHeaderRowDef="['column', 'missing', 'pattern', 'strategy']"></tr>
-                    <tr mat-row *matRowDef="let row; columns: ['column', 'missing', 'pattern', 'strategy'];"></tr>
-                  </table>
+                      <div class="column-metrics">
+                        <div class="metric-row">
+                          <span class="metric-label">Missing Count:</span>
+                          <span class="metric-value">{{ column.missing_count | number }}</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label">Missing Rate:</span>
+                          <div class="rate-display">
+                            <div class="rate-bar">
+                              <div class="rate-fill" [style.width.%]="column.missing_percentage" [ngClass]="getMissingRateClass(column.missing_percentage)"></div>
+                            </div>
+                            <span class="rate-text">{{ column.missing_percentage | number:'1.1-1' }}%</span>
+                          </div>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label">Pattern:</span>
+                          <mat-chip [color]="getPatternColor(column.pattern)" selected size="small">
+                            {{ column.pattern }}
+                          </mat-chip>
+                        </div>
+                      </div>
+
+                      <div class="strategy-section">
+                        <div class="strategy-header">
+                          <mat-icon>psychology</mat-icon>
+                          <span>AI Recommendation</span>
+                        </div>
+                        <div class="primary-strategy">
+                          <strong>{{ column.suggested_strategy.primary }}</strong>
+                        </div>
+                        <div class="alternative-strategies" *ngIf="column.suggested_strategy.alternatives?.length > 0">
+                          <span class="alternatives-label">Alternatives:</span>
+                          <div class="alternatives-chips">
+                            <mat-chip *ngFor="let alt of column.suggested_strategy.alternatives" color="accent" size="small">
+                              {{ alt }}
+                            </mat-chip>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Recommendations -->
-              <div class="missing-analysis-section" *ngIf="basicResults.missing_value_analysis.recommendations?.length > 0">
+              <!-- Enhanced Recommendations -->
+              <div class="missing-analysis-section recommendations-enhanced" *ngIf="basicResults.missing_value_analysis.recommendations?.length > 0">
                 <h3>
-                  <mat-icon>lightbulb</mat-icon>
-                  AI Recommendations
+                  <mat-icon>auto_awesome</mat-icon>
+                  AI-Powered Recommendations
                 </h3>
                 
-                <div class="recommendations-list">
-                  <div *ngFor="let recommendation of basicResults.missing_value_analysis.recommendations" class="recommendation-item">
-                    <mat-icon>arrow_forward</mat-icon>
-                    <span>{{ recommendation }}</span>
+                <div class="recommendations-enhanced-list">
+                  <div *ngFor="let recommendation of basicResults.missing_value_analysis.recommendations; let i = index" class="recommendation-enhanced-item">
+                    <div class="recommendation-number">{{ i + 1 }}</div>
+                    <div class="recommendation-content">
+                      <mat-icon [ngClass]="getRecommendationTypeClass(recommendation)">{{ getRecommendationIcon(recommendation) }}</mat-icon>
+                      <div class="recommendation-text">
+                        <span [innerHTML]="recommendation"></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2260,6 +2402,238 @@
                   <div *ngFor="let recommendation of basicResults?.bias_fairness_flags?.recommendations" class="recommendation-item">
                     <mat-icon>arrow_forward</mat-icon>
                     <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Drift/Stability Analysis -->
+          <mat-card *ngIf="basicResults?.drift_stability_analysis" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>trending_flat</mat-icon>
+                Drift/Stability Analysis
+              </mat-card-title>
+              <mat-card-subtitle>Analyze data stability and detect potential drift indicators</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Overall Stability Assessment -->
+              <div class="stability-summary-section" *ngIf="basicResults?.drift_stability_analysis?.overall_assessment">
+                <h3>
+                  <mat-icon>tune</mat-icon>
+                  Overall Stability Assessment
+                </h3>
+                
+                <div class="stability-score-display">
+                  <div class="score-circle" [ngClass]="getStabilityScoreClass(basicResults?.drift_stability_analysis?.overall_assessment?.stability_score || 0)">
+                    <span class="score-value">{{ basicResults?.drift_stability_analysis?.overall_assessment?.stability_score | number:'1.0-0' }}%</span>
+                    <span class="score-label">Stable</span>
+                  </div>
+                </div>
+                
+                <div class="assessment-details">
+                  <div class="detail-item">
+                    <span class="detail-label">Risk Level:</span>
+                    <mat-chip [color]="getDriftRiskColor(basicResults?.drift_stability_analysis?.overall_assessment?.risk_level || 'low')" selected>
+                      {{ basicResults?.drift_stability_analysis?.overall_assessment?.risk_level | titlecase }}
+                    </mat-chip>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Drift Indicators:</span>
+                    <span class="detail-value">{{ basicResults?.drift_stability_analysis?.overall_assessment?.drift_indicators_count || 0 }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Statistical Stability Tests -->
+              <div class="stability-tests-section" *ngIf="basicResults?.drift_stability_analysis?.statistical_tests?.length > 0">
+                <h3>
+                  <mat-icon>science</mat-icon>
+                  Statistical Stability Tests
+                </h3>
+                
+                <div class="tests-grid">
+                  <div *ngFor="let test of basicResults?.drift_stability_analysis?.statistical_tests" class="test-card">
+                    <h4>{{ test.test_name }}</h4>
+                    <div class="test-result">
+                      <mat-chip [color]="test.is_stable ? 'primary' : 'warn'" selected>
+                        {{ test.is_stable ? 'Stable' : 'Unstable' }}
+                      </mat-chip>
+                    </div>
+                    <div class="test-details">
+                      <div class="test-metric">
+                        <span class="metric-label">P-value:</span>
+                        <span class="metric-value">{{ test.p_value | number:'1.4-4' }}</span>
+                      </div>
+                      <div class="test-metric">
+                        <span class="metric-label">Statistic:</span>
+                        <span class="metric-value">{{ test.statistic | number:'1.4-4' }}</span>
+                      </div>
+                    </div>
+                    <div class="test-interpretation">
+                      {{ test.interpretation }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column-wise Drift Analysis -->
+              <div class="column-drift-section" *ngIf="getColumnDriftArray().length > 0">
+                <h3>
+                  <mat-icon>view_column</mat-icon>
+                  Column-wise Drift Analysis
+                </h3>
+                
+                <div class="drift-columns-grid">
+                  <div *ngFor="let column of getColumnDriftArray()" class="drift-column-card">
+                    <h4>{{ column.column }}</h4>
+                    <div class="drift-status">
+                      <mat-chip [color]="column.drift_detected ? 'warn' : 'primary'" selected>
+                        {{ column.drift_detected ? 'Drift Detected' : 'Stable' }}
+                      </mat-chip>
+                    </div>
+                    <div class="drift-metrics">
+                      <div class="metric-item">
+                        <span class="metric-label">Drift Score:</span>
+                        <span class="metric-value">{{ column.drift_score | number:'1.3-3' }}</span>
+                      </div>
+                      <div class="metric-item">
+                        <span class="metric-label">Method:</span>
+                        <span class="metric-value">{{ column.detection_method }}</span>
+                      </div>
+                    </div>
+                    <div class="drift-details" *ngIf="column.details">
+                      {{ column.details }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <div class="stability-recommendations-section" *ngIf="basicResults?.drift_stability_analysis?.recommendations?.length > 0">
+                <h3>
+                  <mat-icon>lightbulb</mat-icon>
+                  Stability Recommendations
+                </h3>
+                
+                <div class="recommendations-list">
+                  <div *ngFor="let recommendation of basicResults?.drift_stability_analysis?.recommendations" class="recommendation-item">
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Reproducibility Info -->
+          <mat-card *ngIf="basicResults?.reproducibility_info" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>assignment_turned_in</mat-icon>
+                Reproducibility Information
+              </mat-card-title>
+              <mat-card-subtitle>Complete environment and analysis reproducibility details</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Environment Details -->
+              <div class="reproducibility-section" *ngIf="basicResults?.reproducibility_info?.environment">
+                <h3>
+                  <mat-icon>computer</mat-icon>
+                  Environment Details
+                </h3>
+                
+                <div class="environment-grid">
+                  <div class="env-item">
+                    <span class="env-label">Python Version:</span>
+                    <span class="env-value">{{ basicResults?.reproducibility_info?.environment?.python_version }}</span>
+                  </div>
+                  <div class="env-item">
+                    <span class="env-label">Platform:</span>
+                    <span class="env-value">{{ basicResults?.reproducibility_info?.environment?.platform }}</span>
+                  </div>
+                  <div class="env-item">
+                    <span class="env-label">Analysis Timestamp:</span>
+                    <span class="env-value">{{ basicResults?.reproducibility_info?.environment?.timestamp | date:'medium' }}</span>
+                  </div>
+                  <div class="env-item">
+                    <span class="env-label">Random Seed:</span>
+                    <span class="env-value">{{ basicResults?.reproducibility_info?.environment?.random_seed }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Package Versions -->
+              <div class="reproducibility-section" *ngIf="basicResults?.reproducibility_info?.package_versions">
+                <h3>
+                  <mat-icon>extension</mat-icon>
+                  Package Versions
+                </h3>
+                
+                <div class="packages-grid">
+                  <div *ngFor="let package of getPackageVersionsArray()" class="package-item">
+                    <span class="package-name">{{ package.key }}</span>
+                    <span class="package-version">{{ package.value }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Analysis Configuration -->
+              <div class="reproducibility-section" *ngIf="basicResults?.reproducibility_info?.analysis_config">
+                <h3>
+                  <mat-icon>settings</mat-icon>
+                  Analysis Configuration
+                </h3>
+                
+                <div class="config-details">
+                  <div class="config-item" *ngFor="let config of getAnalysisConfigArray()">
+                    <span class="config-label">{{ config.key | titlecase }}:</span>
+                    <span class="config-value">{{ config.value }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Fingerprint -->
+              <div class="reproducibility-section" *ngIf="basicResults?.reproducibility_info?.data_fingerprint">
+                <h3>
+                  <mat-icon>fingerprint</mat-icon>
+                  Data Fingerprint
+                </h3>
+                
+                <div class="fingerprint-details">
+                  <div class="fingerprint-item">
+                    <span class="fingerprint-label">Data Hash:</span>
+                    <code class="fingerprint-value">{{ basicResults?.reproducibility_info?.data_fingerprint?.data_hash }}</code>
+                  </div>
+                  <div class="fingerprint-item">
+                    <span class="fingerprint-label">Schema Hash:</span>
+                    <code class="fingerprint-value">{{ basicResults?.reproducibility_info?.data_fingerprint?.schema_hash }}</code>
+                  </div>
+                  <div class="fingerprint-item">
+                    <span class="fingerprint-label">Row Count:</span>
+                    <span class="fingerprint-value">{{ basicResults?.reproducibility_info?.data_fingerprint?.row_count | number }}</span>
+                  </div>
+                  <div class="fingerprint-item">
+                    <span class="fingerprint-label">Column Count:</span>
+                    <span class="fingerprint-value">{{ basicResults?.reproducibility_info?.data_fingerprint?.column_count | number }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reproduction Instructions -->
+              <div class="reproducibility-section" *ngIf="basicResults?.reproducibility_info?.reproduction_instructions?.length > 0">
+                <h3>
+                  <mat-icon>list_alt</mat-icon>
+                  Reproduction Instructions
+                </h3>
+                
+                <div class="instructions-list">
+                  <div *ngFor="let instruction of basicResults?.reproducibility_info?.reproduction_instructions; let i = index" class="instruction-item">
+                    <span class="step-number">{{ i + 1 }}.</span>
+                    <span class="instruction-text">{{ instruction }}</span>
                   </div>
                 </div>
               </div>

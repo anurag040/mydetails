@@ -1470,13 +1470,6 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Duplicates Analysis Helper Methods
-  getQualityScoreClass(score: number): string {
-    if (score >= 95) return 'excellent';
-    if (score >= 85) return 'good';
-    if (score >= 70) return 'fair';
-    return 'poor';
-  }
-
   hasPartialDuplicates(): boolean {
     return this.basicResults?.duplicates_analysis?.partial_duplicates && 
            Object.keys(this.basicResults.duplicates_analysis.partial_duplicates).length > 0;
@@ -1726,4 +1719,235 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       value
     }));
   }
+
+  getStabilityScoreClass(score: number): string {
+    if (score >= 80) return 'score-high';
+    if (score >= 60) return 'score-moderate';
+    return 'score-low';
+  }
+
+  getDriftRiskColor(riskLevel: string): 'primary' | 'accent' | 'warn' {
+    switch(riskLevel?.toLowerCase()) {
+      case 'high': return 'warn';
+      case 'medium': return 'accent';
+      default: return 'primary';
+    }
+  }
+
+  getColumnDriftArray(): any[] {
+    if (!this.basicResults?.drift_stability_analysis?.column_drift_analysis) {
+      return [];
+    }
+    
+    return Object.entries(this.basicResults.drift_stability_analysis.column_drift_analysis).map(([column, data]: [string, any]) => ({
+      column,
+      drift_detected: data.drift_detected,
+      drift_score: data.drift_score,
+      detection_method: data.detection_method,
+      details: data.details
+    }));
+  }
+
+  getPackageVersionsArray(): any[] {
+    if (!this.basicResults?.reproducibility_info?.package_versions) {
+      return [];
+    }
+    
+    return Object.entries(this.basicResults.reproducibility_info.package_versions).map(([key, value]) => ({
+      key,
+      value
+    }));
+  }
+
+  getAnalysisConfigArray(): any[] {
+    if (!this.basicResults?.reproducibility_info?.analysis_config) {
+      return [];
+    }
+    
+    return Object.entries(this.basicResults.reproducibility_info.analysis_config).map(([key, value]) => ({
+      key: key.replace(/_/g, ' '),
+      value: typeof value === 'object' ? JSON.stringify(value) : value
+    }));
+  }
+
+  // Missing Data Analysis Helper Methods
+  getCompletenessScoreClass(percentage: number): string {
+    if (percentage >= 95) return 'score-excellent';
+    if (percentage >= 85) return 'score-good';
+    if (percentage >= 70) return 'score-fair';
+    return 'score-poor';
+  }
+
+  getCompletenessTextClass(percentage: number): string {
+    if (percentage >= 95) return 'excellent';
+    if (percentage >= 85) return 'good';
+    if (percentage >= 70) return 'fair';
+    return 'poor';
+  }
+
+  getCompletenessAssessment(percentage: number): string {
+    if (percentage >= 95) return 'Excellent data quality - minimal missing values detected';
+    if (percentage >= 85) return 'Good data quality - acceptable level of completeness';
+    if (percentage >= 70) return 'Fair data quality - some missing values may impact analysis';
+    return 'Poor data quality - significant missing values require attention';
+  }
+
+  getUsabilityClass(percentage: number): string {
+    if (percentage >= 90) return 'excellent';
+    if (percentage >= 75) return 'good';
+    if (percentage >= 60) return 'fair';
+    return 'poor';
+  }
+
+  getUsabilityRating(percentage: number): string {
+    if (percentage >= 90) return 'Excellent';
+    if (percentage >= 75) return 'Good';
+    if (percentage >= 60) return 'Fair';
+    return 'Poor';
+  }
+
+  getUsabilityIconClass(percentage: number): string {
+    if (percentage >= 90) return 'excellent';
+    if (percentage >= 75) return 'good';
+    if (percentage >= 60) return 'fair';
+    return 'poor';
+  }
+
+  getUsabilityIcon(percentage: number): string {
+    if (percentage >= 90) return 'sentiment_very_satisfied';
+    if (percentage >= 75) return 'sentiment_satisfied';
+    if (percentage >= 60) return 'sentiment_neutral';
+    return 'sentiment_dissatisfied';
+  }
+
+  getQuickMissingInsights(summary: any): Array<{type: string, icon: string, message: string}> {
+    const insights: Array<{type: string, icon: string, message: string}> = [];
+    
+    if (!summary) return insights;
+
+    const missingPercentage = summary.total_percentage || 0;
+    const completePercentage = summary.complete_rows_percentage || 0;
+
+    if (missingPercentage === 0) {
+      insights.push({
+        type: 'success',
+        icon: 'check_circle',
+        message: 'Perfect! No missing values detected in the dataset.'
+      });
+    } else if (missingPercentage < 5) {
+      insights.push({
+        type: 'success',
+        icon: 'thumb_up',
+        message: 'Excellent data quality with minimal missing values.'
+      });
+    } else if (missingPercentage < 15) {
+      insights.push({
+        type: 'warning',
+        icon: 'info',
+        message: 'Moderate missing values detected - manageable with proper handling.'
+      });
+    } else {
+      insights.push({
+        type: 'error',
+        icon: 'warning',
+        message: 'High level of missing values may impact analysis quality.'
+      });
+    }
+
+    if (completePercentage > 80) {
+      insights.push({
+        type: 'info',
+        icon: 'analytics',
+        message: `${completePercentage.toFixed(0)}% of rows are complete - good for most analyses.`
+      });
+    }
+
+    return insights;
+  }
+
+  getColumnImpactColor(count: number): 'primary' | 'accent' | 'warn' {
+    if (count === 0) return 'primary';
+    if (count <= 3) return 'accent';
+    return 'warn';
+  }
+
+  getColumnImpactLevel(count: number): string {
+    if (count === 0) return 'No Impact';
+    if (count <= 3) return 'Low Impact';
+    if (count <= 7) return 'Medium Impact';
+    return 'High Impact';
+  }
+
+  getQualityScoreClass(percentage: number): string {
+    if (percentage >= 95) return 'score-excellent';
+    if (percentage >= 85) return 'score-good';
+    if (percentage >= 70) return 'score-fair';
+    return 'score-poor';
+  }
+
+  getQualityLabel(percentage: number): string {
+    if (percentage >= 95) return 'Excellent';
+    if (percentage >= 85) return 'Good';
+    if (percentage >= 70) return 'Fair';
+    return 'Needs Attention';
+  }
+
+  getColumnTypeIcon(type: string): string {
+    switch (type?.toLowerCase()) {
+      case 'numeric':
+      case 'float':
+      case 'int':
+        return 'functions';
+      case 'categorical':
+      case 'object':
+        return 'label';
+      case 'datetime':
+      case 'timestamp':
+        return 'schedule';
+      case 'boolean':
+        return 'toggle_on';
+      default:
+        return 'help_outline';
+    }
+  }
+
+  getMissingSeverityColor(percentage: number): 'primary' | 'accent' | 'warn' {
+    if (percentage === 0) return 'primary';
+    if (percentage <= 20) return 'accent';
+    return 'warn';
+  }
+
+  getMissingSeverityLabel(percentage: number): string {
+    if (percentage === 0) return 'Complete';
+    if (percentage <= 5) return 'Minimal';
+    if (percentage <= 20) return 'Moderate';
+    if (percentage <= 50) return 'High';
+    return 'Critical';
+  }
+
+  getMissingRateClass(percentage: number): string {
+    if (percentage === 0) return 'complete';
+    if (percentage <= 20) return 'moderate';
+    return 'high';
+  }
+
+  getRecommendationTypeClass(recommendation: string): string {
+    if (recommendation.toLowerCase().includes('warning') || recommendation.toLowerCase().includes('critical')) {
+      return 'warning';
+    }
+    if (recommendation.toLowerCase().includes('error') || recommendation.toLowerCase().includes('urgent')) {
+      return 'error';
+    }
+    if (recommendation.toLowerCase().includes('success') || recommendation.toLowerCase().includes('excellent')) {
+      return 'success';
+    }
+    return 'info';
+  }
+
+
+
+
+
+
+
 }

@@ -23,6 +23,11 @@ class BasicStatsResponse(BaseModel):
     correlation_matrix: Optional[Dict[str, Any]] = None
     distribution_analysis: Optional[Dict[str, Any]] = None
     missing_data_summary: Optional[Dict[str, Any]] = None
+    missing_value_analysis: Optional[Dict[str, Any]] = None
+    duplicates_analysis: Optional[Dict[str, Any]] = None
+    type_integrity_validation: Optional[Dict[str, Any]] = None
+    univariate_summaries: Optional[Dict[str, Any]] = None
+    outlier_detection: Optional[Dict[str, Any]] = None
 
 class AdvancedStatsRequest(BaseModel):
     dataset_id: str

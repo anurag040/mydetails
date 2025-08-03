@@ -64,26 +64,49 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   // Chart configurations
   distributionCharts: Map<string, ChartData<'bar'>> = new Map();
   correlationHeatmapChart: ChartData<'scatter'> | null = null;
+  heatmapVariables: string[] = [];
   
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#00ff7f',
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          usePointStyle: true
+        }
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
         titleColor: '#00ff7f',
         bodyColor: '#ffffff',
         borderColor: '#00ff7f',
-        borderWidth: 1,
+        borderWidth: 2,
+        cornerRadius: 8,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 12
+        },
         callbacks: {
           title: (context) => {
-            return `Range: ${context[0].label}`;
+            return `Value Range: ${context[0].label}`;
           },
           label: (context) => {
-            return `Count: ${context.parsed.y}`;
+            return `Frequency: ${context.parsed.y}`;
+          },
+          afterLabel: (context) => {
+            const total = context.dataset.data.reduce((sum: number, val: any) => sum + (typeof val === 'number' ? val : 0), 0);
+            const percentage = ((context.parsed.y / total) * 100).toFixed(1);
+            return `Percentage: ${percentage}%`;
           }
         }
       }
@@ -93,35 +116,73 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         ticks: {
           color: '#00ff7f',
           font: {
-            size: 10
+            size: 11,
+            weight: 'bold'
           },
           maxRotation: 45,
           minRotation: 45
         },
         grid: {
-          color: 'rgba(0, 255, 127, 0.1)'
+          color: 'rgba(0, 255, 127, 0.2)',
+          lineWidth: 1
         },
         title: {
           display: true,
           text: 'Value Range',
-          color: '#00ff7f'
+          color: '#00ff7f',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        },
+        border: {
+          color: '#00ff7f',
+          width: 2
         }
       },
       y: {
+        beginAtZero: true,
         ticks: {
           color: '#00ff7f',
           font: {
-            size: 10
+            size: 11,
+            weight: 'bold'
+          },
+          callback: function(value: any) {
+            return Number.isInteger(value) ? value : '';
           }
         },
         grid: {
-          color: 'rgba(0, 255, 127, 0.1)'
+          color: 'rgba(0, 255, 127, 0.2)',
+          lineWidth: 1
         },
         title: {
           display: true,
           text: 'Frequency',
-          color: '#00ff7f'
+          color: '#00ff7f',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        },
+        border: {
+          color: '#00ff7f',
+          width: 2
         }
+      }
+    },
+    layout: {
+      padding: {
+        top: 10,
+        bottom: 10,
+        left: 10,
+        right: 10
+      }
+    },
+    elements: {
+      bar: {
+        borderWidth: 2,
+        borderSkipped: false
       }
     }
   };
@@ -131,34 +192,114 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false
+        display: true,
+        position: 'right',
+        labels: {
+          color: '#00ff7f',
+          usePointStyle: true,
+          generateLabels: () => [
+            { text: 'Strong Positive (0.7-1.0)', fillStyle: '#00ff88', strokeStyle: '#00ff88' },
+            { text: 'Moderate Positive (0.3-0.7)', fillStyle: '#c8e6c9', strokeStyle: '#c8e6c9' },
+            { text: 'Weak (-0.3-0.3)', fillStyle: '#666666', strokeStyle: '#666666' },
+            { text: 'Moderate Negative (-0.7--0.3)', fillStyle: '#ffb74d', strokeStyle: '#ffb74d' },
+            { text: 'Strong Negative (-1.0--0.7)', fillStyle: '#ff6600', strokeStyle: '#ff6600' }
+          ]
+        }
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
         titleColor: '#00ff7f',
         bodyColor: '#ffffff',
         borderColor: '#00ff7f',
-        borderWidth: 1
+        borderWidth: 2,
+        cornerRadius: 8,
+        callbacks: {
+          title: (context: any) => {
+            const point = context[0];
+            const xVar = this.heatmapVariables[point.parsed.x] || 'Unknown';
+            const yVar = this.heatmapVariables[point.parsed.y] || 'Unknown';
+            return `${yVar} vs ${xVar}`;
+          },
+          label: (context: any) => {
+            const value = context.parsed.v || 0;
+            return `Correlation: ${value.toFixed(3)}`;
+          },
+          afterLabel: (context: any) => {
+            const value = context.parsed.v || 0;
+            const absValue = Math.abs(value);
+            let strength = '';
+            if (absValue >= 0.9) strength = 'Very Strong';
+            else if (absValue >= 0.7) strength = 'Strong';
+            else if (absValue >= 0.5) strength = 'Moderate';
+            else if (absValue >= 0.3) strength = 'Weak';
+            else strength = 'Very Weak';
+            
+            const direction = value > 0 ? 'Positive' : value < 0 ? 'Negative' : 'None';
+            return `Strength: ${strength} ${direction}`;
+          }
+        }
       }
     },
     scales: {
       x: {
         type: 'linear',
         position: 'bottom',
+        min: -0.5,
+        max: (this.heatmapVariables?.length || 1) - 0.5,
         ticks: {
-          color: '#00ff7f'
+          color: '#00ff7f',
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          stepSize: 1,
+          callback: (value: any) => {
+            const index = Math.round(value);
+            return this.heatmapVariables?.[index] || '';
+          }
         },
         grid: {
-          color: 'rgba(0, 255, 127, 0.1)'
+          color: 'rgba(0, 255, 127, 0.2)',
+          lineWidth: 1
+        },
+        title: {
+          display: true,
+          text: 'Variables',
+          color: '#00ff7f',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
         }
       },
       y: {
         type: 'linear',
+        min: -0.5,
+        max: (this.heatmapVariables?.length || 1) - 0.5,
         ticks: {
-          color: '#00ff7f'
+          color: '#00ff7f',
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          stepSize: 1,
+          callback: (value: any) => {
+            const index = Math.round(value);
+            return this.heatmapVariables?.[index] || '';
+          }
         },
         grid: {
-          color: 'rgba(0, 255, 127, 0.1)'
+          color: 'rgba(0, 255, 127, 0.2)',
+          lineWidth: 1
+        },
+        title: {
+          display: true,
+          text: 'Variables',
+          color: '#00ff7f',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
         }
       }
     }
@@ -942,19 +1083,48 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   generateChartData(column: string, histogram: Array<{range: string, count: number, height: number}>): void {
+    // Create a gradient color array that mimics matplotlib's default colors
+    const colors = histogram.map((_, index) => {
+      const ratio = index / (histogram.length - 1);
+      // Create a blue-to-orange gradient similar to matplotlib
+      const r = Math.floor(30 + ratio * 200);
+      const g = Math.floor(144 + ratio * 100);  
+      const b = Math.floor(255 - ratio * 200);
+      return `rgba(${r}, ${g}, ${b}, 0.7)`;
+    });
+
+    const borderColors = histogram.map((_, index) => {
+      const ratio = index / (histogram.length - 1);
+      const r = Math.floor(20 + ratio * 180);
+      const g = Math.floor(100 + ratio * 80);
+      const b = Math.floor(200 - ratio * 150);
+      return `rgba(${r}, ${g}, ${b}, 1)`;
+    });
+
     const chartData: ChartData<'bar'> = {
-      labels: histogram.map(h => h.range),
+      labels: histogram.map(h => h.range.replace('-', ' to ')),
       datasets: [{
+        label: `${column} Distribution`,
         data: histogram.map(h => h.count),
-        backgroundColor: histogram.map((_, index) => {
-          const alpha = 0.6 + (index * 0.05); // Varying opacity
-          return `rgba(0, 255, 127, ${alpha})`;
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 2,
+        hoverBackgroundColor: histogram.map((_, index) => {
+          const ratio = index / (histogram.length - 1);
+          const r = Math.floor(50 + ratio * 150);
+          const g = Math.floor(164 + ratio * 80);
+          const b = Math.floor(235 - ratio * 150);
+          return `rgba(${r}, ${g}, ${b}, 0.9)`;
         }),
-        borderColor: '#00ff7f',
-        borderWidth: 1,
-        hoverBackgroundColor: '#ff6600',
         hoverBorderColor: '#ff6600',
-        borderRadius: 4
+        hoverBorderWidth: 3,
+        borderRadius: {
+          topLeft: 4,
+          topRight: 4,
+          bottomLeft: 0,
+          bottomRight: 0
+        },
+        borderSkipped: false
       }]
     };
     
@@ -1074,20 +1244,48 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     Object.keys(histograms).forEach(column => {
       const histData = histograms[column];
       if (histData && histData.counts && histData.labels) {
+        // Create matplotlib-like color scheme
+        const colors = histData.counts.map((_: number, index: number) => {
+          const ratio = index / (histData.counts.length - 1);
+          // Blue to orange gradient similar to matplotlib
+          const r = Math.floor(30 + ratio * 200);
+          const g = Math.floor(144 + ratio * 100);  
+          const b = Math.floor(255 - ratio * 200);
+          return `rgba(${r}, ${g}, ${b}, 0.7)`;
+        });
+
+        const borderColors = histData.counts.map((_: number, index: number) => {
+          const ratio = index / (histData.counts.length - 1);
+          const r = Math.floor(20 + ratio * 180);
+          const g = Math.floor(100 + ratio * 80);
+          const b = Math.floor(200 - ratio * 150);
+          return `rgba(${r}, ${g}, ${b}, 1)`;
+        });
+
         const chartData: ChartData<'bar'> = {
           labels: histData.labels,
           datasets: [{
+            label: `${column} Distribution (n=${histData.total_count || 'N/A'})`,
             data: histData.counts,
-            backgroundColor: histData.counts.map((_: number, index: number) => {
-              const alpha = 0.6 + (index * 0.05); // Varying opacity
-              return `rgba(0, 255, 127, ${Math.min(alpha, 1)})`;
+            backgroundColor: colors,
+            borderColor: borderColors,
+            borderWidth: 2,
+            hoverBackgroundColor: histData.counts.map((_: number, index: number) => {
+              const ratio = index / Math.max(histData.counts.length - 1, 1);
+              const r = Math.floor(50 + ratio * 150);
+              const g = Math.floor(164 + ratio * 80);
+              const b = Math.floor(235 - ratio * 150);
+              return `rgba(${r}, ${g}, ${b}, 0.9)`;
             }),
-            borderColor: '#00ff7f',
-            borderWidth: 1,
-            hoverBackgroundColor: '#ff6600',
             hoverBorderColor: '#ff6600',
-            borderRadius: 4,
-            label: `${column} Distribution`
+            hoverBorderWidth: 3,
+            borderRadius: {
+              topLeft: 4,
+              topRight: 4,
+              bottomLeft: 0,
+              bottomRight: 0
+            },
+            borderSkipped: false
           }]
         };
         
@@ -1104,6 +1302,9 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
 
     const variables = heatmapData.variables;
     const matrix = heatmapData.correlation_matrix;
+    
+    // Set variables for chart options
+    this.heatmapVariables = variables;
     
     // Create scatter plot data for heatmap visualization
     const scatterData: any[] = [];
@@ -1138,7 +1339,23 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       }]
     };
     
+    // Update chart options with current variables
+    this.updateHeatmapChartOptions();
+    
     console.log('Created correlation heatmap:', this.correlationHeatmapChart);
+  }
+
+  updateHeatmapChartOptions(): void {
+    if (this.heatmapChartOptions && this.heatmapChartOptions.scales) {
+      // Update X axis max value
+      if (this.heatmapChartOptions.scales['x']) {
+        (this.heatmapChartOptions.scales['x'] as any).max = this.heatmapVariables.length - 0.5;
+      }
+      // Update Y axis max value  
+      if (this.heatmapChartOptions.scales['y']) {
+        (this.heatmapChartOptions.scales['y'] as any).max = this.heatmapVariables.length - 0.5;
+      }
+    }
   }
 
   getHistogramData(column: string): ChartData<'bar'> | null {
@@ -1162,5 +1379,299 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     } catch (error) {
       return 'Error formatting distribution data';
     }
+  }
+
+  // Schema and Data Source Helper Methods
+  getSchemaTableData(): any[] {
+    if (!this.quickSummary?.schema) return [];
+    
+    return Object.entries(this.quickSummary.schema).map(([name, details]: [string, any]) => ({
+      name,
+      type: this.getReadableDataType(details.dtype),
+      null_count: details.null_count,
+      null_percentage: details.null_percentage,
+      unique_count: details.unique_count,
+      unique_percentage: details.unique_percentage,
+      memory_usage: details.memory_usage,
+      is_numeric: details.is_numeric,
+      is_categorical: details.is_categorical,
+      is_datetime: details.is_datetime
+    }));
+  }
+
+  getReadableDataType(dtype: string): string {
+    if (dtype.includes('int')) return 'Integer';
+    if (dtype.includes('float')) return 'Float';
+    if (dtype.includes('object')) return 'Text/Categorical';
+    if (dtype.includes('datetime')) return 'DateTime';
+    if (dtype.includes('bool')) return 'Boolean';
+    return dtype;
+  }
+
+  getTypeColor(type: string): 'primary' | 'accent' | 'warn' {
+    switch (type) {
+      case 'Integer':
+      case 'Float':
+        return 'primary';
+      case 'Text/Categorical':
+        return 'accent';
+      case 'DateTime':
+      case 'Boolean':
+        return 'warn';
+      default:
+        return 'primary';
+    }
+  }
+
+  getPreviewColumns(): string[] {
+    if (!this.quickSummary?.sample_preview?.head?.length) return [];
+    return Object.keys(this.quickSummary.sample_preview.head[0]);
+  }
+
+  formatCellValue(value: any): string {
+    if (value === null || value === undefined) return '(null)';
+    if (typeof value === 'number') {
+      return value % 1 === 0 ? value.toString() : value.toFixed(3);
+    }
+    if (typeof value === 'string' && value.length > 50) {
+      return value.substring(0, 47) + '...';
+    }
+    return value.toString();
+  }
+
+  // Missing Value Analysis Helper Methods
+  getMissingValueTableData(): any[] {
+    if (!this.basicResults?.missing_value_analysis?.column_analysis) return [];
+    
+    return Object.entries(this.basicResults.missing_value_analysis.column_analysis).map(([name, details]: [string, any]) => ({
+      name,
+      missing_count: details.missing_count,
+      missing_percentage: details.missing_percentage,
+      pattern: details.pattern,
+      suggested_strategy: details.suggested_strategy,
+      data_type: details.data_type,
+      is_numeric: details.is_numeric
+    }));
+  }
+
+  getPatternColor(pattern: string): 'primary' | 'accent' | 'warn' {
+    switch (pattern) {
+      case 'None':
+        return 'primary';
+      case 'Random':
+      case 'Sporadic':
+        return 'accent';
+      case 'Systematic High':
+      case 'Complete':
+        return 'warn';
+      default:
+        return 'accent';
+    }
+  }
+
+  // Duplicates Analysis Helper Methods
+  getQualityScoreClass(score: number): string {
+    if (score >= 95) return 'excellent';
+    if (score >= 85) return 'good';
+    if (score >= 70) return 'fair';
+    return 'poor';
+  }
+
+  hasPartialDuplicates(): boolean {
+    return this.basicResults?.duplicates_analysis?.partial_duplicates && 
+           Object.keys(this.basicResults.duplicates_analysis.partial_duplicates).length > 0;
+  }
+
+  getPartialDuplicatesArray(): any[] {
+    if (!this.basicResults?.duplicates_analysis?.partial_duplicates) return [];
+    
+    return Object.entries(this.basicResults.duplicates_analysis.partial_duplicates).map(([key, value]) => ({
+      key,
+      value
+    }));
+  }
+
+  getRecommendationIcon(recommendation: string): string {
+    if (recommendation.includes('✅')) return 'check_circle';
+    if (recommendation.includes('⚠️')) return 'warning';
+    if (recommendation.includes('🚨')) return 'error';
+    return 'info';
+  }
+
+  getRecommendationIconClass(recommendation: string): string {
+    if (recommendation.includes('✅')) return 'success';
+    if (recommendation.includes('⚠️')) return 'warning';
+    if (recommendation.includes('🚨')) return 'error';
+    return 'info';
+  }
+
+  // Type/Integrity Validation Helper Methods
+  getTypeValidationColumns(): string[] {
+    if (!this.basicResults?.type_integrity_validation?.column_validations) return [];
+    return Object.keys(this.basicResults.type_integrity_validation.column_validations);
+  }
+
+  getTypeValidationTableData(): any[] {
+    if (!this.basicResults?.type_integrity_validation?.column_validations) return [];
+    
+    return Object.entries(this.basicResults.type_integrity_validation.column_validations).map(([name, details]: [string, any]) => ({
+      name,
+      declared_type: details.declared_type,
+      inferred_type: details.inferred_type,
+      integrity_score: details.integrity_score,
+      issues_count: details.issues.length,
+      recommendations_count: details.recommendations.length,
+      issues: details.issues,
+      recommendations: details.recommendations
+    }));
+  }
+
+  getIntegrityScoreClass(score: number): string {
+    if (score >= 90) return 'excellent';
+    if (score >= 75) return 'good';
+    if (score >= 50) return 'fair';
+    return 'poor';
+  }
+
+  // Univariate Summaries Helper Methods
+  getNumericSummaryColumns(): string[] {
+    if (!this.basicResults?.univariate_summaries?.numeric_summaries) return [];
+    return Object.keys(this.basicResults.univariate_summaries.numeric_summaries);
+  }
+
+  getCategoricalSummaryColumns(): string[] {
+    if (!this.basicResults?.univariate_summaries?.categorical_summaries) return [];
+    return Object.keys(this.basicResults.univariate_summaries.categorical_summaries);
+  }
+
+  getTemporalSummaryColumns(): string[] {
+    if (!this.basicResults?.univariate_summaries?.temporal_summaries) return [];
+    return Object.keys(this.basicResults.univariate_summaries.temporal_summaries);
+  }
+
+  getNumericSummaryData(column: string): any {
+    return this.basicResults?.univariate_summaries?.numeric_summaries?.[column] || {};
+  }
+
+  getCategoricalSummaryData(column: string): any {
+    return this.basicResults?.univariate_summaries?.categorical_summaries?.[column] || {};
+  }
+
+  getTemporalSummaryData(column: string): any {
+    return this.basicResults?.univariate_summaries?.temporal_summaries?.[column] || {};
+  }
+
+  getTopCategoriesArray(topCategories: any): any[] {
+    if (!topCategories) return [];
+    return Object.entries(topCategories).map(([category, count]) => ({ category, count }));
+  }
+
+  formatDistributionShape(shape: any): string {
+    if (!shape || !shape.overall_shape) return 'Unknown';
+    return shape.overall_shape;
+  }
+
+  formatNormalityTest(test: any): string {
+    if (!test || test.is_normal === null) return 'Cannot determine';
+    if (test.is_normal) return `Normal (p=${test.p_value?.toFixed(4)})`;
+    return `Not Normal (p=${test.p_value?.toFixed(4)})`;
+  }
+
+  // Outlier Detection Helper Methods
+  getOutlierDetectionColumns(): string[] {
+    if (!this.basicResults?.outlier_detection?.univariate_outliers) return [];
+    return Object.keys(this.basicResults.outlier_detection.univariate_outliers);
+  }
+
+  getOutlierData(column: string): any {
+    return this.basicResults?.outlier_detection?.univariate_outliers?.[column] || {};
+  }
+
+  getOutlierSeverityClass(severity: string): string {
+    switch (severity) {
+      case 'none': return 'success';
+      case 'low': return 'info';
+      case 'moderate': return 'warning';
+      case 'high': case 'critical': return 'error';
+      default: return 'info';
+    }
+  }
+
+  getOutlierMethodData(column: string, method: string): any {
+    const outlierData = this.getOutlierData(column);
+    return outlierData.methods?.[method] || {};
+  }
+
+  formatOutlierMethod(method: string): string {
+    switch (method) {
+      case 'iqr': return 'IQR Method';
+      case 'zscore': return 'Z-Score';
+      case 'modified_zscore': return 'Modified Z-Score';
+      case 'grubbs': return 'Grubbs Test';
+      default: return method;
+    }
+  }
+
+  hasMultivariateOutliers(): boolean {
+    return this.basicResults?.outlier_detection?.multivariate_outliers && 
+           Object.keys(this.basicResults.outlier_detection.multivariate_outliers).length > 0 &&
+           !this.basicResults.outlier_detection.multivariate_outliers.message;
+  }
+
+  getMultivariateOutlierData(): any {
+    return this.basicResults?.outlier_detection?.multivariate_outliers || {};
+  }
+
+  // Missing Data Analysis Helper Methods
+  formatMissingDataSummary(): any[] {
+    if (!this.basicResults?.missing_data_summary) return [];
+    
+    const summary = this.basicResults.missing_data_summary;
+    return [
+      { label: 'Total Missing Values', value: summary.total_missing_values || 0 },
+      { label: 'Missing Percentage', value: `${(summary.missing_percentage || 0).toFixed(2)}%` },
+      { label: 'Complete Rows', value: summary.complete_rows || 0 },
+      { label: 'Incomplete Rows', value: summary.incomplete_rows || 0 },
+      { label: 'Columns with Missing', value: summary.columns_with_missing || 0 },
+      { label: 'Pattern Count', value: summary.pattern_count || 0 }
+    ];
+  }
+
+  // Distribution Analysis Helper Methods
+  formatDistributionSummary(): any[] {
+    if (!this.basicResults?.distribution_analysis) return [];
+    
+    const dist = this.basicResults.distribution_analysis;
+    const result: any[] = [];
+    
+    if (dist.numerical_distributions) {
+      Object.entries(dist.numerical_distributions).forEach(([column, data]: [string, any]) => {
+        result.push({
+          column,
+          type: 'Numerical',
+          skewness: data.skewness?.toFixed(3) || 'N/A',
+          kurtosis: data.kurtosis?.toFixed(3) || 'N/A',
+          shape: data.distribution_shape?.overall_shape || 'Unknown',
+          normality: data.normality_test?.is_normal ? 'Normal' : 'Non-normal',
+          outliers: data.outlier_info?.outlier_count || 0
+        });
+      });
+    }
+    
+    if (dist.categorical_distributions) {
+      Object.entries(dist.categorical_distributions).forEach(([column, data]: [string, any]) => {
+        result.push({
+          column,
+          type: 'Categorical',
+          categories: data.unique_count || 0,
+          mostCommon: data.most_common?.[0]?.[0] || 'N/A',
+          uniformity: data.uniformity_score?.toFixed(3) || 'N/A',
+          entropy: data.entropy?.toFixed(3) || 'N/A',
+          balance: data.balance_score || 'N/A'
+        });
+      });
+    }
+    
+    return result;
   }
 }

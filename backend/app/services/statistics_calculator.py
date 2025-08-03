@@ -10,6 +10,24 @@ from typing import Dict, Any, List, Optional
 from app.services.file_handler import FileHandler
 from app.schemas.responses import BasicStatsResponse, AdvancedStatsResponse
 
+def convert_numpy_types(obj):
+    """Convert numpy types to native Python types for JSON serialization"""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif hasattr(obj, 'item'):
+        return obj.item()
+    return obj
+
 class StatisticsCalculator:
     def __init__(self):
         self.file_handler = FileHandler()
@@ -33,6 +51,21 @@ class StatisticsCalculator:
         
         if "missing_data" in options:
             result.missing_data_summary = self._calculate_missing_data_analysis(df)
+        
+        if "missing_value_analysis" in options:
+            result.missing_value_analysis = self._calculate_missing_value_analysis(df)
+        
+        if "duplicates_analysis" in options:
+            result.duplicates_analysis = self._calculate_duplicates_analysis(df)
+        
+        if "type_integrity_validation" in options:
+            result.type_integrity_validation = self._calculate_type_integrity_validation(df)
+        
+        if "univariate_summaries" in options:
+            result.univariate_summaries = self._calculate_univariate_summaries(df)
+        
+        if "outlier_detection" in options:
+            result.outlier_detection = self._calculate_outlier_detection(df)
         
         return result
     
@@ -62,29 +95,1235 @@ class StatisticsCalculator:
         return result
     
     async def get_quick_summary(self, dataset_id: str) -> Dict[str, Any]:
-        """Get a quick statistical summary"""
+        """Get a comprehensive data source overview including schema and sample preview"""
         df = await self.file_handler.load_dataset(dataset_id)
         if df is None:
             raise FileNotFoundError("Dataset not found")
         
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         categorical_cols = df.select_dtypes(include=['object']).columns
+        datetime_cols = df.select_dtypes(include=['datetime64']).columns
         
-        return {
+        # Schema information
+        schema_info = {}
+        for col in df.columns:
+            dtype = str(df[col].dtype)
+            null_count = int(df[col].isnull().sum())
+            unique_count = int(df[col].nunique())
+            
+            schema_info[col] = {
+                "dtype": dtype,
+                "null_count": null_count,
+                "null_percentage": float(null_count / len(df) * 100),
+                "unique_count": unique_count,
+                "unique_percentage": float(unique_count / len(df) * 100),
+                "memory_usage": float(df[col].memory_usage(deep=True) / 1024),  # KB
+                "is_numeric": col in numeric_cols,
+                "is_categorical": col in categorical_cols,
+                "is_datetime": col in datetime_cols
+            }
+            
+            # Add sample values for categorical columns
+            if col in categorical_cols and unique_count <= 20:
+                schema_info[col]["sample_values"] = df[col].dropna().unique().tolist()[:10]
+            elif col in numeric_cols:
+                schema_info[col]["min_value"] = float(df[col].min()) if not df[col].isna().all() else None
+                schema_info[col]["max_value"] = float(df[col].max()) if not df[col].isna().all() else None
+        
+        # Sample preview (first and last 5 rows)
+        sample_preview = {
+            "head": convert_numpy_types(df.head(5).to_dict('records')),
+            "tail": convert_numpy_types(df.tail(5).to_dict('records')),
+            "random_sample": convert_numpy_types(df.sample(min(5, len(df)), random_state=42).to_dict('records')) if len(df) > 10 else []
+        }
+        
+        return convert_numpy_types({
             "dataset_id": dataset_id,
             "shape": {"rows": df.shape[0], "columns": df.shape[1]},
             "column_types": {
                 "numeric": len(numeric_cols),
                 "categorical": len(categorical_cols),
-                "datetime": len(df.select_dtypes(include=['datetime']).columns)
+                "datetime": len(datetime_cols)
             },
+            "schema": schema_info,
+            "sample_preview": sample_preview,
             "missing_data": {
                 "total_missing": int(df.isnull().sum().sum()),
                 "percentage": float(df.isnull().sum().sum() / (df.shape[0] * df.shape[1]) * 100)
             },
-            "memory_usage": f"{df.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB"
+            "memory_usage": f"{df.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB",
+            "file_info": {
+                "estimated_file_size": f"{df.memory_usage(deep=True).sum() / 1024 / 1024:.2f} MB",
+                "columns_with_missing": len([col for col in df.columns if df[col].isnull().any()]),
+                "duplicate_rows": int(df.duplicated().sum())
+            }
+        })
+    
+    def _calculate_missing_value_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Calculate comprehensive missing value analysis and suggest strategies"""
+        missing_stats = {}
+        
+        # Per-column missing value analysis
+        for col in df.columns:
+            missing_count = df[col].isnull().sum()
+            missing_percentage = (missing_count / len(df)) * 100
+            
+            # Determine missing value pattern
+            pattern = "Random" if missing_count > 0 else "None"
+            if missing_count > 0:
+                # Check if missing values correlate with other columns
+                if missing_count == len(df):
+                    pattern = "Complete"
+                elif missing_percentage > 50:
+                    pattern = "Systematic High"
+                elif missing_percentage > 20:
+                    pattern = "Systematic Medium"
+                else:
+                    pattern = "Sporadic"
+            
+            # Suggest strategy based on missing percentage and data type
+            strategy = self._suggest_missing_value_strategy(df, col, missing_percentage)
+            
+            missing_stats[col] = {
+                "missing_count": int(missing_count),
+                "missing_percentage": float(missing_percentage),
+                "total_values": len(df),
+                "pattern": pattern,
+                "suggested_strategy": strategy,
+                "data_type": str(df[col].dtype),
+                "is_numeric": col in df.select_dtypes(include=[np.number]).columns,
+                "unique_values": int(df[col].nunique()) if missing_count < len(df) else 0
+            }
+        
+        # Overall missing value summary
+        total_missing = df.isnull().sum().sum()
+        total_cells = df.shape[0] * df.shape[1]
+        columns_with_missing = len([col for col in df.columns if df[col].isnull().any()])
+        
+        # Missing value heatmap data (for visualization)
+        missing_matrix = df.isnull().astype(int)
+        
+        return convert_numpy_types({
+            "column_analysis": missing_stats,
+            "overall_summary": {
+                "total_missing_values": int(total_missing),
+                "total_cells": total_cells,
+                "overall_missing_percentage": float((total_missing / total_cells) * 100),
+                "columns_with_missing": columns_with_missing,
+                "complete_rows": int(df.dropna().shape[0]),
+                "complete_rows_percentage": float((df.dropna().shape[0] / len(df)) * 100)
+            },
+            "recommendations": self._get_missing_value_recommendations(missing_stats, df),
+            "missing_patterns": self._analyze_missing_patterns(df)
+        })
+    
+    def _suggest_missing_value_strategy(self, df: pd.DataFrame, column: str, missing_percentage: float) -> Dict[str, Any]:
+        """Suggest appropriate strategy for handling missing values"""
+        is_numeric = column in df.select_dtypes(include=[np.number]).columns
+        unique_ratio = df[column].nunique() / len(df.dropna(subset=[column])) if len(df.dropna(subset=[column])) > 0 else 0
+        
+        strategies = []
+        
+        if missing_percentage == 0:
+            return {"primary": "No action needed", "alternatives": [], "reason": "No missing values"}
+        
+        if missing_percentage > 70:
+            strategies.append({
+                "method": "Drop Column",
+                "priority": "High",
+                "reason": f"Too many missing values ({missing_percentage:.1f}%)"
+            })
+        
+        if missing_percentage < 5:
+            if is_numeric:
+                strategies.append({
+                    "method": "Mean/Median Imputation",
+                    "priority": "High",
+                    "reason": "Low missing percentage, numeric data"
+                })
+            else:
+                strategies.append({
+                    "method": "Mode Imputation",
+                    "priority": "High",
+                    "reason": "Low missing percentage, categorical data"
+                })
+        
+        if missing_percentage < 30:
+            strategies.append({
+                "method": "Listwise Deletion",
+                "priority": "Medium",
+                "reason": "Moderate missing percentage"
+            })
+        
+        if is_numeric and missing_percentage < 50:
+            strategies.append({
+                "method": "Interpolation",
+                "priority": "Medium",
+                "reason": "Numeric data, can use interpolation"
+            })
+        
+        if unique_ratio < 0.1:  # Low cardinality categorical
+            strategies.append({
+                "method": "Mode Imputation",
+                "priority": "Medium",
+                "reason": "Categorical data with low cardinality"
+            })
+        
+        strategies.append({
+            "method": "Advanced Imputation (KNN/MICE)",
+            "priority": "Low",
+            "reason": "Complex imputation for better accuracy"
+        })
+        
+        return {
+            "primary": strategies[0]["method"] if strategies else "Manual Review",
+            "alternatives": [s["method"] for s in strategies[1:3]],
+            "detailed_options": strategies
         }
     
+    def _get_missing_value_recommendations(self, missing_stats: Dict, df: pd.DataFrame) -> List[str]:
+        """Generate overall recommendations for missing value handling"""
+        recommendations = []
+        
+        high_missing_cols = [col for col, stats in missing_stats.items() 
+                           if stats["missing_percentage"] > 50]
+        
+        if high_missing_cols:
+            recommendations.append(f"Consider dropping columns with >50% missing: {', '.join(high_missing_cols[:3])}")
+        
+        numeric_missing = [col for col, stats in missing_stats.items() 
+                         if stats["is_numeric"] and 5 < stats["missing_percentage"] < 30]
+        
+        if numeric_missing:
+            recommendations.append(f"Use median imputation for numeric columns: {', '.join(numeric_missing[:3])}")
+        
+        if len([col for col, stats in missing_stats.items() if stats["missing_count"] > 0]) > len(df.columns) * 0.5:
+            recommendations.append("Consider using advanced imputation methods (MICE, KNN) due to widespread missing data")
+        
+        complete_rows_pct = (df.dropna().shape[0] / len(df)) * 100
+        if complete_rows_pct > 70:
+            recommendations.append(f"Listwise deletion viable: {complete_rows_pct:.1f}% complete rows")
+        
+        return recommendations
+    
+    def _analyze_missing_patterns(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze patterns in missing data"""
+        missing_combinations = df.isnull().groupby(list(df.columns)).size().reset_index(name='count')
+        missing_combinations = missing_combinations.sort_values('count', ascending=False)
+        
+        return {
+            "most_common_patterns": convert_numpy_types(missing_combinations.head(5).to_dict('records')),
+            "total_patterns": len(missing_combinations)
+        }
+    
+    def _calculate_duplicates_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Calculate comprehensive duplicate analysis"""
+        
+        # Full row duplicates
+        full_duplicates = df.duplicated()
+        full_duplicate_count = full_duplicates.sum()
+        
+        # Partial duplicates analysis (by subsets of columns)
+        partial_duplicates = {}
+        important_cols = df.columns[:min(5, len(df.columns))]  # Analyze first 5 columns
+        
+        for i in range(2, min(len(important_cols) + 1, 4)):  # Check combinations of 2-3 columns
+            from itertools import combinations
+            for col_combo in combinations(important_cols, i):
+                combo_name = " + ".join(col_combo)
+                partial_duplicate_count = df.duplicated(subset=list(col_combo)).sum()
+                if partial_duplicate_count > 0:
+                    partial_duplicates[combo_name] = {
+                        "count": int(partial_duplicate_count),
+                        "percentage": float((partial_duplicate_count / len(df)) * 100),
+                        "columns": list(col_combo)
+                    }
+        
+        # Identify potentially problematic duplicates
+        duplicate_rows_detail = []
+        if full_duplicate_count > 0:
+            duplicate_indices = df[df.duplicated(keep=False)].index.tolist()
+            # Group duplicates
+            seen_rows = set()
+            for idx in duplicate_indices:
+                if idx not in seen_rows:
+                    row_hash = hash(tuple(df.loc[idx].values))
+                    duplicate_group = df[df.apply(lambda x: hash(tuple(x.values)) == row_hash, axis=1)]
+                    if len(duplicate_group) > 1:
+                        duplicate_rows_detail.append({
+                            "group_id": len(duplicate_rows_detail) + 1,
+                            "count": len(duplicate_group),
+                            "indices": duplicate_group.index.tolist(),
+                            "sample_row": convert_numpy_types(duplicate_group.iloc[0].to_dict())
+                        })
+                        seen_rows.update(duplicate_group.index.tolist())
+        
+        # Duplicate handling recommendations
+        recommendations = self._get_duplicate_recommendations(full_duplicate_count, len(df), partial_duplicates)
+        
+        return convert_numpy_types({
+            "full_duplicates": {
+                "count": int(full_duplicate_count),
+                "percentage": float((full_duplicate_count / len(df)) * 100),
+                "unique_rows": int(len(df) - full_duplicate_count),
+                "duplicate_groups": duplicate_rows_detail[:5]  # Limit to first 5 groups
+            },
+            "partial_duplicates": partial_duplicates,
+            "summary": {
+                "total_rows": len(df),
+                "unique_rows": int(len(df) - full_duplicate_count),
+                "duplicate_rows": int(full_duplicate_count),
+                "data_quality_score": float(((len(df) - full_duplicate_count) / len(df)) * 100)
+            },
+            "recommendations": recommendations,
+            "impact_analysis": {
+                "memory_saved_if_removed": f"{(full_duplicate_count * df.memory_usage(deep=True).sum() / len(df) / 1024 / 1024):.2f} MB",
+                "rows_after_deduplication": int(len(df) - full_duplicate_count)
+            }
+        })
+    
+    def _get_duplicate_recommendations(self, duplicate_count: int, total_rows: int, partial_duplicates: Dict) -> List[str]:
+        """Generate recommendations for handling duplicates"""
+        recommendations = []
+        duplicate_percentage = (duplicate_count / total_rows) * 100
+        
+        if duplicate_count == 0:
+            recommendations.append("✅ No duplicate rows found - data quality is excellent")
+        elif duplicate_percentage < 1:
+            recommendations.append(f"✅ Low duplicate rate ({duplicate_percentage:.2f}%) - safe to remove duplicates")
+        elif duplicate_percentage < 5:
+            recommendations.append(f"⚠️ Moderate duplicate rate ({duplicate_percentage:.2f}%) - review before removal")
+        else:
+            recommendations.append(f"🚨 High duplicate rate ({duplicate_percentage:.2f}%) - investigate data source")
+        
+        if duplicate_count > 0:
+            recommendations.append("Consider using df.drop_duplicates() to remove exact duplicates")
+            recommendations.append("Review duplicate groups to understand if they represent legitimate vs. erroneous duplicates")
+        
+        if partial_duplicates:
+            partial_count = len(partial_duplicates)
+            recommendations.append(f"Found {partial_count} partial duplicate patterns - review for business logic duplicates")
+            
+            # Explain what partial duplicates mean
+            if partial_count > 0:
+                example_combo = list(partial_duplicates.keys())[0]
+                recommendations.append(f"⚠️ Partial duplicates detected: rows that share identical values in specific column combinations")
+                recommendations.append(f"📋 Example: '{example_combo}' has identical values across {partial_duplicates[example_combo]['count']} rows")
+                recommendations.append(f"🔍 Business Impact: These might represent legitimate entries (e.g., same customer, different orders) or data quality issues")
+                recommendations.append(f"💡 Action Required: Review each pattern to determine if duplicates are intentional or require deduplication")
+        
+        return recommendations
+    
+    def _calculate_type_integrity_validation(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Validate data types and integrity across the dataset"""
+        validation_results = {}
+        overall_quality_score = 0
+        total_checks = 0
+        
+        # Check each column for type consistency and integrity
+        for col in df.columns:
+            col_data = df[col].dropna()  # Exclude missing values from type checks
+            if len(col_data) == 0:
+                continue
+                
+            validation_results[col] = {
+                "declared_type": str(df[col].dtype),
+                "inferred_type": self._infer_optimal_type(col_data),
+                "integrity_score": 0,
+                "issues": [],
+                "recommendations": []
+            }
+            
+            # Type consistency checks
+            type_issues = self._check_type_consistency(col_data, col)
+            validation_results[col]["issues"].extend(type_issues)
+            
+            # Data integrity checks
+            integrity_issues = self._check_data_integrity(col_data, col)
+            validation_results[col]["issues"].extend(integrity_issues)
+            
+            # Calculate integrity score for this column
+            max_possible_issues = 5  # Maximum number of different issue types
+            actual_issues = len(validation_results[col]["issues"])
+            col_score = max(0, (max_possible_issues - actual_issues) / max_possible_issues * 100)
+            validation_results[col]["integrity_score"] = col_score
+            
+            # Generate recommendations
+            validation_results[col]["recommendations"] = self._generate_type_recommendations(
+                validation_results[col]["issues"], 
+                validation_results[col]["declared_type"], 
+                validation_results[col]["inferred_type"]
+            )
+            
+            overall_quality_score += col_score
+            total_checks += 1
+        
+        # Calculate overall data quality score
+        overall_quality_score = overall_quality_score / total_checks if total_checks > 0 else 100
+        
+        # Global integrity checks
+        global_issues = self._check_global_integrity(df)
+        
+        return convert_numpy_types({
+            "column_validations": validation_results,
+            "overall_quality_score": round(overall_quality_score, 2),
+            "global_issues": global_issues,
+            "summary": {
+                "columns_analyzed": total_checks,
+                "columns_with_issues": len([col for col, result in validation_results.items() if result["issues"]]),
+                "average_integrity_score": round(overall_quality_score, 2),
+                "critical_issues": len([issue for col_result in validation_results.values() for issue in col_result["issues"] if "Critical" in issue]),
+                "warning_issues": len([issue for col_result in validation_results.values() for issue in col_result["issues"] if "Warning" in issue])
+            },
+            "recommendations": self._generate_global_type_recommendations(validation_results, global_issues)
+        })
+    
+    def _infer_optimal_type(self, series: pd.Series) -> str:
+        """Infer the optimal data type for a series"""
+        sample_size = min(1000, len(series))  # Sample for performance
+        sample = series.sample(sample_size, random_state=42) if len(series) > sample_size else series
+        
+        # Try to infer numeric types
+        try:
+            numeric_converted = pd.to_numeric(sample, errors='coerce')
+            if not numeric_converted.isna().all():
+                if (numeric_converted % 1 == 0).all():
+                    return "integer"
+                else:
+                    return "float"
+        except:
+            pass
+        
+        # Try to infer datetime
+        try:
+            pd.to_datetime(sample, errors='raise')
+            return "datetime"
+        except:
+            pass
+        
+        # Try to infer boolean
+        unique_values = set(str(v).lower() for v in sample.unique())
+        if unique_values.issubset({'true', 'false', '1', '0', 'yes', 'no', 't', 'f'}):
+            return "boolean"
+        
+        # Check if categorical (low cardinality)
+        cardinality_ratio = len(sample.unique()) / len(sample)
+        if cardinality_ratio < 0.05 and len(sample.unique()) < 50:
+            return "categorical"
+        
+        return "string"
+    
+    def _check_type_consistency(self, series: pd.Series, column_name: str) -> List[str]:
+        """Check for type consistency issues"""
+        issues = []
+        
+        # Check for mixed numeric/string in object columns
+        if series.dtype == 'object':
+            numeric_count = 0
+            string_count = 0
+            
+            for value in series.head(100):  # Sample check
+                try:
+                    float(str(value))
+                    numeric_count += 1
+                except ValueError:
+                    string_count += 1
+            
+            if numeric_count > 0 and string_count > 0:
+                ratio = numeric_count / (numeric_count + string_count)
+                if 0.1 < ratio < 0.9:  # Mixed content
+                    issues.append(f"Warning: Mixed numeric/text content detected ({ratio:.1%} numeric)")
+        
+        # Check for leading/trailing whitespace in string columns
+        if series.dtype == 'object':
+            whitespace_count = sum(1 for v in series.head(100) if str(v) != str(v).strip())
+            if whitespace_count > 0:
+                issues.append(f"Warning: {whitespace_count} values have leading/trailing whitespace")
+        
+        # Check for inconsistent date formats
+        if series.dtype == 'object':
+            potential_dates = []
+            for value in series.head(50):
+                try:
+                    pd.to_datetime(str(value), dayfirst=True)
+                    potential_dates.append(str(value))
+                except:
+                    continue
+            
+            if len(potential_dates) > len(series) * 0.3:  # Likely date column
+                formats = set()
+                for date_str in potential_dates:
+                    if '/' in date_str:
+                        formats.add('MM/DD/YYYY or DD/MM/YYYY')
+                    elif '-' in date_str:
+                        formats.add('YYYY-MM-DD')
+                    elif ' ' in date_str:
+                        formats.add('Date with time')
+                
+                if len(formats) > 1:
+                    issues.append(f"Warning: Inconsistent date formats detected: {', '.join(formats)}")
+        
+        return issues
+    
+    def _check_data_integrity(self, series: pd.Series, column_name: str) -> List[str]:
+        """Check for data integrity issues"""
+        issues = []
+        
+        # Check for negative values where they might not make sense
+        if series.dtype in ['int64', 'float64']:
+            negative_count = (series < 0).sum()
+            if negative_count > 0:
+                # Heuristic: if column name suggests it should be positive
+                positive_indicators = ['age', 'count', 'quantity', 'amount', 'price', 'salary', 'weight', 'height', 'distance']
+                if any(indicator in column_name.lower() for indicator in positive_indicators):
+                    issues.append(f"Critical: {negative_count} negative values in column that should likely be positive")
+        
+        # Check for extremely large values (potential data entry errors)
+        if series.dtype in ['int64', 'float64']:
+            q99 = series.quantile(0.99)
+            q01 = series.quantile(0.01)
+            iqr = series.quantile(0.75) - series.quantile(0.25)
+            
+            # Values beyond 10 IQRs might be suspicious
+            if iqr > 0:
+                extreme_threshold = 10 * iqr
+                extreme_count = ((series > q99 + extreme_threshold) | (series < q01 - extreme_threshold)).sum()
+                if extreme_count > 0:
+                    issues.append(f"Warning: {extreme_count} extremely large/small values detected (>10 IQRs from median)")
+        
+        # Check for duplicate consecutive values (might indicate copy-paste errors)
+        if len(series) > 1:
+            consecutive_duplicates = (series == series.shift()).sum()
+            if consecutive_duplicates > len(series) * 0.3:  # More than 30% consecutive duplicates
+                issues.append(f"Warning: High consecutive duplicate rate ({consecutive_duplicates/len(series):.1%}) - possible copy-paste errors")
+        
+        # Check for unrealistic values based on column name heuristics
+        if series.dtype in ['int64', 'float64']:
+            if 'age' in column_name.lower():
+                invalid_age = ((series < 0) | (series > 150)).sum()
+                if invalid_age > 0:
+                    issues.append(f"Critical: {invalid_age} unrealistic age values (outside 0-150 range)")
+            
+            elif 'percentage' in column_name.lower() or 'percent' in column_name.lower():
+                invalid_pct = ((series < 0) | (series > 100)).sum()
+                if invalid_pct > 0:
+                    issues.append(f"Critical: {invalid_pct} invalid percentage values (outside 0-100 range)")
+        
+        return issues
+    
+    def _check_global_integrity(self, df: pd.DataFrame) -> List[str]:
+        """Check for global data integrity issues"""
+        issues = []
+        
+        # Check for completely empty columns
+        empty_cols = [col for col in df.columns if df[col].isna().all()]
+        if empty_cols:
+            issues.append(f"Critical: {len(empty_cols)} completely empty columns: {', '.join(empty_cols[:3])}")
+        
+        # Check for columns with single value (no variance)
+        constant_cols = []
+        for col in df.columns:
+            if df[col].dropna().nunique() <= 1:
+                constant_cols.append(col)
+        
+        if constant_cols:
+            issues.append(f"Warning: {len(constant_cols)} columns with no variance: {', '.join(constant_cols[:3])}")
+        
+        # Check for suspicious column name patterns
+        suspicious_names = [col for col in df.columns if any(char in col for char in ['Unnamed', 'Column', 'Field'])]
+        if suspicious_names:
+            issues.append(f"Warning: {len(suspicious_names)} columns with generic names suggest data import issues")
+        
+        return issues
+    
+    def _generate_type_recommendations(self, issues: List[str], declared_type: str, inferred_type: str) -> List[str]:
+        """Generate recommendations for type issues"""
+        recommendations = []
+        
+        if not issues:
+            recommendations.append("✅ No type or integrity issues detected")
+            return recommendations
+        
+        if declared_type != inferred_type and inferred_type != "string":
+            recommendations.append(f"Consider converting to {inferred_type} type for better performance and analysis")
+        
+        for issue in issues:
+            if "Mixed numeric/text" in issue:
+                recommendations.append("Clean data to separate numeric and text values or standardize format")
+            elif "whitespace" in issue:
+                recommendations.append("Apply string trimming: df[column].str.strip()")
+            elif "date formats" in issue:
+                recommendations.append("Standardize date format using pd.to_datetime() with format parameter")
+            elif "negative values" in issue:
+                recommendations.append("Review and correct negative values or validate if they're legitimate")
+            elif "extremely large" in issue:
+                recommendations.append("Investigate outliers - may indicate data entry errors or different units")
+            elif "consecutive duplicate" in issue:
+                recommendations.append("Check for copy-paste errors or confirm if repeated values are valid")
+            elif "unrealistic" in issue:
+                recommendations.append("Validate data entry process and implement range constraints")
+        
+        return recommendations
+    
+    def _generate_global_type_recommendations(self, validation_results: Dict, global_issues: List[str]) -> List[str]:
+        """Generate global recommendations for data type and integrity"""
+        recommendations = []
+        
+        critical_issues = sum(1 for col_result in validation_results.values() for issue in col_result["issues"] if "Critical" in issue)
+        warning_issues = sum(1 for col_result in validation_results.values() for issue in col_result["issues"] if "Warning" in issue)
+        
+        if critical_issues == 0 and warning_issues == 0:
+            recommendations.append("🎉 Excellent data quality - no major type or integrity issues detected")
+        elif critical_issues == 0:
+            recommendations.append(f"✅ Good data quality - only {warning_issues} minor warnings to address")
+        else:
+            recommendations.append(f"⚠️ Data quality attention needed - {critical_issues} critical and {warning_issues} warning issues detected")
+        
+        if critical_issues > 0:
+            recommendations.append("🔥 Priority: Address critical issues first as they may impact analysis accuracy")
+            recommendations.append("📊 Consider data validation rules during data collection/entry phase")
+        
+        if len(global_issues) > 0:
+            recommendations.append("🔍 Review global data structure issues to improve overall dataset quality")
+        
+        # Type conversion recommendations
+        conversion_candidates = []
+        for col, result in validation_results.items():
+            if result["declared_type"] != result["inferred_type"] and result["inferred_type"] != "string":
+                conversion_candidates.append(f"{col} → {result['inferred_type']}")
+        
+        if conversion_candidates:
+            recommendations.append(f"🔄 Consider type conversions: {', '.join(conversion_candidates[:3])}")
+        
+        return recommendations
+    
+    def _calculate_univariate_summaries(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Calculate comprehensive univariate summaries for all data types"""
+        summaries = {
+            "numeric_summaries": {},
+            "categorical_summaries": {},
+            "temporal_summaries": {},
+            "overview": {
+                "total_columns": len(df.columns),
+                "numeric_columns": 0,
+                "categorical_columns": 0,
+                "temporal_columns": 0
+            }
+        }
+        
+        # Identify column types
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        categorical_cols = df.select_dtypes(include=['object', 'category']).columns
+        temporal_cols = df.select_dtypes(include=['datetime64']).columns
+        
+        summaries["overview"]["numeric_columns"] = len(numeric_cols)
+        summaries["overview"]["categorical_columns"] = len(categorical_cols)
+        summaries["overview"]["temporal_columns"] = len(temporal_cols)
+        
+        # Numeric summaries
+        for col in numeric_cols:
+            data = df[col].dropna()
+            if len(data) == 0:
+                continue
+                
+            summaries["numeric_summaries"][col] = {
+                "basic_stats": {
+                    "count": int(len(data)),
+                    "mean": float(data.mean()),
+                    "median": float(data.median()),
+                    "mode": float(data.mode().iloc[0]) if len(data.mode()) > 0 else None,
+                    "std": float(data.std()),
+                    "variance": float(data.var()),
+                    "min": float(data.min()),
+                    "max": float(data.max()),
+                    "range": float(data.max() - data.min()),
+                    "q1": float(data.quantile(0.25)),
+                    "q3": float(data.quantile(0.75)),
+                    "iqr": float(data.quantile(0.75) - data.quantile(0.25))
+                },
+                "distribution_stats": {
+                    "skewness": float(stats.skew(data)),
+                    "kurtosis": float(stats.kurtosis(data)),
+                    "is_normal": self._test_normality(data),
+                    "distribution_shape": self._classify_distribution_shape(data)
+                },
+                "missing_info": {
+                    "missing_count": int(df[col].isna().sum()),
+                    "missing_percentage": float(df[col].isna().sum() / len(df) * 100)
+                },
+                "outlier_info": self._detect_univariate_outliers(data),
+                "business_insights": self._generate_numeric_insights(col, data)
+            }
+        
+        # Categorical summaries
+        for col in categorical_cols:
+            data = df[col].dropna()
+            if len(data) == 0:
+                continue
+                
+            value_counts = data.value_counts()
+            
+            summaries["categorical_summaries"][col] = {
+                "basic_stats": {
+                    "count": int(len(data)),
+                    "unique_count": int(data.nunique()),
+                    "cardinality_ratio": float(data.nunique() / len(data)),
+                    "mode": str(data.mode().iloc[0]) if len(data.mode()) > 0 else None,
+                    "mode_frequency": int(value_counts.iloc[0]) if len(value_counts) > 0 else 0,
+                    "mode_percentage": float(value_counts.iloc[0] / len(data) * 100) if len(value_counts) > 0 else 0
+                },
+                "distribution_stats": {
+                    "entropy": float(-sum((value_counts / len(data)) * np.log2(value_counts / len(data)))),
+                    "concentration_ratio": float(value_counts.head(3).sum() / len(data)),  # Top 3 categories
+                    "is_highly_concentrated": value_counts.iloc[0] / len(data) > 0.8 if len(value_counts) > 0 else False
+                },
+                "top_categories": convert_numpy_types(value_counts.head(10).to_dict()),
+                "missing_info": {
+                    "missing_count": int(df[col].isna().sum()),
+                    "missing_percentage": float(df[col].isna().sum() / len(df) * 100)
+                },
+                "quality_checks": {
+                    "has_empty_strings": int((data == '').sum()),
+                    "has_whitespace_issues": int(data.str.strip().ne(data).sum()) if hasattr(data, 'str') else 0,
+                    "case_inconsistency": self._check_case_inconsistency(data)
+                },
+                "business_insights": self._generate_categorical_insights(col, data, value_counts)
+            }
+        
+        # Temporal summaries
+        for col in temporal_cols:
+            data = df[col].dropna()
+            if len(data) == 0:
+                continue
+                
+            summaries["temporal_summaries"][col] = {
+                "basic_stats": {
+                    "count": int(len(data)),
+                    "min_date": str(data.min()),
+                    "max_date": str(data.max()),
+                    "date_range_days": int((data.max() - data.min()).days),
+                    "most_common_date": str(data.mode().iloc[0]) if len(data.mode()) > 0 else None
+                },
+                "temporal_patterns": {
+                    "year_range": f"{data.dt.year.min()}-{data.dt.year.max()}",
+                    "month_distribution": convert_numpy_types(data.dt.month.value_counts().head(5).to_dict()),
+                    "day_of_week_distribution": convert_numpy_types(data.dt.dayofweek.value_counts().to_dict()),
+                    "seasonal_pattern": self._detect_seasonal_pattern(data)
+                },
+                "missing_info": {
+                    "missing_count": int(df[col].isna().sum()),
+                    "missing_percentage": float(df[col].isna().sum() / len(df) * 100)
+                },
+                "business_insights": self._generate_temporal_insights(col, data)
+            }
+        
+        return convert_numpy_types(summaries)
+    
+    def _test_normality(self, data: pd.Series) -> Dict[str, Any]:
+        """Test for normality using multiple methods"""
+        if len(data) < 3:
+            return {"is_normal": None, "method": "insufficient_data"}
+        
+        # Shapiro-Wilk test (for smaller datasets)
+        if len(data) <= 5000:
+            try:
+                stat, p_value = stats.shapiro(data)
+                return {
+                    "is_normal": p_value > 0.05,
+                    "p_value": float(p_value),
+                    "test_statistic": float(stat),
+                    "method": "shapiro_wilk",
+                    "confidence": "high" if len(data) > 50 else "medium"
+                }
+            except Exception:
+                pass
+        
+        # Kolmogorov-Smirnov test (for larger datasets)
+        try:
+            stat, p_value = stats.kstest(stats.zscore(data), 'norm')
+            return {
+                "is_normal": p_value > 0.05,
+                "p_value": float(p_value),
+                "test_statistic": float(stat),
+                "method": "kolmogorov_smirnov",
+                "confidence": "medium"
+            }
+        except Exception:
+            return {"is_normal": None, "method": "test_failed"}
+    
+    def _classify_distribution_shape(self, data: pd.Series) -> Dict[str, str]:
+        """Classify the shape of the distribution"""
+        skewness = stats.skew(data)
+        kurtosis = stats.kurtosis(data)
+        
+        # Skewness classification
+        if abs(skewness) < 0.5:
+            skew_desc = "approximately symmetric"
+        elif skewness > 0.5:
+            skew_desc = "right-skewed (positive)"
+        else:
+            skew_desc = "left-skewed (negative)"
+        
+        # Kurtosis classification
+        if kurtosis > 1:
+            kurt_desc = "heavy-tailed (leptokurtic)"
+        elif kurtosis < -1:
+            kurt_desc = "light-tailed (platykurtic)"
+        else:
+            kurt_desc = "normal-tailed (mesokurtic)"
+        
+        return {
+            "skewness_description": skew_desc,
+            "kurtosis_description": kurt_desc,
+            "overall_shape": f"{skew_desc}, {kurt_desc}"
+        }
+    
+    def _detect_univariate_outliers(self, data: pd.Series) -> Dict[str, Any]:
+        """Detect outliers using multiple methods"""
+        outlier_info = {}
+        
+        # IQR method
+        q1, q3 = data.quantile([0.25, 0.75])
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        
+        iqr_outliers = ((data < lower_bound) | (data > upper_bound)).sum()
+        outlier_info["iqr_method"] = {
+            "outlier_count": int(iqr_outliers),
+            "outlier_percentage": float(iqr_outliers / len(data) * 100),
+            "lower_bound": float(lower_bound),
+            "upper_bound": float(upper_bound)
+        }
+        
+        # Z-score method
+        z_scores = np.abs(stats.zscore(data))
+        zscore_outliers = (z_scores > 3).sum()
+        outlier_info["zscore_method"] = {
+            "outlier_count": int(zscore_outliers),
+            "outlier_percentage": float(zscore_outliers / len(data) * 100),
+            "threshold": 3.0
+        }
+        
+        # Modified Z-score (more robust)
+        median = data.median()
+        mad = np.median(np.abs(data - median))
+        modified_z_scores = 0.6745 * (data - median) / mad if mad > 0 else np.zeros_like(data)
+        mod_zscore_outliers = (np.abs(modified_z_scores) > 3.5).sum()
+        
+        outlier_info["modified_zscore_method"] = {
+            "outlier_count": int(mod_zscore_outliers),
+            "outlier_percentage": float(mod_zscore_outliers / len(data) * 100),
+            "threshold": 3.5
+        }
+        
+        # Summary recommendation
+        methods_agree = [
+            outlier_info["iqr_method"]["outlier_count"],
+            outlier_info["zscore_method"]["outlier_count"],
+            outlier_info["modified_zscore_method"]["outlier_count"]
+        ]
+        
+        outlier_info["consensus"] = {
+            "avg_outlier_percentage": float(np.mean([m["outlier_percentage"] for m in outlier_info.values() if isinstance(m, dict)])),
+            "methods_agreement": "high" if max(methods_agree) - min(methods_agree) <= 2 else "low",
+            "recommended_method": "iqr_method" if iqr_outliers > 0 else "modified_zscore_method"
+        }
+        
+        return outlier_info
+    
+    def _generate_numeric_insights(self, column_name: str, data: pd.Series) -> List[str]:
+        """Generate business insights for numeric columns"""
+        insights = []
+        
+        mean_val = data.mean()
+        median_val = data.median()
+        std_val = data.std()
+        cv = std_val / mean_val if mean_val != 0 else float('inf')
+        
+        # Central tendency insights
+        if abs(mean_val - median_val) / std_val < 0.1 if std_val > 0 else True:
+            insights.append(f"Data is well-centered: mean ({mean_val:.2f}) ≈ median ({median_val:.2f})")
+        elif mean_val > median_val:
+            insights.append(f"Right-skewed: mean ({mean_val:.2f}) > median ({median_val:.2f}) - presence of high outliers")
+        else:
+            insights.append(f"Left-skewed: mean ({mean_val:.2f}) < median ({median_val:.2f}) - presence of low outliers")
+        
+        # Variability insights
+        if cv < 0.1:
+            insights.append(f"Low variability: CV = {cv:.3f} - data is highly consistent")
+        elif cv > 1.0:
+            insights.append(f"High variability: CV = {cv:.3f} - data has high dispersion")
+        
+        # Range insights
+        data_range = data.max() - data.min()
+        if data_range == 0:
+            insights.append("No variation - all values are identical")
+        
+        return insights
+    
+    def _generate_categorical_insights(self, column_name: str, data: pd.Series, value_counts: pd.Series) -> List[str]:
+        """Generate business insights for categorical columns"""
+        insights = []
+        
+        total_count = len(data)
+        unique_count = data.nunique()
+        top_category_pct = value_counts.iloc[0] / total_count * 100 if len(value_counts) > 0 else 0
+        
+        # Diversity insights
+        if unique_count == total_count:
+            insights.append("High diversity: every value is unique - might be an identifier")
+        elif unique_count / total_count > 0.8:
+            insights.append(f"Very high diversity: {unique_count} unique values ({unique_count/total_count:.1%})")
+        elif unique_count < 10:
+            insights.append(f"Low diversity: only {unique_count} categories - good for grouping analysis")
+        
+        # Concentration insights
+        if top_category_pct > 80:
+            insights.append(f"Highly concentrated: top category represents {top_category_pct:.1f}% of data")
+        elif top_category_pct < 10:
+            insights.append(f"Well-distributed: top category only {top_category_pct:.1f}% - balanced representation")
+        
+        # Business recommendations
+        if unique_count > 50 and unique_count / total_count > 0.1:
+            insights.append("Consider grouping categories for analysis - high cardinality may impact model performance")
+        
+        return insights
+    
+    def _generate_temporal_insights(self, column_name: str, data: pd.Series) -> List[str]:
+        """Generate business insights for temporal columns"""
+        insights = []
+        
+        date_range_days = (data.max() - data.min()).days
+        
+        # Time span insights
+        if date_range_days < 7:
+            insights.append(f"Short time span: {date_range_days} days - limited for trend analysis")
+        elif date_range_days > 365 * 2:
+            insights.append(f"Long time span: {date_range_days/365:.1f} years - excellent for trend and seasonality analysis")
+        
+        # Pattern insights
+        year_range = data.dt.year.max() - data.dt.year.min()
+        if year_range > 1:
+            insights.append(f"Multi-year data: {year_range} years - suitable for year-over-year analysis")
+        
+        return insights
+    
+    def _check_case_inconsistency(self, data: pd.Series) -> int:
+        """Check for case inconsistency in categorical data"""
+        if not hasattr(data, 'str'):
+            return 0
+        
+        lowercase_counts = data.str.lower().value_counts()
+        original_counts = data.value_counts()
+        
+        # Count how many categories could be merged by case normalization
+        potential_merges = len(original_counts) - len(lowercase_counts)
+        return max(0, potential_merges)
+    
+    def _detect_seasonal_pattern(self, data: pd.Series) -> str:
+        """Detect basic seasonal patterns in temporal data"""
+        if len(data) < 12:  # Need at least a year of data
+            return "insufficient_data"
+        
+        month_counts = data.dt.month.value_counts()
+        cv_monthly = month_counts.std() / month_counts.mean()
+        
+        if cv_monthly > 0.3:
+            return "seasonal_variation_detected"
+        else:
+            return "no_clear_seasonality"
+    
+    def _calculate_outlier_detection(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Comprehensive outlier detection using multiple methods"""
+        numeric_df = df.select_dtypes(include=[np.number])
+        
+        if numeric_df.empty:
+            return {"message": "No numeric columns found for outlier detection"}
+        
+        outlier_results = {
+            "univariate_outliers": {},
+            "multivariate_outliers": {},
+            "summary": {
+                "total_numeric_columns": len(numeric_df.columns),
+                "columns_with_outliers": 0,
+                "total_outlier_count": 0,
+                "outlier_percentage": 0
+            },
+            "recommendations": []
+        }
+        
+        total_outliers = 0
+        columns_with_outliers = 0
+        
+        # Univariate outlier detection for each column
+        for col in numeric_df.columns:
+            data = numeric_df[col].dropna()
+            if len(data) < 10:  # Need sufficient data
+                continue
+            
+            col_outliers = self._detect_column_outliers(data, col)
+            outlier_results["univariate_outliers"][col] = col_outliers
+            
+            if col_outliers["total_outliers"] > 0:
+                columns_with_outliers += 1
+                total_outliers += col_outliers["total_outliers"]
+        
+        # Multivariate outlier detection
+        if len(numeric_df.columns) >= 2 and len(numeric_df.dropna()) >= 10:
+            outlier_results["multivariate_outliers"] = self._detect_multivariate_outliers(numeric_df)
+            if "outlier_count" in outlier_results["multivariate_outliers"]:
+                total_outliers += outlier_results["multivariate_outliers"]["outlier_count"]
+        
+        # Update summary
+        outlier_results["summary"]["columns_with_outliers"] = columns_with_outliers
+        outlier_results["summary"]["total_outlier_count"] = total_outliers
+        outlier_results["summary"]["outlier_percentage"] = (total_outliers / (len(df) * len(numeric_df.columns))) * 100
+        
+        # Generate recommendations
+        outlier_results["recommendations"] = self._generate_outlier_recommendations(outlier_results)
+        
+        return convert_numpy_types(outlier_results)
+    
+    def _detect_column_outliers(self, data: pd.Series, column_name: str) -> Dict[str, Any]:
+        """Detect outliers in a single column using multiple methods"""
+        methods = {}
+        
+        # 1. IQR Method
+        q1, q3 = data.quantile([0.25, 0.75])
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+        iqr_outliers = ((data < lower_bound) | (data > upper_bound))
+        
+        methods["iqr"] = {
+            "outlier_count": int(iqr_outliers.sum()),
+            "outlier_percentage": float(iqr_outliers.sum() / len(data) * 100),
+            "lower_bound": float(lower_bound),
+            "upper_bound": float(upper_bound),
+            "outlier_indices": data[iqr_outliers].index.tolist()[:10]  # Limit to first 10
+        }
+        
+        # 2. Z-Score Method
+        z_scores = np.abs(stats.zscore(data))
+        zscore_outliers = z_scores > 3
+        
+        methods["zscore"] = {
+            "outlier_count": int(zscore_outliers.sum()),
+            "outlier_percentage": float(zscore_outliers.sum() / len(data) * 100),
+            "threshold": 3.0,
+            "outlier_indices": data[zscore_outliers].index.tolist()[:10]
+        }
+        
+        # 3. Modified Z-Score (more robust)
+        median = data.median()
+        mad = np.median(np.abs(data - median))
+        if mad > 0:
+            modified_z_scores = 0.6745 * (data - median) / mad
+            mod_zscore_outliers = np.abs(modified_z_scores) > 3.5
+        else:
+            mod_zscore_outliers = np.zeros(len(data), dtype=bool)
+        
+        methods["modified_zscore"] = {
+            "outlier_count": int(mod_zscore_outliers.sum()),
+            "outlier_percentage": float(mod_zscore_outliers.sum() / len(data) * 100),
+            "threshold": 3.5,
+            "outlier_indices": data[mod_zscore_outliers].index.tolist()[:10]
+        }
+        
+        # 4. Statistical tests for extreme values
+        # Grubbs' test for single outlier (simplified)
+        if len(data) > 7:  # Minimum sample size for Grubbs test
+            mean_val = data.mean()
+            std_val = data.std()
+            max_deviation = np.max(np.abs(data - mean_val))
+            grubbs_stat = max_deviation / std_val
+            
+            # Critical value approximation for Grubbs test (simplified)
+            n = len(data)
+            grubbs_critical = np.sqrt((n-1)**2 / n * stats.t.ppf(1-0.05/(2*n), n-2)**2 / (n-2 + stats.t.ppf(1-0.05/(2*n), n-2)**2))
+            
+            methods["grubbs"] = {
+                "test_statistic": float(grubbs_stat),
+                "critical_value": float(grubbs_critical),
+                "outlier_detected": grubbs_stat > grubbs_critical,
+                "most_extreme_index": int(data.idxmax() if data.max() - mean_val > mean_val - data.min() else data.idxmin())
+            }
+        
+        # Consensus and best method
+        outlier_counts = [methods[m]["outlier_count"] for m in ["iqr", "zscore", "modified_zscore"]]
+        consensus_count = int(np.median(outlier_counts))
+        
+        # Choose best method based on data characteristics
+        if data.std() / data.mean() > 1.0:  # High variability
+            best_method = "modified_zscore"
+        elif len(data) < 100:  # Small dataset
+            best_method = "iqr"
+        else:  # Large dataset
+            best_method = "zscore"
+        
+        return {
+            "methods": methods,
+            "consensus_outlier_count": consensus_count,
+            "best_method": best_method,
+            "total_outliers": methods[best_method]["outlier_count"],
+            "severity": self._classify_outlier_severity(methods[best_method]["outlier_percentage"]),
+            "sample_outlier_values": data[data.index.isin(methods[best_method]["outlier_indices"])].tolist()[:5]
+        }
+    
+    def _detect_multivariate_outliers(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Detect multivariate outliers using isolation forest and other methods"""
+        clean_df = df.dropna()
+        
+        if len(clean_df) < 10:
+            return {"message": "Insufficient data for multivariate outlier detection"}
+        
+        results = {}
+        
+        # 1. Isolation Forest
+        try:
+            from sklearn.ensemble import IsolationForest
+            
+            iso_forest = IsolationForest(
+                contamination=0.1,  # Expect 10% outliers
+                random_state=42,
+                n_estimators=100
+            )
+            
+            outlier_predictions = iso_forest.fit_predict(clean_df)
+            outlier_scores = iso_forest.decision_function(clean_df)
+            
+            outlier_mask = outlier_predictions == -1
+            outlier_indices = clean_df[outlier_mask].index.tolist()
+            
+            results["isolation_forest"] = {
+                "outlier_count": int(outlier_mask.sum()),
+                "outlier_percentage": float(outlier_mask.sum() / len(clean_df) * 100),
+                "outlier_indices": outlier_indices[:10],  # Limit output
+                "outlier_scores_summary": {
+                    "min_score": float(outlier_scores.min()),
+                    "max_score": float(outlier_scores.max()),
+                    "mean_score": float(outlier_scores.mean())
+                }
+            }
+            
+        except Exception as e:
+            results["isolation_forest"] = {"error": f"Failed to run Isolation Forest: {str(e)}"}
+        
+        # 2. Mahalanobis Distance (for smaller datasets)
+        if len(clean_df.columns) <= 10 and len(clean_df) >= len(clean_df.columns) + 1:
+            try:
+                from scipy.spatial.distance import mahalanobis
+                
+                mean = clean_df.mean().values
+                cov_matrix = clean_df.cov().values
+                inv_cov_matrix = np.linalg.inv(cov_matrix)
+                
+                mahal_distances = []
+                for i, row in clean_df.iterrows():
+                    dist = mahalanobis(row.values, mean, inv_cov_matrix)
+                    mahal_distances.append(dist)
+                
+                mahal_distances = np.array(mahal_distances)
+                
+                # Use chi-square critical value
+                threshold = stats.chi2.ppf(0.975, len(clean_df.columns))  # 97.5% confidence
+                mahal_outliers = mahal_distances > threshold
+                
+                results["mahalanobis"] = {
+                    "outlier_count": int(mahal_outliers.sum()),
+                    "outlier_percentage": float(mahal_outliers.sum() / len(clean_df) * 100),
+                    "threshold": float(threshold),
+                    "outlier_indices": clean_df[mahal_outliers].index.tolist()[:10],
+                    "distance_summary": {
+                        "min": float(mahal_distances.min()),
+                        "max": float(mahal_distances.max()),
+                        "mean": float(mahal_distances.mean())
+                    }
+                }
+                
+            except Exception as e:
+                results["mahalanobis"] = {"error": f"Failed to calculate Mahalanobis distance: {str(e)}"}
+        
+        # Choose primary method
+        if "isolation_forest" in results and "error" not in results["isolation_forest"]:
+            primary_method = "isolation_forest"
+            outlier_count = results["isolation_forest"]["outlier_count"]
+        elif "mahalanobis" in results and "error" not in results["mahalanobis"]:
+            primary_method = "mahalanobis"
+            outlier_count = results["mahalanobis"]["outlier_count"]
+        else:
+            primary_method = None
+            outlier_count = 0
+        
+        results["summary"] = {
+            "primary_method": primary_method,
+            "outlier_count": outlier_count,
+            "outlier_percentage": float(outlier_count / len(clean_df) * 100) if len(clean_df) > 0 else 0,
+            "data_points_analyzed": len(clean_df)
+        }
+        
+        return results
+    
+    def _classify_outlier_severity(self, outlier_percentage: float) -> str:
+        """Classify the severity of outlier presence"""
+        if outlier_percentage == 0:
+            return "none"
+        elif outlier_percentage < 1:
+            return "low"
+        elif outlier_percentage < 5:
+            return "moderate"
+        elif outlier_percentage < 15:
+            return "high"
+        else:
+            return "critical"
+    
+    def _generate_outlier_recommendations(self, outlier_results: Dict[str, Any]) -> List[str]:
+        """Generate recommendations for handling outliers"""
+        recommendations = []
+        
+        total_outliers = outlier_results["summary"]["total_outlier_count"]
+        outlier_pct = outlier_results["summary"]["outlier_percentage"]
+        columns_with_outliers = outlier_results["summary"]["columns_with_outliers"]
+        
+        if total_outliers == 0:
+            recommendations.append("✅ No significant outliers detected - data quality is excellent")
+            return recommendations
+        
+        # General assessment
+        if outlier_pct < 1:
+            recommendations.append(f"✅ Low outlier rate ({outlier_pct:.2f}%) - manageable data quality")
+        elif outlier_pct < 5:
+            recommendations.append(f"⚠️ Moderate outlier rate ({outlier_pct:.2f}%) - review recommended")
+        else:
+            recommendations.append(f"🚨 High outlier rate ({outlier_pct:.2f}%) - investigate data sources")
+        
+        # Column-specific recommendations
+        if columns_with_outliers > 0:
+            recommendations.append(f"📊 {columns_with_outliers} columns contain outliers - prioritize investigation")
+        
+        # Method-specific recommendations
+        for col, col_data in outlier_results["univariate_outliers"].items():
+            severity = col_data.get("severity", "unknown")
+            if severity in ["high", "critical"]:
+                recommendations.append(f"🔍 Column '{col}': {severity} outlier presence - manual review required")
+        
+        # Handling strategies
+        if outlier_pct < 2:
+            recommendations.append("💡 Strategy: Safe to remove outliers for most analyses")
+        elif outlier_pct < 10:
+            recommendations.append("💡 Strategy: Transform data (log, sqrt) or use robust statistical methods")
+            recommendations.append("💡 Alternative: Winsorize extreme values instead of removal")
+        else:
+            recommendations.append("💡 Strategy: Investigate data collection process before any removal")
+            recommendations.append("💡 Consider: Outliers might represent important edge cases")
+        
+        # Technical recommendations
+        recommendations.append("🛠️ Tools: Use box plots and scatter plots for visual confirmation")
+        recommendations.append("🛠️ Validation: Cross-reference outliers with business domain experts")
+        
+        return recommendations
+
     def _calculate_descriptive_stats(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Calculate descriptive statistics"""
         numeric_df = df.select_dtypes(include=[np.number])
@@ -95,7 +1334,7 @@ class StatisticsCalculator:
         desc_stats = numeric_df.describe()
         
         return {
-            "summary": desc_stats.to_dict(),
+            "summary": convert_numpy_types(desc_stats.to_dict()),
             "additional_stats": {
                 col: {
                     "variance": float(numeric_df[col].var()),
@@ -137,12 +1376,12 @@ class StatisticsCalculator:
         # Prepare heatmap data
         heatmap_data = {
             "variables": corr_matrix.columns.tolist(),
-            "correlation_matrix": corr_matrix.values.tolist(),
-            "correlation_dict": corr_matrix.to_dict()
+            "correlation_matrix": convert_numpy_types(corr_matrix.values.tolist()),
+            "correlation_dict": convert_numpy_types(corr_matrix.to_dict())
         }
         
         return {
-            "correlation_matrix": corr_matrix.to_dict(),
+            "correlation_matrix": convert_numpy_types(corr_matrix.to_dict()),
             "heatmap_data": heatmap_data,
             "all_correlations": all_correlations,
             "strong_correlations": strong_correlations,
@@ -186,12 +1425,28 @@ class StatisticsCalculator:
                 else:
                     shapiro_stat, shapiro_p, is_normal = None, None, None
                 
-                # Generate histogram data
-                hist_counts, bin_edges = np.histogram(data, bins=10)
+                # Generate histogram data with more bins for better visualization
+                bins = min(max(int(np.sqrt(len(data))), 10), 30)  # Adaptive bin count
+                hist_counts, bin_edges = np.histogram(data, bins=bins)
+                
+                # Create bin labels from actual data
+                bin_labels = []
+                bin_centers = []
+                for i in range(len(bin_edges)-1):
+                    center = (bin_edges[i] + bin_edges[i+1]) / 2
+                    bin_centers.append(float(center))
+                    if bin_edges[i+1] - bin_edges[i] >= 1:
+                        bin_labels.append(f"{bin_edges[i]:.0f}-{bin_edges[i+1]:.0f}")
+                    else:
+                        bin_labels.append(f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}")
+                
                 histogram_data = {
                     "counts": hist_counts.tolist(),
                     "bin_edges": bin_edges.tolist(),
-                    "labels": [f"{bin_edges[i]:.2f}-{bin_edges[i+1]:.2f}" for i in range(len(bin_edges)-1)]
+                    "bin_centers": bin_centers,
+                    "labels": bin_labels,
+                    "total_count": int(len(data)),
+                    "density": (hist_counts / len(data)).tolist()  # Normalized frequencies
                 }
                 
                 distribution_stats[col] = {
@@ -216,8 +1471,8 @@ class StatisticsCalculator:
         missing_percentages = (missing_counts / len(df)) * 100
         
         return {
-            "missing_by_column": missing_counts.to_dict(),
-            "missing_percentages": missing_percentages.to_dict(),
+            "missing_by_column": convert_numpy_types(missing_counts.to_dict()),
+            "missing_percentages": convert_numpy_types(missing_percentages.to_dict()),
             "total_missing": int(df.isnull().sum().sum()),
             "total_percentage": float(df.isnull().sum().sum() / (df.shape[0] * df.shape[1]) * 100),
             "columns_with_missing": missing_counts[missing_counts > 0].index.tolist(),
@@ -391,7 +1646,7 @@ class StatisticsCalculator:
         
         # Statistical outliers (Z-score method)
         z_scores = np.abs(stats.zscore(numeric_df))
-        statistical_outliers = (z_scores > 3).sum().to_dict()
+        statistical_outliers = convert_numpy_types((z_scores > 3).sum().to_dict())
         
         # Isolation Forest
         if len(numeric_df) > 10:  # Need sufficient data points

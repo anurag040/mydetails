@@ -15,6 +15,11 @@ async def calculate_basic_statistics(request: StatisticsRequest):
     - correlation: Correlation matrix and analysis
     - distribution: Distribution analysis, skewness, kurtosis
     - missing_data: Missing data analysis and patterns
+    - missing_value_analysis: Comprehensive missing value report with strategies
+    - duplicates_analysis: Full and partial duplicate detection with recommendations
+    - type_integrity_validation: Data type and integrity validation with quality scoring
+    - univariate_summaries: Comprehensive univariate analysis for numeric, categorical, and temporal data
+    - outlier_detection: Multi-method outlier detection (univariate and multivariate)
     """
     try:
         result = await stats_calculator.calculate_basic_stats(
@@ -76,6 +81,31 @@ async def get_basic_statistics_options():
                 "id": "missing_data",
                 "name": "Missing Data Analysis",
                 "description": "Missing data patterns, percentages, and recommendations"
+            },
+            {
+                "id": "missing_value_analysis",
+                "name": "Missing Value Report & Strategy",
+                "description": "Comprehensive missing value analysis with suggested handling strategies"
+            },
+            {
+                "id": "duplicates_analysis",
+                "name": "Duplicates Check",
+                "description": "Full and partial duplicate detection with recommendations for data quality"
+            },
+            {
+                "id": "type_integrity_validation",
+                "name": "Type/Integrity Validation",
+                "description": "Data type consistency and integrity validation with quality scoring"
+            },
+            {
+                "id": "univariate_summaries",
+                "name": "Univariate Summaries",
+                "description": "Comprehensive analysis for numeric, categorical, and temporal columns"
+            },
+            {
+                "id": "outlier_detection",
+                "name": "Outlier Detection",
+                "description": "Multi-method outlier detection using statistical and machine learning approaches"
             }
         ]
     }

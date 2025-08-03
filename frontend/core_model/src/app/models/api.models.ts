@@ -26,6 +26,11 @@ export interface BasicStatsResponse {
   correlation_matrix?: any;
   distribution_analysis?: any;
   missing_data_summary?: any;
+  missing_value_analysis?: any;
+  duplicates_analysis?: any;
+  type_integrity_validation?: any;
+  univariate_summaries?: any;
+  outlier_detection?: any;
 }
 
 export interface AdvancedStatsResponse {

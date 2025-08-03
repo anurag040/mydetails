@@ -20,6 +20,14 @@ async def calculate_basic_statistics(request: StatisticsRequest):
     - type_integrity_validation: Data type and integrity validation with quality scoring
     - univariate_summaries: Comprehensive univariate analysis for numeric, categorical, and temporal data
     - outlier_detection: Multi-method outlier detection (univariate and multivariate)
+    - feature_engineering_ideas: Generate feature engineering suggestions based on data characteristics
+    - multicollinearity_assessment: Assess multicollinearity using VIF and correlation analysis
+    - dimensionality_insights: Provide PCA and clustering insights for dimensionality assessment
+    - baseline_model_sanity: Assess data readiness for baseline modeling
+    - drift_stability_analysis: Analyze data stability and potential drift indicators
+    - bias_fairness_flags: Detect potential bias and fairness issues in the dataset
+    - documentation_summary: Generate comprehensive data dictionary and findings summary
+    - reproducibility_info: Generate reproducibility information and environment details
     """
     try:
         result = await stats_calculator.calculate_basic_stats(
@@ -106,6 +114,46 @@ async def get_basic_statistics_options():
                 "id": "outlier_detection",
                 "name": "Outlier Detection",
                 "description": "Multi-method outlier detection using statistical and machine learning approaches"
+            },
+            {
+                "id": "feature_engineering_ideas",
+                "name": "Feature Engineering Ideas",
+                "description": "Generate feature engineering suggestions based on data characteristics"
+            },
+            {
+                "id": "multicollinearity_assessment",
+                "name": "Multicollinearity Assessment",
+                "description": "Assess multicollinearity using VIF and correlation analysis"
+            },
+            {
+                "id": "dimensionality_insights",
+                "name": "Dimensionality Insights",
+                "description": "PCA and clustering insights for dimensionality assessment"
+            },
+            {
+                "id": "baseline_model_sanity",
+                "name": "Baseline Model Sanity",
+                "description": "Assess data readiness for baseline modeling"
+            },
+            {
+                "id": "drift_stability_analysis",
+                "name": "Drift/Stability Analysis",
+                "description": "Analyze data stability and potential drift indicators"
+            },
+            {
+                "id": "bias_fairness_flags",
+                "name": "Bias/Fairness Flags",
+                "description": "Detect potential bias and fairness issues in the dataset"
+            },
+            {
+                "id": "documentation_summary",
+                "name": "Documentation Summary",
+                "description": "Generate comprehensive data dictionary and findings summary"
+            },
+            {
+                "id": "reproducibility_info",
+                "name": "Reproducibility Info",
+                "description": "Generate reproducibility information and environment details"
             }
         ]
     }

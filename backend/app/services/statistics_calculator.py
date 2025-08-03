@@ -67,6 +67,31 @@ class StatisticsCalculator:
         if "outlier_detection" in options:
             result.outlier_detection = self._calculate_outlier_detection(df)
         
+        # Advanced analysis components
+        if "feature_engineering_ideas" in options:
+            result.feature_engineering_ideas = self._calculate_feature_engineering_ideas(df)
+        
+        if "multicollinearity_assessment" in options:
+            result.multicollinearity_assessment = self._calculate_multicollinearity_assessment(df)
+        
+        if "dimensionality_insights" in options:
+            result.dimensionality_insights = self._calculate_dimensionality_insights(df)
+        
+        if "baseline_model_sanity" in options:
+            result.baseline_model_sanity = self._calculate_baseline_model_sanity(df)
+        
+        if "drift_stability_analysis" in options:
+            result.drift_stability_analysis = self._calculate_drift_stability_analysis(df)
+        
+        if "bias_fairness_flags" in options:
+            result.bias_fairness_flags = self._calculate_bias_fairness_flags(df)
+        
+        if "documentation_summary" in options:
+            result.documentation_summary = self._calculate_documentation_summary(df)
+        
+        if "reproducibility_info" in options:
+            result.reproducibility_info = self._calculate_reproducibility_info(df)
+        
         return result
     
     async def calculate_advanced_stats(self, dataset_id: str, options: List[str]) -> AdvancedStatsResponse:
@@ -1683,3 +1708,755 @@ class StatisticsCalculator:
             kurt_type = "normal-tailed"
         
         return f"{skew_type}, {kurt_type}"
+    
+    def _calculate_feature_engineering_ideas(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Generate feature engineering suggestions based on data characteristics"""
+        try:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
+            datetime_cols = df.select_dtypes(include=['datetime64']).columns.tolist()
+            
+            suggestions = {
+                "transformation_ideas": [],
+                "interaction_features": [],
+                "aggregation_features": [],
+                "encoding_suggestions": [],
+                "scaling_recommendations": [],
+                "temporal_features": [],
+                "target_engineering": []
+            }
+            
+            # Transformation suggestions
+            for col in numeric_cols:
+                if not df[col].isna().all():
+                    skewness = df[col].skew()
+                    if abs(skewness) > 1:
+                        suggestions["transformation_ideas"].append({
+                            "column": col,
+                            "issue": f"High skewness ({skewness:.2f})",
+                            "suggestions": ["log transform", "box-cox transform", "sqrt transform"],
+                            "priority": "high" if abs(skewness) > 2 else "medium"
+                        })
+                    
+                    # Check for outliers
+                    Q1, Q3 = df[col].quantile([0.25, 0.75])
+                    IQR = Q3 - Q1
+                    outliers = ((df[col] < (Q1 - 1.5 * IQR)) | (df[col] > (Q3 + 1.5 * IQR))).sum()
+                    if outliers > len(df) * 0.05:  # More than 5% outliers
+                        suggestions["transformation_ideas"].append({
+                            "column": col,
+                            "issue": f"High outlier count ({outliers} outliers)",
+                            "suggestions": ["winsorization", "robust scaling", "clipping"],
+                            "priority": "medium"
+                        })
+            
+            # Interaction features
+            if len(numeric_cols) >= 2:
+                for i, col1 in enumerate(numeric_cols[:5]):  # Limit to first 5 for performance
+                    for col2 in numeric_cols[i+1:6]:
+                        corr = df[col1].corr(df[col2])
+                        if abs(corr) > 0.3:
+                            suggestions["interaction_features"].append({
+                                "feature_1": col1,
+                                "feature_2": col2,
+                                "correlation": float(corr),
+                                "suggested_operations": ["multiply", "divide", "add", "subtract"],
+                                "priority": "high" if abs(corr) > 0.7 else "medium"
+                            })
+            
+            # Categorical encoding
+            for col in categorical_cols:
+                unique_count = df[col].nunique()
+                if unique_count <= 10:
+                    suggestions["encoding_suggestions"].append({
+                        "column": col,
+                        "unique_values": int(unique_count),
+                        "suggested_encoding": "one-hot encoding",
+                        "priority": "high"
+                    })
+                elif unique_count <= 50:
+                    suggestions["encoding_suggestions"].append({
+                        "column": col,
+                        "unique_values": int(unique_count),
+                        "suggested_encoding": "target encoding or frequency encoding",
+                        "priority": "medium"
+                    })
+                else:
+                    suggestions["encoding_suggestions"].append({
+                        "column": col,
+                        "unique_values": int(unique_count),
+                        "suggested_encoding": "dimensionality reduction after encoding",
+                        "priority": "low"
+                    })
+            
+            # Temporal features
+            for col in datetime_cols:
+                suggestions["temporal_features"].append({
+                    "column": col,
+                    "suggested_features": [
+                        "year", "month", "day", "weekday", "hour",
+                        "is_weekend", "is_holiday", "time_since_epoch"
+                    ],
+                    "seasonality_check": "recommended",
+                    "priority": "high"
+                })
+            
+            # Scaling recommendations
+            if len(numeric_cols) > 1:
+                scales = {}
+                for col in numeric_cols:
+                    if not df[col].isna().all():
+                        scales[col] = {
+                            "min": float(df[col].min()),
+                            "max": float(df[col].max()),
+                            "std": float(df[col].std())
+                        }
+                
+                max_std = max([s["std"] for s in scales.values() if not np.isnan(s["std"])])
+                min_std = min([s["std"] for s in scales.values() if not np.isnan(s["std"])])
+                
+                if max_std / min_std > 10:  # High variance in scales
+                    suggestions["scaling_recommendations"].append({
+                        "issue": "Features have very different scales",
+                        "suggestion": "StandardScaler or MinMaxScaler",
+                        "priority": "high"
+                    })
+            
+            return convert_numpy_types(suggestions)
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e), "suggestions": {}})
+    
+    def _calculate_multicollinearity_assessment(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Assess multicollinearity using VIF and correlation analysis"""
+        try:
+            from statsmodels.stats.outliers_influence import variance_inflation_factor
+            
+            numeric_df = df.select_dtypes(include=[np.number]).dropna()
+            if len(numeric_df.columns) < 2:
+                return convert_numpy_types({"message": "Insufficient numeric columns for multicollinearity analysis"})
+            
+            # Calculate correlation matrix
+            corr_matrix = numeric_df.corr()
+            
+            # Find high correlations
+            high_correlations = []
+            for i, col1 in enumerate(corr_matrix.columns):
+                for j, col2 in enumerate(corr_matrix.columns[i+1:], i+1):
+                    corr_val = corr_matrix.iloc[i, j]
+                    if abs(corr_val) > 0.8:
+                        high_correlations.append({
+                            "variable_1": col1,
+                            "variable_2": col2,
+                            "correlation": float(corr_val),
+                            "severity": "critical" if abs(corr_val) > 0.95 else "high"
+                        })
+            
+            # Calculate VIF
+            vif_data = []
+            try:
+                X = numeric_df.values
+                for i in range(X.shape[1]):
+                    vif = variance_inflation_factor(X, i)
+                    vif_data.append({
+                        "variable": numeric_df.columns[i],
+                        "vif": float(vif) if not np.isinf(vif) else 999.0,
+                        "interpretation": (
+                            "severe multicollinearity" if vif > 10 else
+                            "moderate multicollinearity" if vif > 5 else
+                            "acceptable"
+                        )
+                    })
+            except Exception as vif_error:
+                vif_data = [{"error": f"VIF calculation failed: {str(vif_error)}"}]
+            
+            # Recommendations
+            recommendations = []
+            if len(high_correlations) > 0:
+                recommendations.append("Consider removing one variable from highly correlated pairs")
+                recommendations.append("Use PCA or factor analysis for dimensionality reduction")
+            
+            high_vif_vars = [v for v in vif_data if isinstance(v, dict) and v.get("vif", 0) > 10]
+            if len(high_vif_vars) > 0:
+                recommendations.append("Remove variables with VIF > 10")
+                recommendations.append("Consider ridge regression or elastic net for regularization")
+            
+            if len(recommendations) == 0:
+                recommendations.append("No significant multicollinearity detected")
+            
+            return convert_numpy_types({
+                "correlation_analysis": {
+                    "high_correlations": high_correlations,
+                    "correlation_threshold": 0.8
+                },
+                "vif_analysis": vif_data,
+                "summary": {
+                    "total_variables": len(numeric_df.columns),
+                    "high_correlation_pairs": len(high_correlations),
+                    "high_vif_variables": len(high_vif_vars)
+                },
+                "recommendations": recommendations
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})
+    
+    def _calculate_dimensionality_insights(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Provide PCA and clustering insights for dimensionality assessment"""
+        try:
+            numeric_df = df.select_dtypes(include=[np.number]).dropna()
+            if len(numeric_df.columns) < 2:
+                return convert_numpy_types({"message": "Insufficient numeric columns for dimensionality analysis"})
+            
+            # Standardize data
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(numeric_df)
+            
+            # PCA Analysis
+            pca = PCA()
+            pca.fit(X_scaled)
+            
+            explained_variance = pca.explained_variance_ratio_
+            cumulative_variance = np.cumsum(explained_variance)
+            
+            # Find number of components for 95% variance
+            n_components_95 = np.argmax(cumulative_variance >= 0.95) + 1
+            n_components_90 = np.argmax(cumulative_variance >= 0.90) + 1
+            
+            pca_insights = {
+                "total_components": len(explained_variance),
+                "components_for_95_variance": int(n_components_95),
+                "components_for_90_variance": int(n_components_90),
+                "explained_variance_ratio": explained_variance.tolist(),
+                "cumulative_variance": cumulative_variance.tolist(),
+                "first_component_variance": float(explained_variance[0]),
+                "dimensionality_reduction_potential": "high" if n_components_95 < len(numeric_df.columns) * 0.7 else "low"
+            }
+            
+            # Clustering Analysis
+            max_clusters = min(10, len(numeric_df) // 10)
+            if max_clusters >= 2:
+                inertias = []
+                silhouette_scores = []
+                
+                for k in range(2, max_clusters + 1):
+                    kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
+                    labels = kmeans.fit_predict(X_scaled)
+                    inertias.append(float(kmeans.inertia_))
+                    
+                    # Calculate silhouette score
+                    from sklearn.metrics import silhouette_score
+                    sil_score = silhouette_score(X_scaled, labels)
+                    silhouette_scores.append(float(sil_score))
+                
+                # Find elbow point
+                best_k = 2
+                if len(silhouette_scores) > 0:
+                    best_k = int(np.argmax(silhouette_scores) + 2)
+                
+                clustering_insights = {
+                    "optimal_clusters": best_k,
+                    "inertia_values": inertias,
+                    "silhouette_scores": silhouette_scores,
+                    "clustering_recommendation": (
+                        "strong clustering structure" if max(silhouette_scores) > 0.5 else
+                        "moderate clustering structure" if max(silhouette_scores) > 0.3 else
+                        "weak clustering structure"
+                    )
+                }
+            else:
+                clustering_insights = {"message": "Insufficient data for clustering analysis"}
+            
+            # Overall recommendations
+            recommendations = []
+            if n_components_95 < len(numeric_df.columns) * 0.8:
+                recommendations.append(f"Consider PCA: {n_components_95} components explain 95% variance")
+            
+            if max_clusters >= 2 and max(silhouette_scores) > 0.3:
+                recommendations.append(f"Data shows clustering structure with {best_k} optimal clusters")
+            
+            if len(numeric_df.columns) > 10:
+                recommendations.append("Consider feature selection techniques")
+            
+            return convert_numpy_types({
+                "pca_analysis": pca_insights,
+                "clustering_analysis": clustering_insights,
+                "recommendations": recommendations,
+                "data_complexity": {
+                    "original_dimensions": len(numeric_df.columns),
+                    "samples": len(numeric_df),
+                    "dimensions_to_samples_ratio": float(len(numeric_df.columns) / len(numeric_df))
+                }
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})
+    
+    def _calculate_baseline_model_sanity(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Assess data readiness for baseline modeling"""
+        try:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
+            
+            # Data quality assessment
+            total_missing = df.isnull().sum().sum()
+            missing_percentage = (total_missing / (len(df) * len(df.columns))) * 100
+            
+            # Variance assessment
+            low_variance_cols = []
+            for col in numeric_cols:
+                if df[col].var() < 1e-6:
+                    low_variance_cols.append(col)
+            
+            # Categorical cardinality
+            high_cardinality_cols = []
+            for col in categorical_cols:
+                if df[col].nunique() > len(df) * 0.5:
+                    high_cardinality_cols.append({
+                        "column": col,
+                        "unique_values": int(df[col].nunique()),
+                        "cardinality_ratio": float(df[col].nunique() / len(df))
+                    })
+            
+            # Target variable suggestions
+            target_suggestions = []
+            for col in numeric_cols:
+                if df[col].nunique() > 10:  # Regression target
+                    target_suggestions.append({
+                        "column": col,
+                        "type": "regression",
+                        "reason": "continuous numeric variable"
+                    })
+                elif df[col].nunique() <= 10:  # Classification target
+                    target_suggestions.append({
+                        "column": col,
+                        "type": "classification",
+                        "reason": f"discrete variable with {df[col].nunique()} classes"
+                    })
+            
+            # Model readiness score
+            readiness_factors = {
+                "missing_data": max(0, 100 - missing_percentage * 2),
+                "variance_quality": max(0, 100 - len(low_variance_cols) * 10),
+                "cardinality_quality": max(0, 100 - len(high_cardinality_cols) * 15),
+                "sample_size": min(100, len(df) / 10) if len(df) >= 100 else len(df)
+            }
+            
+            overall_readiness = sum(readiness_factors.values()) / len(readiness_factors)
+            
+            # Preprocessing recommendations
+            preprocessing_steps = []
+            if missing_percentage > 5:
+                preprocessing_steps.append("Handle missing values (imputation or removal)")
+            if len(low_variance_cols) > 0:
+                preprocessing_steps.append(f"Remove low variance features: {low_variance_cols}")
+            if len(high_cardinality_cols) > 0:
+                preprocessing_steps.append("Apply dimensionality reduction to high cardinality categorical features")
+            if len(numeric_cols) > 1:
+                preprocessing_steps.append("Scale numeric features")
+            if len(categorical_cols) > 0:
+                preprocessing_steps.append("Encode categorical variables")
+            
+            return convert_numpy_types({
+                "readiness_score": float(overall_readiness),
+                "readiness_factors": readiness_factors,
+                "data_quality": {
+                    "missing_percentage": float(missing_percentage),
+                    "low_variance_features": low_variance_cols,
+                    "high_cardinality_features": high_cardinality_cols,
+                    "sample_size": len(df),
+                    "feature_count": len(df.columns)
+                },
+                "target_suggestions": target_suggestions,
+                "preprocessing_recommendations": preprocessing_steps,
+                "model_suggestions": [
+                    "Start with simple models (Linear/Logistic Regression)",
+                    "Try ensemble methods (Random Forest, Gradient Boosting)",
+                    "Consider cross-validation for model selection",
+                    "Use train/validation/test split"
+                ]
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})
+    
+    def _calculate_drift_stability_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze data stability and potential drift indicators"""
+        try:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            datetime_cols = df.select_dtypes(include=['datetime64']).columns.tolist()
+            
+            # Temporal analysis if datetime columns exist
+            temporal_analysis = {}
+            if len(datetime_cols) > 0:
+                date_col = datetime_cols[0]  # Use first datetime column
+                df_temporal = df.copy()
+                df_temporal['period'] = pd.to_datetime(df_temporal[date_col]).dt.to_period('M')
+                
+                # Check for trends in numeric variables
+                temporal_trends = {}
+                for col in numeric_cols[:5]:  # Limit to first 5 numeric columns
+                    monthly_stats = df_temporal.groupby('period')[col].agg(['mean', 'std', 'count'])
+                    if len(monthly_stats) > 1:
+                        # Simple trend detection
+                        trend_correlation = monthly_stats['mean'].corr(range(len(monthly_stats)))
+                        temporal_trends[col] = {
+                            "trend_correlation": float(trend_correlation) if not np.isnan(trend_correlation) else 0,
+                            "trend_direction": (
+                                "increasing" if trend_correlation > 0.3 else
+                                "decreasing" if trend_correlation < -0.3 else
+                                "stable"
+                            ),
+                            "coefficient_of_variation": float(monthly_stats['mean'].std() / monthly_stats['mean'].mean()) if monthly_stats['mean'].mean() != 0 else 0
+                        }
+                
+                temporal_analysis = {
+                    "temporal_column": date_col,
+                    "time_periods": len(monthly_stats),
+                    "temporal_trends": temporal_trends
+                }
+            
+            # Statistical stability analysis
+            stability_metrics = {}
+            for col in numeric_cols:
+                if not df[col].isna().all():
+                    # Split data into chunks for stability analysis
+                    chunk_size = len(df) // 4
+                    if chunk_size > 10:  # Only if meaningful chunks
+                        chunks = [df[col].iloc[i:i+chunk_size].dropna() for i in range(0, len(df), chunk_size)]
+                        
+                        means = [chunk.mean() for chunk in chunks if len(chunk) > 0]
+                        stds = [chunk.std() for chunk in chunks if len(chunk) > 0]
+                        
+                        if len(means) > 1:
+                            stability_metrics[col] = {
+                                "mean_stability": float(np.std(means) / np.mean(means)) if np.mean(means) != 0 else 0,
+                                "std_stability": float(np.std(stds) / np.mean(stds)) if np.mean(stds) != 0 else 0,
+                                "chunks_analyzed": len(means)
+                            }
+            
+            # Overall stability assessment
+            stability_flags = []
+            if temporal_analysis:
+                for col, trend in temporal_analysis.get("temporal_trends", {}).items():
+                    if abs(trend["trend_correlation"]) > 0.5:
+                        stability_flags.append(f"Strong temporal trend detected in {col}")
+                    if trend["coefficient_of_variation"] > 0.3:
+                        stability_flags.append(f"High temporal variability in {col}")
+            
+            for col, metrics in stability_metrics.items():
+                if metrics["mean_stability"] > 0.2:
+                    stability_flags.append(f"Unstable mean detected in {col}")
+                if metrics["std_stability"] > 0.3:
+                    stability_flags.append(f"Unstable variance detected in {col}")
+            
+            # Recommendations
+            recommendations = []
+            if len(stability_flags) > 0:
+                recommendations.append("Monitor data quality over time")
+                recommendations.append("Implement drift detection in production")
+                recommendations.append("Consider retraining models periodically")
+            else:
+                recommendations.append("Data appears stable for modeling")
+            
+            return convert_numpy_types({
+                "temporal_analysis": temporal_analysis,
+                "stability_metrics": stability_metrics,
+                "stability_flags": stability_flags,
+                "recommendations": recommendations,
+                "overall_stability": "unstable" if len(stability_flags) > 2 else "stable"
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})
+    
+    def _calculate_bias_fairness_flags(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Detect potential bias and fairness issues in the dataset"""
+        try:
+            categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            
+            fairness_flags = []
+            sensitive_attributes = []
+            
+            # Detect potential sensitive attributes
+            potential_sensitive = []
+            for col in categorical_cols:
+                unique_vals = df[col].dropna().unique()
+                
+                # Check for gender indicators
+                gender_keywords = ['male', 'female', 'man', 'woman', 'gender', 'sex']
+                if any(keyword in col.lower() for keyword in gender_keywords):
+                    potential_sensitive.append({
+                        "column": col,
+                        "type": "gender",
+                        "unique_values": len(unique_vals)
+                    })
+                
+                # Check for age groups
+                age_keywords = ['age', 'young', 'old', 'senior', 'adult']
+                if any(keyword in col.lower() for keyword in age_keywords):
+                    potential_sensitive.append({
+                        "column": col,
+                        "type": "age",
+                        "unique_values": len(unique_vals)
+                    })
+                
+                # Check for race/ethnicity
+                race_keywords = ['race', 'ethnic', 'nationality', 'origin']
+                if any(keyword in col.lower() for keyword in race_keywords):
+                    potential_sensitive.append({
+                        "column": col,
+                        "type": "race/ethnicity",
+                        "unique_values": len(unique_vals)
+                    })
+            
+            # Class imbalance analysis
+            imbalance_analysis = {}
+            for col in categorical_cols[:5]:  # Limit analysis
+                value_counts = df[col].value_counts()
+                if len(value_counts) > 1:
+                    max_class = value_counts.max()
+                    min_class = value_counts.min()
+                    imbalance_ratio = max_class / min_class
+                    
+                    if imbalance_ratio > 10:
+                        imbalance_analysis[col] = {
+                            "imbalance_ratio": float(imbalance_ratio),
+                            "majority_class": value_counts.index[0],
+                            "majority_percentage": float(value_counts.iloc[0] / len(df) * 100),
+                            "severity": "severe" if imbalance_ratio > 50 else "moderate"
+                        }
+            
+            # Representation analysis
+            representation_issues = []
+            for col in categorical_cols:
+                value_counts = df[col].value_counts()
+                total = len(df)
+                
+                for value, count in value_counts.items():
+                    percentage = (count / total) * 100
+                    if percentage < 1:  # Less than 1% representation
+                        representation_issues.append({
+                            "column": col,
+                            "value": str(value),
+                            "count": int(count),
+                            "percentage": float(percentage)
+                        })
+            
+            # Correlation with potential outcomes
+            outcome_correlations = {}
+            if len(numeric_cols) > 0 and len(categorical_cols) > 0:
+                # Assume first numeric column might be an outcome
+                potential_outcome = numeric_cols[0]
+                
+                for col in categorical_cols:
+                    try:
+                        # One-way ANOVA to test for differences
+                        groups = [df[df[col] == group][potential_outcome].dropna() for group in df[col].unique()]
+                        groups = [g for g in groups if len(g) > 0]
+                        
+                        if len(groups) > 1:
+                            f_stat, p_value = stats.f_oneway(*groups)
+                            if p_value < 0.05:
+                                outcome_correlations[col] = {
+                                    "f_statistic": float(f_stat),
+                                    "p_value": float(p_value),
+                                    "significant": True
+                                }
+                    except:
+                        continue
+            
+            # Generate recommendations
+            recommendations = []
+            if len(potential_sensitive) > 0:
+                recommendations.append("Review identified sensitive attributes for fairness implications")
+                recommendations.append("Consider bias testing if using these attributes for predictions")
+            
+            if len(imbalance_analysis) > 0:
+                recommendations.append("Address class imbalances through sampling or weighting techniques")
+            
+            if len(representation_issues) > 5:
+                recommendations.append("Consider data collection strategy to improve representation")
+            
+            if len(outcome_correlations) > 0:
+                recommendations.append("Investigate potential disparate impact on different groups")
+            
+            return convert_numpy_types({
+                "potential_sensitive_attributes": potential_sensitive,
+                "class_imbalance_analysis": imbalance_analysis,
+                "representation_issues": representation_issues[:10],  # Limit output
+                "outcome_correlations": outcome_correlations,
+                "fairness_flags": fairness_flags,
+                "recommendations": recommendations,
+                "bias_risk_level": (
+                    "high" if len(potential_sensitive) > 2 or len(imbalance_analysis) > 2 else
+                    "medium" if len(potential_sensitive) > 0 or len(imbalance_analysis) > 0 else
+                    "low"
+                )
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})
+    
+    def _calculate_documentation_summary(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Generate comprehensive data dictionary and findings summary"""
+        try:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
+            datetime_cols = df.select_dtypes(include=['datetime64']).columns.tolist()
+            
+            # Data dictionary
+            data_dictionary = {}
+            for col in df.columns:
+                dtype = str(df[col].dtype)
+                
+                col_info = {
+                    "data_type": dtype,
+                    "null_count": int(df[col].isnull().sum()),
+                    "null_percentage": float(df[col].isnull().sum() / len(df) * 100),
+                    "unique_count": int(df[col].nunique()),
+                    "memory_usage_kb": float(df[col].memory_usage(deep=True) / 1024)
+                }
+                
+                if col in numeric_cols:
+                    col_info.update({
+                        "min_value": float(df[col].min()) if not df[col].isna().all() else None,
+                        "max_value": float(df[col].max()) if not df[col].isna().all() else None,
+                        "mean": float(df[col].mean()) if not df[col].isna().all() else None,
+                        "median": float(df[col].median()) if not df[col].isna().all() else None,
+                        "std_dev": float(df[col].std()) if not df[col].isna().all() else None
+                    })
+                elif col in categorical_cols:
+                    value_counts = df[col].value_counts()
+                    col_info.update({
+                        "most_frequent": str(value_counts.index[0]) if len(value_counts) > 0 else None,
+                        "most_frequent_count": int(value_counts.iloc[0]) if len(value_counts) > 0 else None,
+                        "sample_values": [str(v) for v in df[col].dropna().unique()[:5]]
+                    })
+                elif col in datetime_cols:
+                    col_info.update({
+                        "earliest_date": str(df[col].min()) if not df[col].isna().all() else None,
+                        "latest_date": str(df[col].max()) if not df[col].isna().all() else None,
+                        "date_range_days": int((df[col].max() - df[col].min()).days) if not df[col].isna().all() else None
+                    })
+                
+                data_dictionary[col] = col_info
+            
+            # Key findings summary
+            key_findings = []
+            
+            # Data quality findings
+            total_missing = df.isnull().sum().sum()
+            if total_missing > 0:
+                key_findings.append(f"Dataset contains {total_missing} missing values across all columns")
+            
+            # Column type distribution
+            key_findings.append(f"Dataset has {len(numeric_cols)} numeric, {len(categorical_cols)} categorical, and {len(datetime_cols)} datetime columns")
+            
+            # Data volume
+            key_findings.append(f"Dataset contains {len(df)} rows and {len(df.columns)} columns")
+            
+            # Memory usage
+            total_memory_mb = df.memory_usage(deep=True).sum() / (1024 * 1024)
+            key_findings.append(f"Total memory usage: {total_memory_mb:.2f} MB")
+            
+            # Potential issues
+            high_cardinality_cols = [col for col in categorical_cols if df[col].nunique() > len(df) * 0.5]
+            if len(high_cardinality_cols) > 0:
+                key_findings.append(f"High cardinality categorical columns detected: {high_cardinality_cols}")
+            
+            # Analysis recommendations
+            analysis_recommendations = [
+                "Start with exploratory data analysis (EDA)",
+                "Handle missing values appropriately for your use case",
+                "Consider feature engineering for categorical variables",
+                "Validate data quality before modeling",
+                "Document any preprocessing steps taken"
+            ]
+            
+            return convert_numpy_types({
+                "data_dictionary": data_dictionary,
+                "dataset_summary": {
+                    "total_rows": len(df),
+                    "total_columns": len(df.columns),
+                    "numeric_columns": len(numeric_cols),
+                    "categorical_columns": len(categorical_cols),
+                    "datetime_columns": len(datetime_cols),
+                    "total_missing_values": int(total_missing),
+                    "missing_percentage": float(total_missing / (len(df) * len(df.columns)) * 100),
+                    "memory_usage_mb": float(total_memory_mb)
+                },
+                "key_findings": key_findings,
+                "analysis_recommendations": analysis_recommendations,
+                "metadata": {
+                    "analysis_date": pd.Timestamp.now().isoformat(),
+                    "analyst": "Data Analysis Platform",
+                    "version": "1.0"
+                }
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})
+    
+    def _calculate_reproducibility_info(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Generate reproducibility information and environment details"""
+        try:
+            import sys
+            import platform
+            
+            # Environment information
+            environment_info = {
+                "python_version": sys.version,
+                "platform": platform.platform(),
+                "pandas_version": pd.__version__,
+                "numpy_version": np.__version__
+            }
+            
+            # Data fingerprint
+            data_fingerprint = {
+                "shape": df.shape,
+                "columns": df.columns.tolist(),
+                "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
+                "memory_usage": int(df.memory_usage(deep=True).sum()),
+                "checksum": int(pd.util.hash_pandas_object(df).sum())
+            }
+            
+            # Analysis parameters
+            analysis_parameters = {
+                "missing_data_threshold": 0.05,
+                "correlation_threshold": 0.7,
+                "outlier_method": "IQR and Z-score",
+                "random_seed": 42,
+                "scaling_method": "StandardScaler"
+            }
+            
+            # Reproducibility checklist
+            reproducibility_checklist = [
+                "Environment information documented",
+                "Data fingerprint captured",
+                "Analysis parameters recorded",
+                "Random seeds fixed where applicable",
+                "Preprocessing steps documented"
+            ]
+            
+            # Code snippets for key operations
+            code_snippets = {
+                "load_data": "df = pd.read_csv('data.csv')",
+                "basic_stats": "df.describe()",
+                "missing_analysis": "df.isnull().sum()",
+                "correlation": "df.corr()",
+                "outlier_detection": "Q1, Q3 = df.quantile([0.25, 0.75]); IQR = Q3 - Q1"
+            }
+            
+            return convert_numpy_types({
+                "environment_info": environment_info,
+                "data_fingerprint": data_fingerprint,
+                "analysis_parameters": analysis_parameters,
+                "reproducibility_checklist": reproducibility_checklist,
+                "code_snippets": code_snippets,
+                "timestamp": pd.Timestamp.now().isoformat()
+            })
+            
+        except Exception as e:
+            return convert_numpy_types({"error": str(e)})

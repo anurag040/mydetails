@@ -28,6 +28,16 @@ class BasicStatsResponse(BaseModel):
     type_integrity_validation: Optional[Dict[str, Any]] = None
     univariate_summaries: Optional[Dict[str, Any]] = None
     outlier_detection: Optional[Dict[str, Any]] = None
+    
+    # Advanced analysis components
+    feature_engineering_ideas: Optional[Dict[str, Any]] = None
+    multicollinearity_assessment: Optional[Dict[str, Any]] = None
+    dimensionality_insights: Optional[Dict[str, Any]] = None
+    baseline_model_sanity: Optional[Dict[str, Any]] = None
+    drift_stability_analysis: Optional[Dict[str, Any]] = None
+    bias_fairness_flags: Optional[Dict[str, Any]] = None
+    documentation_summary: Optional[Dict[str, Any]] = None
+    reproducibility_info: Optional[Dict[str, Any]] = None
 
 class AdvancedStatsRequest(BaseModel):
     dataset_id: str

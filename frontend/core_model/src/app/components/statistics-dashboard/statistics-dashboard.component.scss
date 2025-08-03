@@ -2457,3 +2457,549 @@
     }
   }
 }
+
+// New Analysis Types Styling
+.feature-section, .multicollinearity-section, .dimensionality-section, .documentation-section {
+  margin-bottom: 24px;
+  
+  h3 {
+    color: #00ff88;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    
+    mat-icon {
+      color: #00ff88;
+    }
+  }
+}
+
+.transformation-grid, .interaction-grid, .encoding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.transformation-card, .interaction-card, .encoding-card {
+  background: rgba(20, 20, 20, 0.8);
+  border: 1px solid rgba(0, 255, 136, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  
+  h4 {
+    color: #00ff88;
+    margin: 0 0 12px 0;
+  }
+  
+  .issue-description, .correlation-info, .encoding-details {
+    margin: 8px 0;
+    color: #e0e0e0;
+  }
+  
+  .suggestions ul {
+    margin: 8px 0;
+    padding-left: 20px;
+    
+    li {
+      color: #e0e0e0;
+      margin: 4px 0;
+    }
+  }
+  
+  .operation-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
+.high-correlations-table {
+  margin: 16px 0;
+  
+  .correlation-table {
+    width: 100%;
+    background: rgba(20, 20, 20, 0.8);
+    border-radius: 8px;
+    overflow: hidden;
+    
+    th {
+      background: rgba(0, 255, 136, 0.1);
+      color: #00ff88;
+      font-weight: 600;
+      padding: 12px;
+    }
+    
+    td {
+      color: #e0e0e0;
+      padding: 12px;
+      border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+    }
+  }
+}
+
+.vif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.vif-card {
+  background: rgba(20, 20, 20, 0.8);
+  border: 1px solid rgba(0, 255, 136, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  
+  h4 {
+    color: #00ff88;
+    margin: 0 0 12px 0;
+  }
+  
+  .vif-score {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 8px 0;
+    
+    &.acceptable {
+      color: #00ff88;
+    }
+    
+    &.warning {
+      color: #ff9800;
+    }
+    
+    &.critical {
+      color: #f44336;
+    }
+  }
+  
+  .vif-interpretation {
+    color: #b0b0b0;
+    font-size: 14px;
+  }
+}
+
+.pca-summary, .clustering-summary {
+  margin: 16px 0;
+  
+  .pca-metrics, .clustering-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    
+    .metric-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border-left: 3px solid #00ff88;
+      
+      .metric-label {
+        color: #b0b0b0;
+      }
+      
+      .metric-value {
+        color: #ffffff;
+        font-weight: 600;
+        
+        &.highlight {
+          color: #00ff88;
+        }
+        
+        &.success {
+          color: #4caf50;
+        }
+      }
+    }
+  }
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+  
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border-left: 3px solid #00ff88;
+    
+    .summary-label {
+      color: #b0b0b0;
+    }
+    
+    .summary-value {
+      color: #ffffff;
+      font-weight: 600;
+    }
+  }
+}
+
+.findings-list, .recommendations-list {
+  .finding-item, .recommendation-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    mat-icon {
+      color: #00ff88;
+      margin-top: 2px;
+    }
+    
+    span {
+      color: #e0e0e0;
+      line-height: 1.4;
+    }
+  }
+}
+
+// Multicollinearity analysis styles
+.multicollinearity-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    color: #00ff7f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .high-correlations-table {
+    .correlation-table {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      
+      th {
+        background: rgba(0, 255, 127, 0.1);
+        color: #00ff7f;
+        font-weight: 600;
+      }
+      
+      td {
+        color: #ffffff;
+      }
+    }
+  }
+  
+  .vif-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    
+    .vif-card {
+      background: rgba(0, 255, 127, 0.05);
+      border: 1px solid rgba(0, 255, 127, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      
+      h4 {
+        color: #00ff7f;
+        margin-bottom: 0.5rem;
+      }
+      
+      .vif-score {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+        
+        &.vif-low {
+          color: #00ff7f;
+        }
+        
+        &.vif-moderate {
+          color: #ffa500;
+        }
+        
+        &.vif-high {
+          color: #ff6b6b;
+        }
+      }
+      
+      .vif-interpretation {
+        color: #cccccc;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Dimensionality analysis styles
+.dimensionality-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    color: #00ff7f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .pca-summary,
+  .clustering-summary {
+    .pca-metrics,
+    .clustering-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      
+      .metric-item {
+        background: rgba(0, 255, 127, 0.05);
+        border: 1px solid rgba(0, 255, 127, 0.2);
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        .metric-label {
+          color: #cccccc;
+        }
+        
+        .metric-value {
+          color: #ffffff;
+          font-weight: 600;
+          
+          &.highlight {
+            color: #00ff7f;
+            font-size: 1.2rem;
+          }
+          
+          &.success {
+            color: #00ff7f;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Model readiness styles
+.model-readiness-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    color: #00ff7f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .readiness-score-display {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+    
+    .score-circle {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 4px solid;
+      position: relative;
+      
+      &.score-high {
+        border-color: #00ff7f;
+        background: rgba(0, 255, 127, 0.1);
+        color: #00ff7f;
+      }
+      
+      &.score-moderate {
+        border-color: #ffa500;
+        background: rgba(255, 165, 0, 0.1);
+        color: #ffa500;
+      }
+      
+      &.score-low {
+        border-color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+        color: #ff6b6b;
+      }
+      
+      .score-value {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+      
+      .score-label {
+        font-size: 1rem;
+        color: #cccccc;
+      }
+    }
+  }
+  
+  .readiness-factors {
+    margin-top: 2rem;
+    
+    .factor-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      
+      .factor-label {
+        color: #cccccc;
+        min-width: 150px;
+      }
+      
+      .factor-bar {
+        flex: 1;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        
+        .factor-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #00ff7f, #ffa500);
+          transition: width 0.3s ease;
+        }
+      }
+      
+      .factor-value {
+        color: #00ff7f;
+        font-weight: 600;
+        min-width: 50px;
+      }
+    }
+  }
+}
+
+.model-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    color: #00ff7f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .target-suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    
+    .target-card {
+      background: rgba(0, 255, 127, 0.05);
+      border: 1px solid rgba(0, 255, 127, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      
+      h4 {
+        color: #00ff7f;
+        margin-bottom: 0.5rem;
+      }
+      
+      .target-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        
+        .target-reason {
+          color: #cccccc;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+  
+  .preprocessing-list {
+    .preprocessing-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      color: #ffffff;
+      
+      mat-icon {
+        color: #00ff7f;
+      }
+    }
+  }
+}
+
+// Bias and fairness styles
+.bias-summary-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    color: #00ff7f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .bias-risk-display {
+    text-align: center;
+    margin: 1rem 0;
+  }
+}
+
+.bias-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    color: #00ff7f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .sensitive-attributes-grid,
+  .imbalance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    
+    .sensitive-attr-card,
+    .imbalance-card {
+      background: rgba(0, 255, 127, 0.05);
+      border: 1px solid rgba(0, 255, 127, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      
+      h4 {
+        color: #00ff7f;
+        margin-bottom: 0.5rem;
+      }
+      
+      .attr-details,
+      .imbalance-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        
+        .unique-count,
+        .imbalance-ratio,
+        .majority-class {
+          color: #cccccc;
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+}

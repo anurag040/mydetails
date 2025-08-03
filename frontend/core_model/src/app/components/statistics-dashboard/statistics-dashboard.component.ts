@@ -1674,4 +1674,56 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     
     return result;
   }
+  
+  // Helper methods for new analysis types
+  getPriorityColor(priority: string): string {
+    switch (priority) {
+      case 'high': return 'warn';
+      case 'medium': return 'accent';
+      case 'low': return 'primary';
+      default: return 'primary';
+    }
+  }
+  
+  getVIFClass(vif: number): string {
+    if (vif > 10) return 'critical';
+    if (vif > 5) return 'warning';
+    return 'acceptable';
+  }
+
+  getReadinessScoreClass(score: number): string {
+    if (score >= 80) return 'score-high';
+    if (score >= 60) return 'score-moderate';
+    return 'score-low';
+  }
+
+  getReadinessFactorsArray(): any[] {
+    if (!this.basicResults?.baseline_model_sanity?.readiness_factors) {
+      return [];
+    }
+    
+    return Object.entries(this.basicResults.baseline_model_sanity.readiness_factors).map(([key, value]) => ({
+      key: key.replace(/_/g, ' '),
+      value: typeof value === 'number' ? value : 0
+    }));
+  }
+
+  getBiasRiskColor(riskLevel: string): 'primary' | 'accent' | 'warn' {
+    switch(riskLevel?.toLowerCase()) {
+      case 'high': return 'warn';
+      case 'medium': return 'accent';
+      default: return 'primary';
+    }
+  }
+
+  getClassImbalanceArray(): any[] {
+    if (!this.basicResults?.bias_fairness_flags?.class_imbalance) {
+      return [];
+    }
+    
+    return Object.entries(this.basicResults.bias_fairness_flags.class_imbalance).map(([key, value]) => ({
+      key,
+      value
+    }));
+  }
 }

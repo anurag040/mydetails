@@ -31,6 +31,16 @@ export interface BasicStatsResponse {
   type_integrity_validation?: any;
   univariate_summaries?: any;
   outlier_detection?: any;
+  
+  // Advanced analysis components
+  feature_engineering_ideas?: any;
+  multicollinearity_assessment?: any;
+  dimensionality_insights?: any;
+  baseline_model_sanity?: any;
+  drift_stability_analysis?: any;
+  bias_fairness_flags?: any;
+  documentation_summary?: any;
+  reproducibility_info?: any;
 }
 
 export interface AdvancedStatsResponse {

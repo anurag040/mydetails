@@ -1781,6 +1781,490 @@
               </div>
             </mat-card-content>
           </mat-card>
+
+          <!-- Feature Engineering Ideas -->
+          <mat-card *ngIf="basicResults?.feature_engineering_ideas" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>engineering</mat-icon>
+                Feature Engineering Ideas
+              </mat-card-title>
+              <mat-card-subtitle>AI-powered suggestions for feature transformations and enhancements</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Transformation Ideas -->
+              <div class="feature-section" *ngIf="basicResults?.feature_engineering_ideas?.transformation_ideas?.length > 0">
+                <h3>
+                  <mat-icon>transform</mat-icon>
+                  Transformation Suggestions
+                </h3>
+                
+                <div class="transformation-grid">
+                  <div *ngFor="let idea of basicResults?.feature_engineering_ideas?.transformation_ideas" class="transformation-card">
+                    <h4>{{ idea.column }}</h4>
+                    <div class="issue-description">
+                      <strong>Issue:</strong> {{ idea.issue }}
+                    </div>
+                    <div class="suggestions">
+                      <strong>Suggestions:</strong>
+                      <ul>
+                        <li *ngFor="let suggestion of idea.suggestions">{{ suggestion }}</li>
+                      </ul>
+                    </div>
+                    <mat-chip [color]="getPriorityColor(idea.priority)" selected>
+                      {{ idea.priority | titlecase }} Priority
+                    </mat-chip>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interaction Features -->
+              <div class="feature-section" *ngIf="basicResults?.feature_engineering_ideas?.interaction_features?.length > 0">
+                <h3>
+                  <mat-icon>link</mat-icon>
+                  Interaction Features
+                </h3>
+                
+                <div class="interaction-grid">
+                  <div *ngFor="let interaction of basicResults?.feature_engineering_ideas?.interaction_features" class="interaction-card">
+                    <div class="feature-pair">
+                      <strong>{{ interaction.feature_1 }}</strong> × <strong>{{ interaction.feature_2 }}</strong>
+                    </div>
+                    <div class="correlation-info">
+                      Correlation: {{ formatNumber(interaction.correlation) }}
+                    </div>
+                    <div class="operations">
+                      <strong>Suggested Operations:</strong>
+                      <div class="operation-chips">
+                        <mat-chip *ngFor="let op of interaction.suggested_operations" color="primary" selected>
+                          {{ op }}
+                        </mat-chip>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Encoding Suggestions -->
+              <div class="feature-section" *ngIf="basicResults?.feature_engineering_ideas?.encoding_suggestions?.length > 0">
+                <h3>
+                  <mat-icon>code</mat-icon>
+                  Encoding Recommendations
+                </h3>
+                
+                <div class="encoding-grid">
+                  <div *ngFor="let encoding of basicResults?.feature_engineering_ideas?.encoding_suggestions" class="encoding-card">
+                    <h4>{{ encoding.column }}</h4>
+                    <div class="encoding-details">
+                      <div class="detail-item">
+                        <span class="label">Unique Values:</span>
+                        <span class="value">{{ encoding.unique_values }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="label">Suggested Encoding:</span>
+                        <span class="value">{{ encoding.suggested_encoding }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Documentation Summary -->
+          <mat-card *ngIf="basicResults?.documentation_summary" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>description</mat-icon>
+                Documentation Summary
+              </mat-card-title>
+              <mat-card-subtitle>Comprehensive data dictionary and analysis findings</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Dataset Summary -->
+              <div class="documentation-section" *ngIf="basicResults?.documentation_summary?.dataset_summary">
+                <h3>
+                  <mat-icon>summarize</mat-icon>
+                  Dataset Overview
+                </h3>
+                
+                <div class="summary-grid">
+                  <div class="summary-item">
+                    <span class="summary-label">Total Rows:</span>
+                    <span class="summary-value">{{ basicResults?.documentation_summary?.dataset_summary?.total_rows | number }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Total Columns:</span>
+                    <span class="summary-value">{{ basicResults?.documentation_summary?.dataset_summary?.total_columns | number }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Memory Usage:</span>
+                    <span class="summary-value">{{ basicResults?.documentation_summary?.dataset_summary?.memory_usage_mb | number:'1.2-2' }} MB</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Missing Values:</span>
+                    <span class="summary-value">{{ basicResults?.documentation_summary?.dataset_summary?.missing_percentage | number:'1.2-2' }}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Key Findings -->
+              <div class="documentation-section" *ngIf="basicResults?.documentation_summary?.key_findings?.length > 0">
+                <h3>
+                  <mat-icon>insights</mat-icon>
+                  Key Findings
+                </h3>
+                
+                <div class="findings-list">
+                  <div *ngFor="let finding of basicResults?.documentation_summary?.key_findings" class="finding-item">
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span>{{ finding }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Analysis Recommendations -->
+              <div class="documentation-section" *ngIf="basicResults?.documentation_summary?.analysis_recommendations?.length > 0">
+                <h3>
+                  <mat-icon>lightbulb</mat-icon>
+                  Analysis Recommendations
+                </h3>
+                
+                <div class="recommendations-list">
+                  <div *ngFor="let recommendation of basicResults?.documentation_summary?.analysis_recommendations" class="recommendation-item">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Multicollinearity Assessment -->
+          <mat-card *ngIf="basicResults?.multicollinearity_assessment" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>device_hub</mat-icon>
+                Multicollinearity Assessment
+              </mat-card-title>
+              <mat-card-subtitle>VIF analysis and correlation-based multicollinearity detection</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- High Correlations -->
+              <div class="multicollinearity-section" *ngIf="basicResults?.multicollinearity_assessment?.correlation_analysis?.high_correlations?.length > 0">
+                <h3>
+                  <mat-icon>warning</mat-icon>
+                  High Correlations Detected
+                </h3>
+                
+                <div class="high-correlations-table">
+                  <table mat-table [dataSource]="basicResults?.multicollinearity_assessment?.correlation_analysis?.high_correlations" class="correlation-table">
+                    <ng-container matColumnDef="variables">
+                      <th mat-header-cell *matHeaderCellDef>Variable Pair</th>
+                      <td mat-cell *matCellDef="let element">
+                        <strong>{{ element.variable_1 }}</strong> ↔ <strong>{{ element.variable_2 }}</strong>
+                      </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="correlation">
+                      <th mat-header-cell *matHeaderCellDef>Correlation</th>
+                      <td mat-cell *matCellDef="let element">
+                        {{ formatNumber(element.correlation) }}
+                      </td>
+                    </ng-container>
+                    
+                    <ng-container matColumnDef="severity">
+                      <th mat-header-cell *matHeaderCellDef>Severity</th>
+                      <td mat-cell *matCellDef="let element">
+                        <mat-chip [color]="element.severity === 'critical' ? 'warn' : 'accent'" selected>
+                          {{ element.severity | titlecase }}
+                        </mat-chip>
+                      </td>
+                    </ng-container>
+                    
+                    <tr mat-header-row *matHeaderRowDef="['variables', 'correlation', 'severity']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['variables', 'correlation', 'severity'];"></tr>
+                  </table>
+                </div>
+              </div>
+
+              <!-- VIF Analysis -->
+              <div class="multicollinearity-section" *ngIf="basicResults?.multicollinearity_assessment?.vif_analysis?.length > 0">
+                <h3>
+                  <mat-icon>analytics</mat-icon>
+                  Variance Inflation Factor (VIF) Analysis
+                </h3>
+                
+                <div class="vif-grid">
+                  <div *ngFor="let vif of basicResults?.multicollinearity_assessment?.vif_analysis" class="vif-card">
+                    <h4>{{ vif.variable }}</h4>
+                    <div class="vif-score" [ngClass]="getVIFClass(vif.vif)">
+                      {{ formatNumber(vif.vif) }}
+                    </div>
+                    <div class="vif-interpretation">
+                      {{ vif.interpretation }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <div class="multicollinearity-section" *ngIf="basicResults?.multicollinearity_assessment?.recommendations?.length > 0">
+                <h3>
+                  <mat-icon>lightbulb</mat-icon>
+                  Recommendations
+                </h3>
+                
+                <div class="recommendations-list">
+                  <div *ngFor="let recommendation of basicResults?.multicollinearity_assessment?.recommendations" class="recommendation-item">
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Dimensionality Insights -->
+          <mat-card *ngIf="basicResults?.dimensionality_insights" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>scatter_plot</mat-icon>
+                Dimensionality Insights
+              </mat-card-title>
+              <mat-card-subtitle>PCA and clustering analysis for dimensionality reduction</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- PCA Analysis -->
+              <div class="dimensionality-section" *ngIf="basicResults?.dimensionality_insights?.pca_analysis">
+                <h3>
+                  <mat-icon>compress</mat-icon>
+                  Principal Component Analysis
+                </h3>
+                
+                <div class="pca-summary">
+                  <div class="pca-metrics">
+                    <div class="metric-item">
+                      <span class="metric-label">Original Dimensions:</span>
+                      <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.total_components }}</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">Components for 95% Variance:</span>
+                      <span class="metric-value highlight">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_95_variance }}</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">Components for 90% Variance:</span>
+                      <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_90_variance }}</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">Reduction Potential:</span>
+                      <span class="metric-value" [ngClass]="{'success': basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential === 'high'}">
+                        {{ basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential | titlecase }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clustering Analysis -->
+              <div class="dimensionality-section" *ngIf="basicResults?.dimensionality_insights?.clustering_analysis">
+                <h3>
+                  <mat-icon>group_work</mat-icon>
+                  Clustering Structure Analysis
+                </h3>
+                
+                <div class="clustering-summary">
+                  <div class="clustering-metrics">
+                    <div class="metric-item">
+                      <span class="metric-label">Optimal Clusters:</span>
+                      <span class="metric-value highlight">{{ basicResults?.dimensionality_insights?.clustering_analysis?.optimal_clusters }}</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">Clustering Quality:</span>
+                      <span class="metric-value">{{ basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <div class="dimensionality-section" *ngIf="basicResults?.dimensionality_insights?.recommendations?.length > 0">
+                <h3>
+                  <mat-icon>recommend</mat-icon>
+                  Dimensionality Recommendations
+                </h3>
+                
+                <div class="recommendations-list">
+                  <div *ngFor="let recommendation of basicResults?.dimensionality_insights?.recommendations" class="recommendation-item">
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Baseline Model Sanity -->
+          <mat-card *ngIf="basicResults?.baseline_model_sanity" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>model_training</mat-icon>
+                Baseline Model Sanity Check
+              </mat-card-title>
+              <mat-card-subtitle>Data readiness assessment for machine learning modeling</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Readiness Score -->
+              <div class="model-readiness-section">
+                <h3>
+                  <mat-icon>speed</mat-icon>
+                  Model Readiness Assessment
+                </h3>
+                
+                <div class="readiness-score-display">
+                  <div class="score-circle" [ngClass]="getReadinessScoreClass(basicResults?.baseline_model_sanity?.readiness_score || 0)">
+                    <span class="score-value">{{ basicResults?.baseline_model_sanity?.readiness_score | number:'1.0-0' }}%</span>
+                    <span class="score-label">Ready</span>
+                  </div>
+                </div>
+                
+                <div class="readiness-factors">
+                  <div class="factor-item" *ngFor="let factor of getReadinessFactorsArray()">
+                    <span class="factor-label">{{ factor.key | titlecase }}:</span>
+                    <div class="factor-bar">
+                      <div class="factor-fill" [style.width.%]="factor.value"></div>
+                    </div>
+                    <span class="factor-value">{{ factor.value | number:'1.0-0' }}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Target Suggestions -->
+              <div class="model-section" *ngIf="basicResults?.baseline_model_sanity?.target_suggestions?.length > 0">
+                <h3>
+                  <mat-icon>adjust</mat-icon>
+                  Target Variable Suggestions
+                </h3>
+                
+                <div class="target-suggestions-grid">
+                  <div *ngFor="let target of basicResults?.baseline_model_sanity?.target_suggestions" class="target-card">
+                    <h4>{{ target.column }}</h4>
+                    <div class="target-info">
+                      <mat-chip [color]="target.type === 'regression' ? 'primary' : 'accent'" selected>
+                        {{ target.type | titlecase }}
+                      </mat-chip>
+                      <span class="target-reason">{{ target.reason }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Preprocessing Recommendations -->
+              <div class="model-section" *ngIf="basicResults?.baseline_model_sanity?.preprocessing_recommendations?.length > 0">
+                <h3>
+                  <mat-icon>build</mat-icon>
+                  Preprocessing Steps
+                </h3>
+                
+                <div class="preprocessing-list">
+                  <div *ngFor="let step of basicResults?.baseline_model_sanity?.preprocessing_recommendations" class="preprocessing-item">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>{{ step }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Bias/Fairness Flags -->
+          <mat-card *ngIf="basicResults?.bias_fairness_flags" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>balance</mat-icon>
+                Bias & Fairness Assessment
+              </mat-card-title>
+              <mat-card-subtitle>Detect potential bias and fairness issues in the dataset</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Bias Risk Level -->
+              <div class="bias-summary-section">
+                <h3>
+                  <mat-icon>report</mat-icon>
+                  Overall Bias Risk Assessment
+                </h3>
+                
+                <div class="bias-risk-display">
+                  <mat-chip [color]="getBiasRiskColor(basicResults?.bias_fairness_flags?.bias_risk_level || 'low')" selected>
+                    {{ basicResults?.bias_fairness_flags?.bias_risk_level | titlecase }} Risk
+                  </mat-chip>
+                </div>
+              </div>
+
+              <!-- Sensitive Attributes -->
+              <div class="bias-section" *ngIf="basicResults?.bias_fairness_flags?.potential_sensitive_attributes?.length > 0">
+                <h3>
+                  <mat-icon>visibility_off</mat-icon>
+                  Potential Sensitive Attributes
+                </h3>
+                
+                <div class="sensitive-attributes-grid">
+                  <div *ngFor="let attr of basicResults?.bias_fairness_flags?.potential_sensitive_attributes" class="sensitive-attr-card">
+                    <h4>{{ attr.column }}</h4>
+                    <div class="attr-details">
+                      <mat-chip color="warn" selected>{{ attr.type | titlecase }}</mat-chip>
+                      <span class="unique-count">{{ attr.unique_values }} unique values</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Class Imbalance -->
+              <div class="bias-section" *ngIf="getClassImbalanceArray().length > 0">
+                <h3>
+                  <mat-icon>donut_small</mat-icon>
+                  Class Imbalance Analysis
+                </h3>
+                
+                <div class="imbalance-grid">
+                  <div *ngFor="let imbalance of getClassImbalanceArray()" class="imbalance-card">
+                    <h4>{{ imbalance.key }}</h4>
+                    <div class="imbalance-details">
+                      <div class="imbalance-ratio">
+                        Ratio: {{ imbalance.value.imbalance_ratio | number:'1.1-1' }}:1
+                      </div>
+                      <div class="majority-class">
+                        Majority: {{ imbalance.value.majority_class }} ({{ imbalance.value.majority_percentage | number:'1.1-1' }}%)
+                      </div>
+                      <mat-chip [color]="imbalance.value.severity === 'severe' ? 'warn' : 'accent'" selected>
+                        {{ imbalance.value.severity | titlecase }}
+                      </mat-chip>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <div class="bias-section" *ngIf="basicResults?.bias_fairness_flags?.recommendations?.length > 0">
+                <h3>
+                  <mat-icon>gavel</mat-icon>
+                  Fairness Recommendations
+                </h3>
+                
+                <div class="recommendations-list">
+                  <div *ngFor="let recommendation of basicResults?.bias_fairness_flags?.recommendations" class="recommendation-item">
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span>{{ recommendation }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
       </div>
     </mat-tab>

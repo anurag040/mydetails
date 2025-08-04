@@ -16,10 +16,6 @@
         <div class="title-section">
           <div class="title-row">
             <h3 class="title">{{ title }}</h3>
-            <div class="trend-indicator" [ngClass]="{ positive: delta >= 0, negative: delta < 0 }">
-              <mat-icon>{{ delta >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
-              <span class="trend-value">{{ deltaSign }}{{ delta | number:'1.1-1' }}%</span>
-            </div>
           </div>
           <p class="subtitle">{{ subtitle }}</p>
         </div>
@@ -27,10 +23,24 @@
 
       <div class="card-body">
         <div class="main-metric">
-          <span class="value">{{ value !== null ? (value | number) : '-' }}</span>
-          <div class="comparison" *ngIf="previousValue !== null">
-            <span class="label">vs yesterday</span>
-            <span class="prev-value">{{ previousValue | number }}</span>
+          <div class="primary-value">
+            <span class="value">{{ value !== null ? (value | number) : '-' }}</span>
+            <div class="trend-section" *ngIf="changePercent !== null && changePercent !== undefined && yesterdayValue !== null && yesterdayValue !== undefined">
+              <div class="trend-indicator-compact" [ngClass]="trendClass">
+                <mat-icon class="trend-icon">{{ trendIcon }}</mat-icon>
+                <span class="trend-text">{{ changeSign }}{{ changePercent | number:'1.1-1' }}%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="comparison-section" *ngIf="yesterdayValue !== null && yesterdayValue !== undefined">
+            <div class="comparison-row">
+              <span class="label">vs yesterday</span>
+              <span class="prev-value">{{ yesterdayValue | number }}</span>
+            </div>
+            <div class="change-row" *ngIf="changeAmount !== null && changeAmount !== undefined">
+              <span class="change-amount" [ngClass]="trendClass">{{ formattedChangeAmount }}</span>
+            </div>
           </div>
         </div>
 
@@ -72,19 +82,25 @@
             <h4 class="mobile-title">{{ title }}</h4>
             <mat-icon class="chevron">chevron_right</mat-icon>
           </div>
-          <div class="trend-badge" [ngClass]="{ positive: delta >= 0, negative: delta < 0 }">
-            <mat-icon>{{ delta >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
-            <span>{{ deltaSign }}{{ delta | number:'1.1-1' }}%</span>
+          <div class="trend-badge" [ngClass]="trendClass" *ngIf="changePercent !== null && changePercent !== undefined">
+            <mat-icon>{{ trendIcon }}</mat-icon>
+            <span>{{ changeSign }}{{ changePercent | number:'1.1-1' }}%</span>
           </div>
         </div>
 
         <div class="mobile-body">
           <div class="main-value">{{ value !== null ? (value | number) : '-' }}</div>
           <div class="mobile-subtitle">{{ subtitle }}</div>
+          <div class="mobile-comparison" *ngIf="yesterdayValue !== null && yesterdayValue !== undefined">
+            <span class="comparison-text">vs {{ yesterdayValue | number }}</span>
+            <span class="change-text" [ngClass]="trendClass" *ngIf="changeAmount !== null && changeAmount !== undefined">
+              ({{ formattedChangeAmount }})
+            </span>
+          </div>
         </div>
 
         <div class="mobile-footer" *ngIf="lastUpdated">
-          <div class="status-dot" [ngClass]="{ positive: delta >= 0, negative: delta < 0 }"></div>
+          <div class="status-dot" [ngClass]="trendClass"></div>
           <span class="update-text">Updated {{ lastUpdated }}</span>
         </div>
       </div>

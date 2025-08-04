@@ -51,14 +51,41 @@ export class ApiService {
     };
   }
   getSummary(): Observable<Summary> {
-    // Enhanced summary using SWIFT statistics
+    // Enhanced summary using SWIFT statistics with trend data
+    const currentSwift = this.mockData?.statistics?.totalTransactions || 15847;
+    const currentNetted = Math.round(currentSwift * 0.75);
+    const currentFed = 5000;
+    const currentChips = 3000;
+    const currentDeposits = 2000;
+
+    // Calculate trend data with realistic yesterday values
+    const createTrend = (current: number, yesterdayVariation: number): any => {
+      const yesterday = Math.round(current * (1 + yesterdayVariation));
+      const change = current - yesterday;
+      const changePercent = yesterday > 0 ? (change / yesterday) * 100 : 0;
+      return {
+        current,
+        yesterday,
+        change,
+        changePercent: Math.round(changePercent * 10) / 10,
+        trend: change > 0 ? 'up' : change < 0 ? 'down' : 'stable'
+      };
+    };
+
     const summary = {
-      swiftTransactions: this.mockData?.statistics?.totalTransactions || 15847,
-      nattedSwiftMessages: Math.round((this.mockData?.statistics?.totalTransactions || 15847) * 0.75),
-      fedPayments: 5000,
-      chipsPayments: 3000,
-      chipsDeposits: 2000,
-      timestamp: new Date().toISOString()
+      swiftTransactions: currentSwift,
+      nattedSwiftMessages: currentNetted,
+      fedPayments: currentFed,
+      chipsPayments: currentChips,
+      chipsDeposits: currentDeposits,
+      timestamp: new Date().toISOString(),
+      trends: {
+        swiftTransactions: createTrend(currentSwift, -0.008),    // +0.8% vs yesterday
+        nattedSwiftMessages: createTrend(currentNetted, 0.015),  // -1.5% vs yesterday
+        fedPayments: createTrend(currentFed, -0.012),            // +1.2% vs yesterday
+        chipsPayments: createTrend(currentChips, -0.011),        // +1.1% vs yesterday
+        chipsDeposits: createTrend(currentDeposits, 0.006)       // -0.6% vs yesterday
+      }
     };
     
     return of(summary).pipe(delay(200));

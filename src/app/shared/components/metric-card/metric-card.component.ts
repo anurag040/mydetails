@@ -19,6 +19,12 @@ export class MetricCardComponent {
   @Input() lastUpdated: string | null = null;
   @Input() sparkline: number[] = [];
   @Input() dense = false;
+  
+  // Enhanced trend inputs
+  @Input() yesterdayValue: number | null | undefined = null;
+  @Input() changeAmount: number | null | undefined = null;
+  @Input() changePercent: number | null | undefined = null;
+  @Input() trendDirection: 'up' | 'down' | 'stable' = 'stable';
 
   isMobile = false;
 
@@ -30,6 +36,33 @@ export class MetricCardComponent {
 
   get deltaSign() {
     return this.delta >= 0 ? '+' : '';
+  }
+
+  get changeSign() {
+    if (!this.changePercent && this.changePercent !== 0) return '';
+    return this.changePercent >= 0 ? '+' : '';
+  }
+
+  get formattedChangeAmount(): string {
+    if (!this.changeAmount && this.changeAmount !== 0) return '';
+    const sign = this.changeAmount >= 0 ? '+' : '';
+    return `${sign}${Math.abs(this.changeAmount).toLocaleString()}`;
+  }
+
+  get trendIcon(): string {
+    switch (this.trendDirection) {
+      case 'up': return 'trending_up';
+      case 'down': return 'trending_down';
+      default: return 'trending_flat';
+    }
+  }
+
+  get trendClass(): string {
+    switch (this.trendDirection) {
+      case 'up': return 'trend-positive';
+      case 'down': return 'trend-negative';
+      default: return 'trend-neutral';
+    }
   }
 
   // New methods for enhanced card design

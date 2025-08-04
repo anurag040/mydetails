@@ -271,17 +271,116 @@
       .main-metric {
         text-align: left;
         
-        .value {
-          font-size: 1.8rem;
-          font-weight: 900;
-          color: #ffffff;
-          line-height: 1;
-          margin-bottom: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .primary-value {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 6px;
+          
+          .value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .trend-section {
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+            
+            .trend-indicator-compact {
+              display: flex;
+              align-items: center;
+              gap: 3px;
+              padding: 4px 8px;
+              border-radius: 6px;
+              font-size: 10px;
+              font-weight: 700;
+              backdrop-filter: blur(10px);
+              border: 1px solid;
+              
+              &.trend-positive {
+                background: rgba(42, 255, 176, 0.15);
+                color: #2affb0;
+                border-color: rgba(42, 255, 176, 0.3);
+              }
+
+              &.trend-negative {
+                background: rgba(255, 107, 107, 0.15);
+                color: #ff6b6b;
+                border-color: rgba(255, 107, 107, 0.3);
+              }
+
+              &.trend-neutral {
+                background: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.8);
+                border-color: rgba(255, 255, 255, 0.2);
+              }
+
+              .trend-icon {
+                font-size: 12px;
+                width: 12px;
+                height: 12px;
+              }
+            }
+          }
         }
 
+        .comparison-section {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          
+          .comparison-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+
+            .label {
+              color: rgba(255, 255, 255, 0.7);
+              font-weight: 500;
+            }
+
+            .prev-value {
+              color: rgba(255, 255, 255, 0.9);
+              font-weight: 700;
+            }
+          }
+
+          .change-row {
+            display: flex;
+            align-items: center;
+            
+            .change-amount {
+              font-size: 9px;
+              font-weight: 700;
+              padding: 2px 6px;
+              border-radius: 4px;
+              
+              &.trend-positive {
+                color: #2affb0;
+                background: rgba(42, 255, 176, 0.1);
+              }
+
+              &.trend-negative {
+                color: #ff6b6b;
+                background: rgba(255, 107, 107, 0.1);
+              }
+
+              &.trend-neutral {
+                color: rgba(255, 255, 255, 0.7);
+                background: rgba(255, 255, 255, 0.05);
+              }
+            }
+          }
+        }
+
+        // Legacy comparison fallback
         .comparison {
           display: flex;
           align-items: center;
@@ -474,6 +573,40 @@
         font-size: 9px;
         color: rgba(255, 255, 255, 0.7);
         font-weight: 500;
+      }
+
+      .mobile-comparison {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 2px;
+        font-size: 8px;
+
+        .comparison-text {
+          color: rgba(255, 255, 255, 0.7);
+          font-weight: 500;
+        }
+
+        .change-text {
+          font-weight: 700;
+          padding: 1px 4px;
+          border-radius: 3px;
+
+          &.trend-positive {
+            color: #2affb0;
+            background: rgba(42, 255, 176, 0.1);
+          }
+
+          &.trend-negative {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+          }
+
+          &.trend-neutral {
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.05);
+          }
+        }
       }
     }
 

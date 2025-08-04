@@ -22,11 +22,14 @@ export class DetailModalComponent implements OnInit {
   chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
-    elements: { point: { radius: 0 } },
+    elements: { 
+      point: { radius: 0 },
+      line: { tension: 0.4 }
+    },
     scales: {
       x: {
         grid: { color: 'rgba(255,255,255,0.07)' },
-        ticks: { color: '#a3adc8' }
+        ticks: { color: '#a3adc8', maxTicksLimit: 8 }
       },
       y: {
         grid: { color: 'rgba(255,255,255,0.07)' },
@@ -34,14 +37,29 @@ export class DetailModalComponent implements OnInit {
       }
     },
     plugins: {
-      legend: { display: false },
+      legend: { 
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#a3adc8',
+          usePointStyle: true,
+          pointStyle: 'line',
+          font: { size: 10 }
+        }
+      },
       tooltip: {
         backgroundColor: '#1f2330',
         titleColor: '#e3e9ff',
         bodyColor: '#a3adc8',
         borderColor: 'rgba(255,255,255,0.1)',
-        borderWidth: 1
+        borderWidth: 1,
+        mode: 'index',
+        intersect: false
       }
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false
     }
   };
 
@@ -55,6 +73,12 @@ export class DetailModalComponent implements OnInit {
     this.metricName = this.data.metric;
     this.generateSyntheticChart();
     this.generateInsights();
+  }
+
+  // Update chart when period changes
+  onPeriodChange(period: string): void {
+    this.selectedPeriod = period;
+    this.generateSyntheticChart();
   }
 
   // Icon and category methods
@@ -165,36 +189,134 @@ export class DetailModalComponent implements OnInit {
   }
 
   private generateSyntheticChart() {
-    const pointCount = 48; // 48 hours of data
+    // Determine data points based on selected period
+    let pointCount: number;
+    let labelFormat: (index: number) => string;
+
+    switch (this.selectedPeriod) {
+      case '1H':
+        pointCount = 60; // 60 minutes
+        labelFormat = (i) => {
+          const minute = (new Date().getMinutes() - pointCount + i + 60) % 60;
+          return `${minute.toString().padStart(2, '0')}m`;
+        };
+        break;
+      case '6H':
+        pointCount = 36; // 6 hours in 10-minute intervals
+        labelFormat = (i) => {
+          const totalMinutes = (new Date().getHours() * 60 + new Date().getMinutes()) - (pointCount * 10) + (i * 10);
+          const hour = Math.floor(totalMinutes / 60) % 24;
+          const minute = totalMinutes % 60;
+          return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        };
+        break;
+      case '7D':
+        pointCount = 168; // 7 days in hourly intervals
+        labelFormat = (i) => {
+          const daysAgo = Math.floor((pointCount - i) / 24);
+          const hour = (new Date().getHours() - (pointCount - i) + 24 * 7) % 24;
+          return daysAgo === 0 ? `${hour}h` : `${daysAgo}d`;
+        };
+        break;
+      default: // 24H
+        pointCount = 48; // 48 hours in 30-minute intervals
+        labelFormat = (i) => {
+          const hour = (new Date().getHours() - pointCount + i + 24) % 24;
+          return `${hour.toString().padStart(2, '0')}:00`;
+        };
+    }
+
     const base = this.getCurrentValue();
     const data: number[] = [];
+    const movingAverage: number[] = [];
+    const upperBand: number[] = [];
+    const lowerBand: number[] = [];
+    const period = Math.min(20, Math.floor(pointCount / 3)); // Adaptive period based on data length
+    const standardDeviations = 2; // 2 standard deviations
 
+    // Generate base data with some volatility
     for (let i = 0; i < pointCount; i++) {
-      const noise = Math.sin(i / 8) * 20 + Math.random() * 40 - 20;
-      const trend = i * 2; // Slight upward trend
+      const noise = Math.sin(i / 8) * 15 + Math.random() * 30 - 15;
+      const trend = i * (this.selectedPeriod === '7D' ? 0.5 : 1.5); // Different trends for different periods
       const value = base + noise + trend;
       data.push(parseFloat(value.toFixed(0)));
     }
 
+    // Calculate Bollinger Bands
+    for (let i = 0; i < pointCount; i++) {
+      if (i >= period - 1) {
+        // Calculate moving average
+        const slice = data.slice(i - period + 1, i + 1);
+        const avg = slice.reduce((sum, val) => sum + val, 0) / period;
+        movingAverage[i] = avg;
+
+        // Calculate standard deviation
+        const squaredDiffs = slice.map(val => Math.pow(val - avg, 2));
+        const variance = squaredDiffs.reduce((sum, val) => sum + val, 0) / period;
+        const stdDev = Math.sqrt(variance);
+
+        // Calculate upper and lower bands
+        upperBand[i] = avg + (standardDeviations * stdDev);
+        lowerBand[i] = avg - (standardDeviations * stdDev);
+      } else {
+        // For early data points, use simple average
+        const slice = data.slice(0, i + 1);
+        const avg = slice.reduce((sum, val) => sum + val, 0) / slice.length;
+        movingAverage[i] = avg;
+        upperBand[i] = avg + (data[i] * 0.1);
+        lowerBand[i] = avg - (data[i] * 0.1);
+      }
+    }
+
     this.chartData = {
-      labels: Array.from({ length: pointCount }, (_, i) => {
-        const hour = (new Date().getHours() - pointCount + i + 24) % 24;
-        return `${hour.toString().padStart(2, '0')}:00`;
-      }),
+      labels: Array.from({ length: pointCount }, (_, i) => labelFormat(i)),
       datasets: [
+        {
+          label: 'Upper Band',
+          data: upperBand,
+          borderWidth: 1,
+          tension: 0.4,
+          pointRadius: 0,
+          borderColor: 'rgba(255, 72, 219, 0.6)',
+          backgroundColor: 'transparent',
+          fill: false,
+          borderDash: [3, 3]
+        },
+        {
+          label: 'Moving Average',
+          data: movingAverage,
+          borderWidth: 2,
+          tension: 0.4,
+          pointRadius: 0,
+          borderColor: '#00fff7',
+          backgroundColor: 'transparent',
+          fill: false
+        },
+        {
+          label: 'Lower Band',
+          data: lowerBand,
+          borderWidth: 1,
+          tension: 0.4,
+          pointRadius: 0,
+          borderColor: 'rgba(255, 72, 219, 0.6)',
+          backgroundColor: 'rgba(0, 255, 247, 0.1)',
+          fill: '+1', // Fill between this line and the upper band
+          borderDash: [3, 3]
+        },
         {
           label: this.metricName,
           data: data,
-          borderWidth: 3,
+          borderWidth: 2,
           tension: 0.4,
-          pointRadius: 2,
-          pointHoverRadius: 6,
-          borderColor: '#00fff7',
-          backgroundColor: 'rgba(0, 255, 247, 0.1)',
-          fill: true,
-          pointBackgroundColor: '#00fff7',
-          pointBorderColor: '#0f111a',
-          pointBorderWidth: 2
+          pointRadius: this.selectedPeriod === '1H' ? 0 : 1,
+          pointHoverRadius: 4,
+          borderColor: '#ffffff',
+          backgroundColor: '#ffffff',
+          fill: false,
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#00fff7',
+          pointBorderWidth: 1,
+          order: 1 // Ensure this line is drawn on top
         }
       ]
     };
@@ -202,11 +324,23 @@ export class DetailModalComponent implements OnInit {
 
   private generateInsights(): void {
     const metricLower = this.metricName.toLowerCase();
+    const currentValue = this.getCurrentValue();
+    const trend = this.getTrendClass();
+    
+    // Generate Bollinger Band insights
+    const bollingerInsights = [
+      `Current value ${trend === 'positive' ? 'above' : 'below'} moving average`,
+      `Price volatility ${Math.random() > 0.5 ? 'increasing' : 'decreasing'} based on band width`,
+      `${Math.random() > 0.7 ? 'Breakout' : 'Consolidation'} pattern detected in recent data`,
+      `Band squeeze indicates ${Math.random() > 0.5 ? 'potential volatility increase' : 'stable trading range'}`
+    ];
+    
     const baseInsights = [
-      `Volume ${this.getTrendClass() === 'positive' ? 'increased' : 'decreased'} by ${this.getTrendPercentage()}% vs last 24h`,
+      `Volume ${trend === 'positive' ? 'increased' : 'decreased'} by ${this.getTrendPercentage()}% vs last 24h`,
       `Peak activity observed at ${this.getPeakTime()}`,
       `Average processing time: ${this.getAvgProcessingTime()}ms`,
-      `Success rate maintained at ${this.getSuccessRate()}%`
+      `Success rate maintained at ${this.getSuccessRate()}%`,
+      ...bollingerInsights.slice(0, 2) // Add 2 Bollinger insights
     ];
 
     if (metricLower.includes('swift')) {
@@ -214,24 +348,24 @@ export class DetailModalComponent implements OnInit {
         ...baseInsights,
         'SWIFT network connectivity stable',
         'Message formatting compliance: 100%',
-        'No regulatory flags detected'
+        'Technical indicators suggest continued upward momentum'
       ];
     } else if (metricLower.includes('fed')) {
       this.insights = [
         ...baseInsights,
         'Federal Reserve connectivity optimal',
         'Settlement times within SLA',
-        'Reserve requirements met'
+        'Bollinger bands indicate healthy volatility range'
       ];
     } else if (metricLower.includes('chips')) {
       this.insights = [
         ...baseInsights,
         'CHIPS network performance normal',
         'Liquidity levels adequate',
-        'Transaction priorities processed correctly'
+        'Price action respecting technical support levels'
       ];
     } else {
-      this.insights = baseInsights;
+      this.insights = [...baseInsights, ...bollingerInsights.slice(2)];
     }
   }
 }

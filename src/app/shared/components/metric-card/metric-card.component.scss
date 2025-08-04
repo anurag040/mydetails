@@ -1,0 +1,560 @@
+// Modern Glassmorphism Metric Card Design
+.metric-card-wrapper {
+  position: relative;
+  border-radius: 24px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  margin: 2px; // Reduced margin for tighter spacing
+  width: 100% !important; // Force consistent wrapper width
+  height: 100% !important; // Force consistent wrapper height
+  box-sizing: border-box;
+  // Remove overflow: hidden to prevent content clipping
+
+  &:hover {
+    transform: translateY(-4px);
+    
+    .metric-card.premium {
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.15),
+        0 10px 20px rgba(102, 126, 234, 0.1);
+      
+      .card-icon {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  &.mobile {
+    transform: none;
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+.metric-card {
+  // Modern glassmorphism background
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  border-radius: 24px;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(180%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // Premium glass reflection
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.6) 50%, 
+      transparent 100%
+    );
+    border-radius: 24px 24px 0 0;
+  }
+
+  &.premium {
+    padding: 16px;
+    height: 240px !important; // Force consistent height
+    min-height: 240px !important;
+    max-height: 240px !important;
+    width: 100% !important; // Force consistent width
+    min-width: 100% !important;
+    max-width: 100% !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 24px; // Ensure border radius is maintained
+    box-sizing: border-box; // Include padding in size calculations
+    
+    // Premium gradient background
+    background: linear-gradient(145deg, 
+      rgba(102, 126, 234, 0.12) 0%,
+      rgba(118, 75, 162, 0.12) 30%,
+      rgba(64, 93, 230, 0.12) 70%,
+      rgba(76, 29, 149, 0.12) 100%
+    );
+    
+    // Multi-layered shadow for depth
+    box-shadow: 
+      0 25px 50px rgba(0, 0, 0, 0.15),
+      0 12px 24px rgba(102, 126, 234, 0.1),
+      0 6px 12px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    
+    // Color theme variations
+    &.transactions {
+      background: linear-gradient(145deg, 
+        rgba(34, 197, 94, 0.12) 0%,
+        rgba(16, 185, 129, 0.12) 50%,
+        rgba(5, 150, 105, 0.12) 100%
+      );
+    }
+    
+    &.networks {
+      background: linear-gradient(145deg, 
+        rgba(59, 130, 246, 0.12) 0%,
+        rgba(37, 99, 235, 0.12) 50%,
+        rgba(29, 78, 216, 0.12) 100%
+      );
+    }
+    
+    &.payments {
+      background: linear-gradient(145deg, 
+        rgba(168, 85, 247, 0.12) 0%,
+        rgba(147, 51, 234, 0.12) 50%,
+        rgba(126, 34, 206, 0.12) 100%
+      );
+    }
+    
+    &.deposits {
+      background: linear-gradient(145deg, 
+        rgba(245, 158, 11, 0.12) 0%,
+        rgba(217, 119, 6, 0.12) 50%,
+        rgba(180, 83, 9, 0.12) 100%
+      );
+    }
+
+    // Card Icon - Properly contained within card
+    .card-icon {
+      position: absolute;
+      top: 12px; // Slightly further from edge
+      right: 12px; // Slightly further from edge
+      width: 28px; // Smaller to ensure it fits
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      z-index: 2;
+      
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      // Category colors
+      &.swift, &.transactions {
+        background: rgba(34, 197, 94, 0.2);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      
+      &.fed, &.networks {
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+      
+      &.chips, &.payments {
+        background: rgba(168, 85, 247, 0.2);
+        border: 1px solid rgba(168, 85, 247, 0.3);
+      }
+      
+      &.deposits {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+      
+      &.payment, &.deposit {
+        background: rgba(42, 255, 176, 0.2);
+        border: 1px solid rgba(42, 255, 176, 0.3);
+      }
+      
+      &.message {
+        background: rgba(255, 182, 38, 0.2);
+        border: 1px solid rgba(255, 182, 38, 0.3);
+      }
+      
+      &.default {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+    }
+
+    .card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+      padding-right: 44px; // Adjusted for smaller icon (28px + 16px)
+      flex-shrink: 0;
+
+      .title-section {
+        .title-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 2px;
+          
+          .title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .trend-indicator {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            flex-shrink: 0;
+            white-space: nowrap;
+
+            &.positive {
+              background: rgba(42, 255, 176, 0.15);
+              color: #2affb0;
+              border: 1px solid rgba(42, 255, 176, 0.3);
+            }
+
+            &.negative {
+              background: rgba(255, 107, 107, 0.15);
+              color: #ff6b6b;
+              border: 1px solid rgba(255, 107, 107, 0.3);
+            }
+
+            mat-icon {
+              font-size: 10px;
+              width: 10px;
+              height: 10px;
+            }
+          }
+        }
+
+        .subtitle {
+          font-size: 9px;
+          color: rgba(255, 255, 255, 0.7);
+          margin: 0;
+          line-height: 1.2;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+      min-height: 0;
+
+      .main-metric {
+        text-align: left;
+        
+        .value {
+          font-size: 1.8rem;
+          font-weight: 900;
+          color: #ffffff;
+          line-height: 1;
+          margin-bottom: 4px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .comparison {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 10px;
+
+          .label {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+          }
+
+          .prev-value {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 700;
+          }
+        }
+      }
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+      gap: 8px;
+
+      .insights {
+        display: flex;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+
+        .insight-pill {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          padding: 2px 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 4px;
+          font-size: 8px;
+          color: rgba(255, 255, 255, 0.9);
+          white-space: nowrap;
+          backdrop-filter: blur(10px);
+          font-weight: 500;
+
+          mat-icon {
+            font-size: 8px;
+            width: 8px;
+            height: 8px;
+            opacity: 0.8;
+          }
+
+          span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 50px;
+          }
+        }
+      }
+
+      .last-updated {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        font-size: 8px;
+        color: rgba(255, 255, 255, 0.6);
+        white-space: nowrap;
+        flex-shrink: 0;
+        font-weight: 500;
+
+        mat-icon {
+          font-size: 8px;
+          width: 8px;
+          height: 8px;
+          opacity: 0.7;
+        }
+      }
+    }
+
+    // Animated border gradient effect
+    .border-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 24px;
+      padding: 1px;
+      background: linear-gradient(45deg, 
+        rgba(102, 126, 234, 0.3),
+        rgba(118, 75, 162, 0.3),
+        rgba(64, 93, 230, 0.3),
+        rgba(102, 126, 234, 0.3)
+      );
+      background-size: 200% 200%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: -1;
+    }
+  }
+
+  // Mobile Card Design
+  .mobile-card {
+    padding: 12px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(145deg, 
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(15px);
+
+    .mobile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+
+        .mobile-title {
+          font-size: 11px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0;
+        }
+
+        .chevron {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.6);
+        }
+      }
+
+      .trend-badge {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 8px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+
+        &.positive {
+          background: rgba(34, 197, 94, 0.2);
+          color: #22c55e;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        &.negative {
+          background: rgba(239, 68, 68, 0.2);
+          color: #ef4444;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        mat-icon {
+          font-size: 10px;
+          width: 10px;
+          height: 10px;
+        }
+      }
+    }
+
+    .mobile-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .main-value {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #ffffff;
+        line-height: 1;
+      }
+
+      .mobile-subtitle {
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+      }
+    }
+
+    .mobile-footer {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+      .status-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        flex-shrink: 0;
+
+        &.positive {
+          background: #22c55e;
+        }
+
+        &.negative {
+          background: #ef4444;
+        }
+      }
+
+      .update-text {
+        font-size: 7px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .metric-card-wrapper {
+    margin: 1px; // Even tighter spacing on mobile
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
+    
+    .metric-card.premium {
+      height: 200px !important;
+      min-height: 200px !important;
+      max-height: 200px !important;
+      width: 100% !important;
+      padding: 12px;
+      box-sizing: border-box;
+      
+      .card-header {
+        margin-bottom: 8px;
+        padding-right: 36px; // Adjusted for smaller icon on mobile
+        
+        .title-section .title {
+          font-size: 10px;
+        }
+        
+        .title-section .subtitle {
+          font-size: 8px;
+        }
+      }
+      
+      .card-body .main-metric .value {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  .mobile-card {
+    padding: 12px;
+    min-height: 80px;
+    
+    .mobile-header .mobile-title {
+      font-size: 11px;
+    }
+    
+    .mobile-body .main-value {
+      font-size: 1.2rem;
+    }
+  }
+}

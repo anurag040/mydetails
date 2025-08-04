@@ -1,0 +1,182 @@
+<div class="detail-modal">
+  <!-- Modal Header -->
+  <div class="modal-header" mat-dialog-title>
+    <div class="header-content">
+      <div class="metric-icon" [ngClass]="getMetricCategory()">
+        <mat-icon>{{ getMetricIcon() }}</mat-icon>
+      </div>
+      <div class="title-section">
+        <h2 class="modal-title">{{ metricName }}</h2>
+        <p class="modal-subtitle">Detailed Analytics & Insights</p>
+      </div>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Modal Content -->
+  <div mat-dialog-content class="modal-content">
+    <!-- Key Metrics Row -->
+    <div class="metrics-row">
+      <div class="metric-summary">
+        <div class="metric-value">{{ getCurrentValue() | number }}</div>
+        <div class="metric-label">Current Value</div>
+        <div class="trend-indicator" [ngClass]="getTrendClass()">
+          <mat-icon>{{ getTrendIcon() }}</mat-icon>
+          <span>{{ getTrendPercentage() }}% from yesterday</span>
+        </div>
+      </div>
+
+      <div class="quick-stats">
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon>schedule</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ getAveragePerHour() }}</div>
+            <div class="stat-label">Avg/Hour</div>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon>timeline</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ getPeakTime() }}</div>
+            <div class="stat-label">Peak Time</div>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ getGrowthRate() }}%</div>
+            <div class="stat-label">Growth Rate</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h3 class="chart-title">Performance Trend</h3>
+        <div class="chart-controls">
+          <button mat-button 
+                  *ngFor="let period of timePeriods" 
+                  [class.active]="selectedPeriod === period"
+                  (click)="selectedPeriod = period"
+                  class="period-btn">
+            {{ period }}
+          </button>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas
+          baseChart
+          [data]="chartData"
+          [options]="chartOptions"
+          [type]="'line'"
+          class="performance-chart"
+        ></canvas>
+      </div>
+    </div>
+
+    <!-- Insights and Analytics -->
+    <div class="insights-section">
+      <div class="insights-grid">
+        <div class="insights-panel">
+          <h4 class="panel-title">
+            <mat-icon>lightbulb</mat-icon>
+            Key Insights
+          </h4>
+          <ul class="insights-list">
+            <li *ngFor="let insight of insights" class="insight-item">
+              <mat-icon class="insight-icon">{{ getInsightIcon(insight) }}</mat-icon>
+              <span>{{ insight }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="performance-panel">
+          <h4 class="panel-title">
+            <mat-icon>analytics</mat-icon>
+            Performance Metrics
+          </h4>
+          <div class="performance-metrics">
+            <div class="performance-item">
+              <div class="metric-circle success">
+                <span>{{ getSuccessRate() }}%</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-name">Success Rate</div>
+                <div class="metric-desc">Transactions completed successfully</div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="metric-circle processing">
+                <span>{{ getAvgProcessingTime() }}ms</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-name">Avg Processing</div>
+                <div class="metric-desc">Average transaction processing time</div>
+              </div>
+            </div>
+
+            <div class="performance-item">
+              <div class="metric-circle volume">
+                <span>${{ getTotalVolume() }}M</span>
+              </div>
+              <div class="metric-info">
+                <div class="metric-name">Total Volume</div>
+                <div class="metric-desc">Total transaction volume today</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerts and Notifications -->
+      <div class="alerts-section" *ngIf="hasAlerts()">
+        <h4 class="section-title">
+          <mat-icon>notifications_active</mat-icon>
+          Active Alerts
+        </h4>
+        <div class="alerts-list">
+          <div *ngFor="let alert of getAlerts()" class="alert-item" [ngClass]="alert.severity">
+            <div class="alert-icon">
+              <mat-icon>{{ alert.icon }}</mat-icon>
+            </div>
+            <div class="alert-content">
+              <div class="alert-title">{{ alert.title }}</div>
+              <div class="alert-message">{{ alert.message }}</div>
+              <div class="alert-time">{{ alert.time }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Actions -->
+  <div mat-dialog-actions class="modal-actions">
+    <button mat-button class="action-btn secondary" (click)="exportData()">
+      <mat-icon>download</mat-icon>
+      Export Data
+    </button>
+    <button mat-button class="action-btn secondary" (click)="setAlert()">
+      <mat-icon>notification_add</mat-icon>
+      Set Alert
+    </button>
+    <button mat-raised-button class="action-btn primary" mat-dialog-close>
+      <mat-icon>check</mat-icon>
+      Done
+    </button>
+  </div>
+</div>

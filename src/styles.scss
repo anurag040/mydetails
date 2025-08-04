@@ -1,1 +1,213 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+$font-stack: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+$bg-base: #0f111a;
+$text-primary: #e3e9ff;
+$text-secondary: #a3adc8;
+
+$neon-cyan: #00fff7;
+$neon-pink: #ff48db;
+$neon-purple: #a66fff;
+$neon-green: #2affb0;
+
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: mat.define-palette(mat.$blue-grey-palette),
+    accent: mat.define-palette(mat.$cyan-palette),
+    warn: mat.define-palette(mat.$deep-orange-palette)
+  )
+));
+
+@include mat.all-component-themes($dark-theme);
+
+body {
+  background: $bg-base;
+  color: $text-primary;
+  font-family: $font-stack;
+  margin: 0;
+  min-height: 100vh;
+  --radius: 10px;
+  --transition: .25s cubic-bezier(.4,.2,.2,1);
+}
+
+/* scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #1f2330;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* neon glow utility */
+.neon-glow {
+  position: relative;
+}
+.neon-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  filter: blur(18px);
+  background: linear-gradient(135deg, $neon-cyan, $neon-pink, $neon-green);
+  opacity: 0.2;
+  border-radius: 10px;
+  z-index: -1;
+}
+
+/* focus outline */
+:focus-visible {
+  outline: 2px solid $neon-cyan;
+  outline-offset: 2px;
+}
+
+/* metric card base (density/responsive baked in) */
+.metric-card {
+  background: #1f2330;
+  border-radius: 10px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 18px 50px -8px rgba(0, 255, 247, 0.15);
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    .title {
+      font-size: clamp(0.55rem, 1vw, 0.75rem);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #a3adc8;
+      margin-right: 4px;
+    }
+
+    .delta {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: clamp(0.65rem, 1vw, 0.9rem);
+      font-weight: 600;
+
+      &.positive { color: #2affb0; }
+      &.negative { color: #ff6b6b; }
+
+      mat-icon {
+        font-size: 16px;
+        margin-left: 0;
+      }
+    }
+  }
+
+  .main-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+
+    .value {
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      font-weight: 700;
+      color: #e3e9ff;
+      line-height: 1.1;
+    }
+
+    .comparison {
+      font-size: 0.65rem;
+      color: #8fa3c1;
+      align-self: flex-end;
+      white-space: nowrap;
+    }
+  }
+
+  .sparkline-wrapper {
+    height: 36px;
+    margin: 4px 0;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.55rem;
+    color: #8fa3c1;
+
+    .subtitle {}
+    .meta {
+      .updated {
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 28px 60px -4px rgba(0, 255, 247, 0.45);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $neon-cyan, $neon-pink, $neon-purple);
+    border-radius: 0 0 10px 10px;
+  }
+}
+
+/* severity badges (incident) */
+// severity badge styles
+.severity {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 10px;
+  display: inline-block;
+
+  &.high {
+    background: rgba(229, 57, 53, 0.1);
+    color: #ff6b6b;
+    box-shadow: 0 0 16px rgba(255, 107, 107, 0.6);
+  }
+  &.medium {
+    background: rgba(255, 182, 38, 0.1);
+    color: #ffca28;
+    box-shadow: 0 0 14px rgba(255, 202, 40, 0.5);
+  }
+  &.low {
+    background: rgba(102, 187, 106, 0.1);
+    color: #64dd17;
+    box-shadow: 0 0 12px rgba(100, 221, 23, 0.4);
+  }
+}
+
+// Global modal panel styles for enhanced detail modal
+.detail-modal-panel {
+  .mat-mdc-dialog-container {
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  
+  .mat-mdc-dialog-surface {
+    background: transparent !important;
+    border-radius: 20px !important;
+  }
+}

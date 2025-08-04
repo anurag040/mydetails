@@ -1,0 +1,96 @@
+<div
+  class="metric-card-wrapper"
+  [class.mobile]="isMobile"
+  role="button"
+  [attr.aria-label]="title + ' summary'"
+>
+  <div class="metric-card" [class.premium]="!isMobile">
+    <!-- Card Icon/Category Indicator -->
+    <div class="card-icon" [ngClass]="getCardCategory()">
+      <mat-icon>{{ getCardIcon() }}</mat-icon>
+    </div>
+
+    <ng-container *ngIf="!isMobile; else mobileView">
+      <!-- Enhanced Desktop View -->
+      <div class="card-header">
+        <div class="title-section">
+          <div class="title-row">
+            <h3 class="title">{{ title }}</h3>
+            <div class="trend-indicator" [ngClass]="{ positive: delta >= 0, negative: delta < 0 }">
+              <mat-icon>{{ delta >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+              <span class="trend-value">{{ deltaSign }}{{ delta | number:'1.1-1' }}%</span>
+            </div>
+          </div>
+          <p class="subtitle">{{ subtitle }}</p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="main-metric">
+          <span class="value">{{ value !== null ? (value | number) : '-' }}</span>
+          <div class="comparison" *ngIf="previousValue !== null">
+            <span class="label">vs yesterday</span>
+            <span class="prev-value">{{ previousValue | number }}</span>
+          </div>
+        </div>
+
+        <!-- Mini Chart/Sparkline - Hidden on dashboard, shown on click/detail view -->
+        <!-- <div class="chart-section" *ngIf="sparkline?.length">
+          <canvas
+            baseChart
+            [data]="sparklineChartData"
+            [options]="sparklineOptions"
+            [type]="'line'"
+            class="sparkline-chart"
+          ></canvas>
+        </div> -->
+      </div>
+
+      <div class="card-footer">
+        <div class="insights">
+          <div class="insight-pill" *ngIf="averagePerHour !== null">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ averagePerHour | number }}/hr avg</span>
+          </div>
+          <div class="insight-pill" *ngIf="peakTime">
+            <mat-icon>timeline</mat-icon>
+            <span>Peak: {{ peakTime }}</span>
+          </div>
+        </div>
+        <div class="last-updated" *ngIf="lastUpdated">
+          <mat-icon>access_time</mat-icon>
+          <span>{{ lastUpdated }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #mobileView>
+      <!-- Enhanced Mobile View -->
+      <div class="mobile-card">
+        <div class="mobile-header">
+          <div class="title-row">
+            <h4 class="mobile-title">{{ title }}</h4>
+            <mat-icon class="chevron">chevron_right</mat-icon>
+          </div>
+          <div class="trend-badge" [ngClass]="{ positive: delta >= 0, negative: delta < 0 }">
+            <mat-icon>{{ delta >= 0 ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+            <span>{{ deltaSign }}{{ delta | number:'1.1-1' }}%</span>
+          </div>
+        </div>
+
+        <div class="mobile-body">
+          <div class="main-value">{{ value !== null ? (value | number) : '-' }}</div>
+          <div class="mobile-subtitle">{{ subtitle }}</div>
+        </div>
+
+        <div class="mobile-footer" *ngIf="lastUpdated">
+          <div class="status-dot" [ngClass]="{ positive: delta >= 0, negative: delta < 0 }"></div>
+          <span class="update-text">Updated {{ lastUpdated }}</span>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Gradient Border Effect -->
+    <div class="border-gradient"></div>
+  </div>
+</div>

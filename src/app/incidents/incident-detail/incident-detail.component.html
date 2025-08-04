@@ -1,0 +1,136 @@
+<div class="incident-detail-container">
+  <!-- Modal Header -->
+  <div class="detail-header">
+    <div class="header-content">
+      <div class="severity-indicator" [ngClass]="incident.severity.toLowerCase()">
+        <mat-icon>{{ getSeverityIcon(incident.severity) }}</mat-icon>
+      </div>
+      <div class="title-section">
+        <h2 class="incident-title">{{ incident.title }}</h2>
+        <div class="incident-badges">
+          <div class="severity-badge" [ngClass]="incident.severity.toLowerCase()">
+            {{ incident.severity }}
+          </div>
+          <div class="status-badge" [ngClass]="getStatusClass(incident.status)">
+            {{ incident.status }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <button mat-icon-button mat-dialog-close class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Modal Content -->
+  <div mat-dialog-content class="detail-content">
+    <!-- Timeline and Metadata -->
+    <div class="metadata-section">
+      <div class="meta-card">
+        <div class="meta-item">
+          <mat-icon>schedule</mat-icon>
+          <div class="meta-content">
+            <div class="meta-label">Reported</div>
+            <div class="meta-value">{{ incident.date | date:'MMM d, y, h:mm a' }}</div>
+          </div>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>person</mat-icon>
+          <div class="meta-content">
+            <div class="meta-label">Reporter</div>
+            <div class="meta-value">System Monitor</div>
+          </div>
+        </div>
+        
+        <div class="meta-item">
+          <mat-icon>update</mat-icon>
+          <div class="meta-content">
+            <div class="meta-label">Last Updated</div>
+            <div class="meta-value">{{ getLastUpdated() }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description Section -->
+    <div class="description-section">
+      <h3 class="section-title">
+        <mat-icon>description</mat-icon>
+        Description
+      </h3>
+      <div class="description-content">
+        {{ incident.description }}
+      </div>
+    </div>
+
+    <!-- Impact Assessment -->
+    <div class="impact-section">
+      <h3 class="section-title">
+        <mat-icon>assessment</mat-icon>
+        Impact Assessment
+      </h3>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <div class="impact-icon priority">
+            <mat-icon>priority_high</mat-icon>
+          </div>
+          <div class="impact-content">
+            <div class="impact-label">Priority</div>
+            <div class="impact-value">{{ getPriority(incident.severity) }}</div>
+          </div>
+        </div>
+        
+        <div class="impact-item">
+          <div class="impact-icon affected">
+            <mat-icon>groups</mat-icon>
+          </div>
+          <div class="impact-content">
+            <div class="impact-label">Affected Systems</div>
+            <div class="impact-value">{{ getAffectedSystems() }}</div>
+          </div>
+        </div>
+        
+        <div class="impact-item">
+          <div class="impact-icon duration">
+            <mat-icon>timer</mat-icon>
+          </div>
+          <div class="impact-content">
+            <div class="impact-label">Duration</div>
+            <div class="impact-value">{{ getDuration() }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="actions-section">
+      <h3 class="section-title">
+        <mat-icon>build</mat-icon>
+        Recommended Actions
+      </h3>
+      <div class="actions-list">
+        <div class="action-item" *ngFor="let action of getRecommendedActions()">
+          <mat-icon>{{ action.icon }}</mat-icon>
+          <span>{{ action.text }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Actions -->
+  <div mat-dialog-actions class="detail-actions">
+    <button mat-button class="action-btn secondary" (click)="acknowledgeIncident()">
+      <mat-icon>check</mat-icon>
+      Acknowledge
+    </button>
+    <button mat-button class="action-btn secondary" (click)="escalateIncident()">
+      <mat-icon>trending_up</mat-icon>
+      Escalate
+    </button>
+    <button mat-raised-button class="action-btn primary" mat-dialog-close>
+      <mat-icon>close</mat-icon>
+      Close
+    </button>
+  </div>
+</div>

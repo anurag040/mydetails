@@ -1,0 +1,520 @@
+// Enhanced Dashboard Layout
+.dashboard-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 72px);
+
+  // Dashboard Header
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    .header-content {
+      .header-with-logo {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .logo-container {
+          flex-shrink: 0;
+          
+          .bny-logo {
+            height: 40px;
+            width: auto;
+            filter: brightness(0) invert(1);
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            
+            &:hover {
+              opacity: 1;
+              transform: scale(1.02);
+            }
+          }
+        }
+
+        .title-section {
+          flex: 1;
+          
+          .dashboard-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            background: linear-gradient(135deg, #e3e9ff, #00fff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+          }
+
+          .dashboard-subtitle {
+            font-size: 0.9rem;
+            color: #a3adc8;
+            margin: 0;
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .refresh-btn {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e3e9ff;
+        transition: all 0.3s ease;
+
+        &:hover:not([disabled]) {
+          background: rgba(0, 255, 247, 0.1);
+          border-color: rgba(0, 255, 247, 0.3);
+          transform: translateY(-1px);
+        }
+
+        &[disabled] {
+          opacity: 0.5;
+        }
+
+        mat-icon.spinning {
+          animation: spin 1s linear infinite;
+        }
+      }
+
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 24px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        color: #ff6b6b;
+        transition: all 0.3s ease;
+
+        &.online {
+          background: rgba(42, 255, 176, 0.1);
+          border-color: rgba(42, 255, 176, 0.3);
+          color: #2affb0;
+
+          .status-dot {
+            background: #2affb0;
+            box-shadow: 0 0 12px rgba(42, 255, 176, 0.6);
+          }
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #ff6b6b;
+          box-shadow: 0 0 12px rgba(255, 107, 107, 0.6);
+          animation: pulse 2s infinite;
+        }
+      }
+    }
+  }
+
+  // Compact System Overview at Top
+  .quick-stats-top {
+    margin-bottom: 20px;
+
+    .stats-header-compact {
+      margin-bottom: 12px;
+
+      .stats-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #e3e9ff;
+        margin: 0;
+      }
+    }
+
+    .stats-grid-compact {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 8px;
+
+      .stat-card-mini {
+        background: linear-gradient(135deg, #1f2330 0%, #252b3d 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        min-height: 70px;
+
+        &:hover {
+          transform: translateY(-1px);
+          border-color: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, #00fff7, #ff48db, #a66fff);
+        }
+
+        .stat-icon {
+          width: 24px;
+          height: 24px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          &.success {
+            background: linear-gradient(135deg, rgba(42, 255, 176, 0.2), rgba(42, 255, 176, 0.1));
+            border: 1px solid rgba(42, 255, 176, 0.3);
+            color: #2affb0;
+          }
+
+          &.processing {
+            background: linear-gradient(135deg, rgba(255, 182, 38, 0.2), rgba(255, 182, 38, 0.1));
+            border: 1px solid rgba(255, 182, 38, 0.3);
+            color: #ffca28;
+          }
+
+          &.volume {
+            background: linear-gradient(135deg, rgba(0, 255, 247, 0.2), rgba(0, 255, 247, 0.1));
+            border: 1px solid rgba(0, 255, 247, 0.3);
+            color: #00fff7;
+          }
+
+          &.alerts {
+            background: linear-gradient(135deg, rgba(255, 72, 219, 0.2), rgba(255, 72, 219, 0.1));
+            border: 1px solid rgba(255, 72, 219, 0.3);
+            color: #ff48db;
+          }
+
+          mat-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+          }
+        }
+
+        .stat-content {
+          text-align: center;
+
+          .stat-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #e3e9ff;
+            line-height: 1;
+            margin-bottom: 1px;
+          }
+
+          .stat-label {
+            font-size: 0.6rem;
+            color: #a3adc8;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+  }
+
+  // Metrics Section
+  .metrics-section {
+    margin-bottom: 24px;
+
+    .section-header {
+      margin-bottom: 16px;
+
+      .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #e3e9ff;
+        margin: 0 0 4px 0;
+      }
+
+      .section-subtitle {
+        font-size: 0.85rem;
+        color: #a3adc8;
+        margin: 0;
+        opacity: 0.8;
+      }
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 8px; // Reduced gap for tighter spacing
+      align-items: stretch;
+      padding: 4px; // Reduced padding
+
+      .metric-item {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 240px; // Match card component height exactly
+        width: 100%;
+        display: flex;
+
+        // Ensure all cards have the same dimensions
+        ::ng-deep app-metric-card {
+          width: 100%;
+          height: 100%;
+          
+          .metric-card-wrapper {
+            width: 100%;
+            height: 100%;
+            
+            .metric-card.premium {
+              width: 100%;
+              height: 100%;
+              min-height: 240px;
+              max-height: 240px;
+            }
+          }
+        }
+
+        &.swift {
+          animation: slideInUp 0.6s ease 0.1s both;
+        }
+        &.swift-messages {
+          animation: slideInUp 0.6s ease 0.2s both;
+        }
+        &.fed {
+          animation: slideInUp 0.6s ease 0.3s both;
+        }
+        &.chips {
+          animation: slideInUp 0.6s ease 0.4s both;
+        }
+        &.chips-deposits {
+          animation: slideInUp 0.6s ease 0.5s both;
+        }
+      }
+    }
+  }
+
+  // Loading State
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+
+    .loading-spinner {
+      ::ng-deep .mat-spinner {
+        circle {
+          stroke: #00fff7;
+        }
+      }
+    }
+
+    .loading-text {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #e3e9ff;
+    }
+
+    .loading-subtext {
+      font-size: 0.9rem;
+      color: #a3adc8;
+      opacity: 0.8;
+    }
+  }
+}
+
+// Animations
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .dashboard-container {
+    .metrics-section .metrics-grid {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 6px; // Reduced gap for medium screens
+    }
+
+    .quick-stats-top .stats-grid-compact {
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+
+    .dashboard-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 16px;
+      margin-bottom: 20px;
+
+      .header-content {
+        .header-with-logo {
+          gap: 12px;
+          
+          .logo-container .bny-logo {
+            height: 32px;
+          }
+          
+          .title-section .dashboard-title {
+            font-size: 2rem;
+          }
+        }
+      }
+
+      .header-actions {
+        justify-content: space-between;
+      }
+    }
+
+    .quick-stats-top {
+      margin-bottom: 16px;
+
+      .stats-grid-compact {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+
+        .stat-card-mini {
+          padding: 6px;
+          min-height: 60px;
+          gap: 3px;
+
+          .stat-icon {
+            width: 20px;
+            height: 20px;
+
+            mat-icon {
+              font-size: 12px;
+              width: 12px;
+              height: 12px;
+            }
+          }
+
+          .stat-content .stat-value {
+            font-size: 0.7rem;
+          }
+
+          .stat-content .stat-label {
+            font-size: 0.55rem;
+          }
+        }
+      }
+    }
+
+    .metrics-section {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 4px; // Reduced gap for mobile
+
+        .metric-item {
+          height: 200px; // Consistent mobile height
+          width: 100%;
+
+          ::ng-deep app-metric-card {
+            width: 100%;
+            height: 100%;
+            
+            .metric-card-wrapper {
+              width: 100%;
+              height: 100%;
+              
+              .metric-card.premium {
+                width: 100%;
+                height: 100%;
+                min-height: 200px;
+                max-height: 200px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 12px;
+
+    .dashboard-header {
+      .header-content {
+        .header-with-logo {
+          gap: 10px;
+          
+          .logo-container .bny-logo {
+            height: 28px;
+          }
+          
+          .title-section .dashboard-title {
+            font-size: 1.75rem;
+          }
+        }
+      }
+    }
+
+    .quick-stats-top .stats-grid-compact {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+
+      .stat-card-mini {
+        padding: 4px;
+        min-height: 50px;
+
+        .stat-icon {
+          width: 16px;
+          height: 16px;
+
+          mat-icon {
+            font-size: 10px;
+            width: 10px;
+            height: 10px;
+          }
+        }
+
+        .stat-content .stat-value {
+          font-size: 0.6rem;
+        }
+
+        .stat-content .stat-label {
+          font-size: 0.5rem;
+        }
+      }
+    }
+  }
+}

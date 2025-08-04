@@ -1,0 +1,168 @@
+<div class="dashboard-container">
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-with-logo">
+        <div class="logo-container">
+          <!-- <img src="https://www.bny.com/content/dam/bnymellon/images/about-us/bny-logo---2024-brand-update.png" 
+               alt="BNY Logo" 
+               class="bny-logo"
+               loading="lazy"> -->
+        </div>
+        <div class="title-section">
+          <h1 class="dashboard-title">Payments Dashboard</h1>
+          <p class="dashboard-subtitle">Real-time payment processing metrics</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button class="refresh-btn" (click)="refreshData()" [disabled]="isLoading">
+        <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+      </button>
+      <div class="status-indicator" [class.online]="isOnline">
+        <div class="status-dot"></div>
+        <span class="status-text">{{ isOnline ? 'Live' : 'Offline' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compact System Overview -->
+  <div class="quick-stats-top" *ngIf="summary">
+    <div class="stats-header-compact">
+      <h2 class="stats-title">System Overview</h2>
+    </div>
+    
+    <div class="stats-grid-compact">
+      <div class="stat-card-mini">
+        <div class="stat-icon success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ getSuccessRate() }}%</div>
+          <div class="stat-label">Success</div>
+        </div>
+      </div>
+
+      <div class="stat-card-mini">
+        <div class="stat-icon processing">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ getProcessingTime() }}ms</div>
+          <div class="stat-label">Avg Time</div>
+        </div>
+      </div>
+
+      <div class="stat-card-mini">
+        <div class="stat-icon volume">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">${{ getTotalVolume() }}M</div>
+          <div class="stat-label">Volume</div>
+        </div>
+      </div>
+
+      <div class="stat-card-mini">
+        <div class="stat-icon alerts">
+          <mat-icon>notifications</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ getActiveAlerts() }}</div>
+          <div class="stat-label">Alerts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics Grid Section -->
+  <div class="metrics-section" *ngIf="summary; else loadingTpl">
+    <div class="section-header">
+      <h2 class="section-title">Payment Channels</h2>
+      <p class="section-subtitle">Detailed metrics for each payment processing channel</p>
+    </div>
+
+    <div class="metrics-grid">
+      <app-metric-card
+        title="SWIFT Transactions"
+        subtitle="Today"
+        [value]="summary.swiftTransactions"
+        [delta]="5"
+        [previousValue]="summary.swiftTransactions - 127"
+        [averagePerHour]="45"
+        [peakTime]="'2:30 PM'"
+        [lastUpdated]="'2 min ago'"
+        [sparkline]="[120, 135, 142, 128, 156, 149, 167, 172, 158, 163, 171, 169]"
+        (click)="openDetail('SWIFT Transactions')"
+        class="metric-item swift"
+      ></app-metric-card>
+
+      <app-metric-card
+        title="Netted SWIFT Messages"
+        subtitle="Today"
+        [value]="summary.nattedSwiftMessages"
+        [delta]="-2.3"
+        [previousValue]="summary.nattedSwiftMessages + 45"
+        [averagePerHour]="28"
+        [peakTime]="'1:15 PM'"
+        [lastUpdated]="'1 min ago'"
+        [sparkline]="[85, 92, 88, 76, 82, 79, 74, 71, 68, 73, 75, 72]"
+        (click)="openDetail('Netted SWIFT Messages')"
+        class="metric-item swift-messages"
+      ></app-metric-card>
+
+      <app-metric-card
+        title="Fed Payments"
+        subtitle="Today"
+        [value]="summary.fedPayments"
+        [delta]="1.2"
+        [previousValue]="summary.fedPayments - 89"
+        [averagePerHour]="67"
+        [peakTime]="'11:45 AM'"
+        [lastUpdated]="'3 min ago'"
+        [sparkline]="[450, 478, 465, 489, 512, 498, 525, 543, 537, 551, 548, 562]"
+        (click)="openDetail('Fed Payments')"
+        class="metric-item fed"
+      ></app-metric-card>
+
+      <app-metric-card
+        title="CHIPS Payments"
+        subtitle="Today"
+        [value]="summary.chipsPayments"
+        [delta]="0.8"
+        [previousValue]="summary.chipsPayments - 34"
+        [averagePerHour]="23"
+        [peakTime]="'10:20 AM'"
+        [lastUpdated]="'4 min ago'"
+        [sparkline]="[180, 195, 187, 203, 198, 212, 225, 218, 231, 227, 234, 229]"
+        (click)="openDetail('CHIPS Payments')"
+        class="metric-item chips"
+      ></app-metric-card>
+
+      <app-metric-card
+        title="CHIPS Deposits"
+        subtitle="Today"
+        [value]="summary.chipsDeposits"
+        [delta]="-0.5"
+        [previousValue]="summary.chipsDeposits + 12"
+        [averagePerHour]="15"
+        [peakTime]="'9:30 AM'"
+        [lastUpdated]="'5 min ago'"
+        [sparkline]="[95, 102, 98, 91, 87, 84, 89, 86, 83, 88, 85, 82]"
+        (click)="openDetail('CHIPS Deposits')"
+        class="metric-item chips-deposits"
+      ></app-metric-card>
+    </div>
+  </div>
+
+  <!-- Loading Template -->
+  <ng-template #loadingTpl>
+    <div class="loading-container">
+      <div class="loading-spinner">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+      <div class="loading-text">Loading dashboard metrics...</div>
+      <div class="loading-subtext">Fetching real-time payment data</div>
+    </div>
+  </ng-template>
+</div>

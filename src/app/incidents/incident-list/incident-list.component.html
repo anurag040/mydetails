@@ -1,0 +1,123 @@
+<div class="incidents-container">
+  <!-- Header Section -->
+  <div class="incidents-header">
+    <div class="header-content">
+      <h1 class="incidents-title">System Incidents</h1>
+      <p class="incidents-subtitle">Monitor and track system alerts and incidents</p>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button class="refresh-btn" (click)="ngOnInit()" [disabled]="loading">
+        <mat-icon [class.spinning]="loading">refresh</mat-icon>
+      </button>
+      <div class="status-indicator online">
+        <div class="status-dot"></div>
+        <span class="status-text">Monitoring</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incidents Summary -->
+  <div class="incidents-summary" *ngIf="!loading">
+    <div class="summary-stats">
+      <div class="stat-item high">
+        <div class="stat-icon">
+          <mat-icon>error</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ getIncidentsByType('High').length }}</div>
+          <div class="stat-label">High</div>
+        </div>
+      </div>
+      
+      <div class="stat-item medium">
+        <div class="stat-icon">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ getIncidentsByType('Medium').length }}</div>
+          <div class="stat-label">Medium</div>
+        </div>
+      </div>
+      
+      <div class="stat-item low">
+        <div class="stat-icon">
+          <mat-icon>info</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ getIncidentsByType('Low').length }}</div>
+          <div class="stat-label">Low</div>
+        </div>
+      </div>
+      
+      <div class="stat-item total">
+        <div class="stat-icon">
+          <mat-icon>list</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ incidents.length }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incidents List -->
+  <div class="incidents-section" *ngIf="!loading; else loadingTpl">
+    <div class="section-header">
+      <h2 class="section-title">Recent Incidents</h2>
+      <p class="section-subtitle">Latest system alerts and their current status</p>
+    </div>
+
+    <div class="incidents-list">
+      <div *ngFor="let inc of incidents" 
+           class="incident-card" 
+           (click)="openDetail(inc)" 
+           role="button" 
+           [attr.aria-label]="inc.title">
+        
+        <!-- Severity Indicator -->
+        <div class="severity-indicator" [ngClass]="inc.severity.toLowerCase()">
+          <mat-icon>{{ getSeverityIcon(inc.severity) }}</mat-icon>
+        </div>
+
+        <!-- Incident Content -->
+        <div class="incident-content">
+          <div class="incident-header">
+            <div class="incident-title">{{ inc.title }}</div>
+            <div class="incident-time">{{ inc.date | date:'MMM d, h:mm a' }}</div>
+          </div>
+          
+          <div class="incident-meta">
+            <div class="severity-badge" [ngClass]="inc.severity.toLowerCase()">
+              {{ inc.severity }}
+            </div>
+            <div class="status-badge" [ngClass]="getStatusClass(inc.status)">
+              {{ inc.status }}
+            </div>
+          </div>
+          
+          <div class="incident-description">{{ inc.description }}</div>
+        </div>
+
+        <!-- Action Arrow -->
+        <div class="incident-arrow">
+          <mat-icon>chevron_right</mat-icon>
+        </div>
+
+        <!-- Gradient Border Effect -->
+        <div class="border-gradient" [ngClass]="inc.severity.toLowerCase()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <ng-template #loadingTpl>
+    <div class="loading-container">
+      <div class="loading-spinner">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+      <div class="loading-text">Loading incidents...</div>
+      <div class="loading-subtext">Fetching system alerts and notifications</div>
+    </div>
+  </ng-template>
+</div>

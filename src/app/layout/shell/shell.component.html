@@ -1,0 +1,52 @@
+<mat-toolbar class="topbar">
+  <div class="logo">BNY Dashboard</div>
+  
+  <div class="nav-links">
+    <a mat-button routerLink="/dashboard" routerLinkActive="active">
+      <mat-icon>dashboard</mat-icon>
+      <span class="nav-text">Dashboard</span>
+    </a>
+    <a mat-button routerLink="/incidents" routerLinkActive="active">
+      <mat-icon>report_problem</mat-icon>
+      <span class="nav-text">Incidents</span>
+    </a>
+  </div>
+
+  <span class="spacer"></span>
+
+  <div class="controls">
+    <button mat-icon-button class="theme-toggle" (click)="theme.toggle()" 
+            [attr.aria-label]="'Toggle ' + (theme.isDark ? 'light' : 'dark') + ' theme'">
+      <mat-icon>{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+
+    <div class="user-menu">
+      <div class="user-avatar">AD</div>
+      <div class="user-info">
+        <div class="user-name">Admin</div>
+        <div class="user-role">Operator</div>
+      </div>
+      <mat-icon>expand_more</mat-icon>
+    </div>
+  </div>
+</mat-toolbar>
+
+<!-- Mobile bottom navigation -->
+<div class="mobile-bottom-nav">
+  <a mat-button routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+    <mat-icon>dashboard</mat-icon>
+    <span>Dashboard</span>
+  </a>
+  <a mat-button routerLink="/incidents" routerLinkActive="active" class="nav-item">
+    <mat-icon>report_problem</mat-icon>
+    <span>Incidents</span>
+  </a>
+  <button mat-button class="nav-item" (click)="theme.toggle()">
+    <mat-icon>{{ theme.isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    <span>Theme</span>
+  </button>
+</div>
+
+<div class="content mobile-with-bottom-nav">
+  <router-outlet></router-outlet>
+</div>

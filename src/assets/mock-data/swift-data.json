@@ -1,0 +1,268 @@
+{
+  "swiftTransactions": [
+    {
+      "id": "TXN-SW-240801-001",
+      "messageType": "MT103",
+      "senderBIC": "CHASUS33XXX",
+      "receiverBIC": "DEUTDEFFXXX",
+      "amount": 150000.00,
+      "currency": "USD",
+      "status": "Completed",
+      "priority": "Normal",
+      "timestamp": "2025-08-01T08:15:23.123Z",
+      "settledTimestamp": "2025-08-01T08:16:45.890Z",
+      "processingTime": 82567,
+      "fees": 25.00,
+      "reference": "FT25080100001",
+      "valueDate": "2025-08-01",
+      "description": "Corporate payment for trade settlement",
+      "country": "Germany",
+      "network": "SWIFT_GPI",
+      "gpiUETR": "20250801CHASUS33001XXXX",
+      "compliance": {
+        "amlStatus": "Cleared",
+        "sanctionsCheck": "Passed",
+        "kycStatus": "Verified"
+      },
+      "routing": {
+        "intermediaryBanks": ["CHASDEFXAXX"],
+        "expectedHops": 2,
+        "actualHops": 2
+      }
+    },
+    {
+      "id": "TXN-SW-240801-002",
+      "messageType": "MT202",
+      "senderBIC": "HSBCHKHKXXX",
+      "receiverBIC": "BOFAUS3NXXX",
+      "amount": 500000.00,
+      "currency": "USD",
+      "status": "Processing",
+      "priority": "High",
+      "timestamp": "2025-08-01T09:22:15.456Z",
+      "processingTime": 45230,
+      "fees": 75.00,
+      "reference": "FT25080100002",
+      "valueDate": "2025-08-01",
+      "description": "Interbank transfer for liquidity management",
+      "country": "United States",
+      "network": "SWIFT_GPI",
+      "gpiUETR": "20250801HSBCHKHK002XXXX",
+      "compliance": {
+        "amlStatus": "Cleared",
+        "sanctionsCheck": "Passed",
+        "kycStatus": "Verified"
+      },
+      "routing": {
+        "intermediaryBanks": ["CHASUS33XXX", "IRVTUS3NXXX"],
+        "expectedHops": 3,
+        "actualHops": 2
+      }
+    },
+    {
+      "id": "TXN-SW-240801-003",
+      "messageType": "MT103",
+      "senderBIC": "BNPAFRPPXXX",
+      "receiverBIC": "CITIUS33XXX",
+      "amount": 75000.00,
+      "currency": "EUR",
+      "status": "Completed",
+      "priority": "Normal",
+      "timestamp": "2025-08-01T10:05:42.789Z",
+      "settledTimestamp": "2025-08-01T10:07:18.234Z",
+      "processingTime": 95445,
+      "fees": 35.00,
+      "reference": "FT25080100003",
+      "valueDate": "2025-08-01",
+      "description": "Cross-border payment for services",
+      "country": "United States",
+      "network": "SWIFT",
+      "compliance": {
+        "amlStatus": "Cleared",
+        "sanctionsCheck": "Passed",
+        "kycStatus": "Verified"
+      },
+      "routing": {
+        "intermediaryBanks": ["CHASUS33XXX"],
+        "expectedHops": 2,
+        "actualHops": 2
+      }
+    },
+    {
+      "id": "TXN-SW-240801-004",
+      "messageType": "MT950",
+      "senderBIC": "DEUTDEFFXXX",
+      "receiverBIC": "CHASUS33XXX",
+      "amount": 0.00,
+      "currency": "USD",
+      "status": "Completed",
+      "priority": "Normal",
+      "timestamp": "2025-08-01T11:30:12.345Z",
+      "settledTimestamp": "2025-08-01T11:30:45.123Z",
+      "processingTime": 32778,
+      "fees": 5.00,
+      "reference": "ST25080100004",
+      "valueDate": "2025-08-01",
+      "description": "Account statement transmission",
+      "country": "United States",
+      "network": "SWIFT",
+      "compliance": {
+        "amlStatus": "Cleared",
+        "sanctionsCheck": "Passed",
+        "kycStatus": "Verified"
+      },
+      "routing": {
+        "intermediaryBanks": [],
+        "expectedHops": 1,
+        "actualHops": 1
+      }
+    },
+    {
+      "id": "TXN-SW-240801-005",
+      "messageType": "MT103",
+      "senderBIC": "BARCGB22XXX",
+      "receiverBIC": "WFBIUS6SXXX",
+      "amount": 225000.00,
+      "currency": "GBP",
+      "status": "Failed",
+      "priority": "High",
+      "timestamp": "2025-08-01T12:15:30.678Z",
+      "processingTime": 120000,
+      "fees": 50.00,
+      "reference": "FT25080100005",
+      "valueDate": "2025-08-01",
+      "description": "International trade payment",
+      "country": "United States",
+      "network": "SWIFT",
+      "compliance": {
+        "amlStatus": "Pending",
+        "sanctionsCheck": "Flagged",
+        "kycStatus": "Required"
+      },
+      "routing": {
+        "intermediaryBanks": ["CHASUS33XXX", "IRVTUS3NXXX"],
+        "expectedHops": 3,
+        "actualHops": 2
+      }
+    },
+    {
+      "id": "TXN-SW-240801-006",
+      "messageType": "MT202",
+      "senderBIC": "CITIUS33XXX",
+      "receiverBIC": "UBSWCHZHXXX",
+      "amount": 1000000.00,
+      "currency": "CHF",
+      "status": "Pending",
+      "priority": "Urgent",
+      "timestamp": "2025-08-01T13:45:18.901Z",
+      "processingTime": 15000,
+      "fees": 125.00,
+      "reference": "FT25080100006",
+      "valueDate": "2025-08-01",
+      "description": "Large value interbank transfer",
+      "country": "Switzerland",
+      "network": "SWIFT_GPI",
+      "gpiUETR": "20250801CITIUS33006XXXX",
+      "compliance": {
+        "amlStatus": "Pending",
+        "sanctionsCheck": "Pending",
+        "kycStatus": "Verified"
+      },
+      "routing": {
+        "intermediaryBanks": ["CHASUS33XXX"],
+        "expectedHops": 2,
+        "actualHops": 1
+      }
+    }
+  ],
+  "statistics": {
+    "totalTransactions": 15847,
+    "completedTransactions": 14523,
+    "pendingTransactions": 892,
+    "failedTransactions": 432,
+    "totalVolume": 2847592385.50,
+    "averageProcessingTime": 87532,
+    "successRate": 91.64,
+    "networkUptime": 99.8,
+    "peakThroughput": 1250,
+    "currentThroughput": 834,
+    "topCurrencies": [
+      { "currency": "USD", "count": 8523, "volume": 1547892385.50 },
+      { "currency": "EUR", "count": 3842, "volume": 634728394.20 },
+      { "currency": "GBP", "count": 2156, "volume": 423847291.80 },
+      { "currency": "JPY", "count": 1326, "volume": 241124314.00 }
+    ],
+    "topCountries": [
+      { "country": "United States", "count": 6834, "volume": 1234567890.00 },
+      { "country": "Germany", "count": 3245, "volume": 567891234.50 },
+      { "country": "United Kingdom", "count": 2567, "volume": 345678912.30 },
+      { "country": "Switzerland", "count": 1534, "volume": 234567891.20 },
+      { "country": "Japan", "count": 1667, "volume": 464887451.50 }
+    ],
+    "messageTypeBreakdown": [
+      { "type": "MT103", "count": 9876, "percentage": 62.3 },
+      { "type": "MT202", "count": 3245, "percentage": 20.5 },
+      { "type": "MT950", "count": 1567, "percentage": 9.9 },
+      { "type": "MT940", "count": 892, "percentage": 5.6 },
+      { "type": "Other", "count": 267, "percentage": 1.7 }
+    ],
+    "hourlyTrends": [
+      { "hour": 0, "transactions": 234, "volume": 45678912.30 },
+      { "hour": 1, "transactions": 156, "volume": 23456789.10 },
+      { "hour": 2, "transactions": 89, "volume": 12345678.90 },
+      { "hour": 3, "transactions": 67, "volume": 9876543.21 },
+      { "hour": 4, "transactions": 123, "volume": 18765432.10 },
+      { "hour": 5, "transactions": 234, "volume": 34567891.20 },
+      { "hour": 6, "transactions": 456, "volume": 56789123.40 },
+      { "hour": 7, "transactions": 678, "volume": 78912345.60 },
+      { "hour": 8, "transactions": 892, "volume": 89123456.70 },
+      { "hour": 9, "transactions": 1234, "volume": 123456789.00 },
+      { "hour": 10, "transactions": 1456, "volume": 145678912.30 },
+      { "hour": 11, "transactions": 1567, "volume": 156789123.40 },
+      { "hour": 12, "transactions": 1678, "volume": 167891234.50 },
+      { "hour": 13, "transactions": 1789, "volume": 178912345.60 },
+      { "hour": 14, "transactions": 1634, "volume": 163456789.10 },
+      { "hour": 15, "transactions": 1523, "volume": 152345678.90 },
+      { "hour": 16, "transactions": 1412, "volume": 141234567.80 },
+      { "hour": 17, "transactions": 1234, "volume": 123456789.00 },
+      { "hour": 18, "transactions": 987, "volume": 98765432.10 },
+      { "hour": 19, "transactions": 765, "volume": 76543210.98 },
+      { "hour": 20, "transactions": 543, "volume": 54321098.70 },
+      { "hour": 21, "transactions": 432, "volume": 43210987.60 },
+      { "hour": 22, "transactions": 321, "volume": 32109876.50 },
+      { "hour": 23, "transactions": 289, "volume": 28976543.20 }
+    ]
+  },
+  "alerts": [
+    {
+      "id": "ALT-SW-001",
+      "type": "Processing Delay",
+      "severity": "Medium",
+      "message": "Average processing time increased by 15% in the last hour",
+      "timestamp": "2025-08-01T13:30:00.000Z",
+      "resolved": false,
+      "affectedTransactions": 45,
+      "estimatedImpact": "Moderate delay in settlement times"
+    },
+    {
+      "id": "ALT-SW-002",
+      "type": "Compliance Alert",
+      "severity": "High",
+      "message": "Sanctions screening flagged transaction TXN-SW-240801-005",
+      "timestamp": "2025-08-01T12:20:00.000Z",
+      "resolved": false,
+      "affectedTransactions": 1,
+      "estimatedImpact": "Transaction held pending manual review"
+    },
+    {
+      "id": "ALT-SW-003",
+      "type": "High Volume",
+      "severity": "Low",
+      "message": "Transaction volume 20% above normal for this time period",
+      "timestamp": "2025-08-01T11:15:00.000Z",
+      "resolved": true,
+      "affectedTransactions": 0,
+      "estimatedImpact": "Increased network utilization, no delays expected"
+    }
+  ]
+}

@@ -1919,18 +1919,54 @@ class StatisticsCalculator:
             explained_variance = pca.explained_variance_ratio_
             cumulative_variance = np.cumsum(explained_variance)
             
+            # Get feature loadings (components) for each PC
+            feature_names = numeric_df.columns.tolist()
+            components = pca.components_
+            
             # Find number of components for 95% variance
             n_components_95 = np.argmax(cumulative_variance >= 0.95) + 1
             n_components_90 = np.argmax(cumulative_variance >= 0.90) + 1
+            
+            # Get top contributing features for each component
+            component_features = []
+            for i in range(min(10, len(explained_variance))):  # Show up to 10 components
+                component_loadings = components[i]
+                # Get absolute values for ranking
+                abs_loadings = np.abs(component_loadings)
+                # Get indices of top 5 contributing features
+                top_indices = np.argsort(abs_loadings)[-5:][::-1]
+                
+                top_features = []
+                for idx in top_indices:
+                    feature_name = feature_names[idx]
+                    loading = float(component_loadings[idx])
+                    contribution = float(abs_loadings[idx])
+                    top_features.append({
+                        "feature": feature_name,
+                        "loading": loading,
+                        "contribution": contribution,
+                        "percentage": float(contribution / np.sum(abs_loadings) * 100)
+                    })
+                
+                component_features.append({
+                    "component": f"PC{i+1}",
+                    "variance_explained": float(explained_variance[i]),
+                    "variance_percentage": float(explained_variance[i] * 100),
+                    "top_features": top_features
+                })
             
             pca_insights = {
                 "total_components": len(explained_variance),
                 "components_for_95_variance": int(n_components_95),
                 "components_for_90_variance": int(n_components_90),
                 "explained_variance_ratio": explained_variance.tolist(),
+                "component_variances": explained_variance.tolist(),  # For frontend compatibility
                 "cumulative_variance": cumulative_variance.tolist(),
+                "cumulative_variances": cumulative_variance.tolist(),  # For frontend compatibility
                 "first_component_variance": float(explained_variance[0]),
-                "dimensionality_reduction_potential": "high" if n_components_95 < len(numeric_df.columns) * 0.7 else "low"
+                "dimensionality_reduction_potential": "high" if n_components_95 < len(numeric_df.columns) * 0.7 else "low",
+                "component_features": component_features,  # New: detailed feature contributions
+                "feature_names": feature_names  # New: all feature names for reference
             }
             
             # Clustering Analysis
@@ -1986,6 +2022,11 @@ class StatisticsCalculator:
                     "original_dimensions": len(numeric_df.columns),
                     "samples": len(numeric_df),
                     "dimensions_to_samples_ratio": float(len(numeric_df.columns) / len(numeric_df))
+                },
+                "overview": {
+                    "total_features": len(numeric_df.columns),
+                    "reduction_potential": "high" if n_components_95 < len(numeric_df.columns) * 0.7 else "moderate" if n_components_95 < len(numeric_df.columns) * 0.9 else "low",
+                    "data_complexity": "high" if len(numeric_df.columns) > 20 else "moderate" if len(numeric_df.columns) > 10 else "low"
                 }
             })
             

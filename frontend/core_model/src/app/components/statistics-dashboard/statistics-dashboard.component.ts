@@ -1944,6 +1944,910 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return 'info';
   }
 
+  // Enhanced Outlier Detection Helper Methods
+  getOutlierSeverityDescription(percentage: number): string {
+    if (percentage === 0) return 'No outliers detected - excellent data quality';
+    if (percentage < 1) return 'Minimal outliers - generally acceptable';
+    if (percentage < 5) return 'Moderate outliers - investigate patterns';
+    if (percentage < 10) return 'High outliers - requires attention';
+    return 'Critical outlier levels - immediate review needed';
+  }
+
+  getOutlierPercentageClass(percentage: number): string {
+    if (percentage === 0) return 'excellent';
+    if (percentage < 1) return 'good';
+    if (percentage < 5) return 'warning';
+    return 'critical';
+  }
+
+  getOutlierPercentageInterpretation(percentage: number): string {
+    if (percentage === 0) return 'Perfect - no unusual values detected';
+    if (percentage < 1) return 'Excellent - very few outliers';
+    if (percentage < 5) return 'Acceptable - monitor for patterns';
+    if (percentage < 10) return 'Concerning - investigate causes';
+    return 'Critical - immediate action required';
+  }
+
+  getColumnAffectedColor(affected: number, total: number): 'primary' | 'accent' | 'warn' {
+    const ratio = affected / total;
+    if (ratio === 0) return 'primary';
+    if (ratio < 0.3) return 'accent';
+    return 'warn';
+  }
+
+  getColumnAffectedLabel(affected: number, total: number): string {
+    const ratio = affected / total;
+    if (ratio === 0) return 'No Impact';
+    if (ratio < 0.3) return 'Low Impact';
+    if (ratio < 0.7) return 'Moderate Impact';
+    return 'High Impact';
+  }
+
+  getImpactClass(percentage: number): string {
+    if (percentage === 0) return 'impact-positive';
+    if (percentage < 5) return 'impact-neutral';
+    return 'impact-negative';
+  }
+
+  getImpactIcon(percentage: number): string {
+    if (percentage === 0) return 'thumb_up';
+    if (percentage < 5) return 'info';
+    return 'warning';
+  }
+
+  getImpactTitle(percentage: number): string {
+    if (percentage === 0) return 'Excellent Data Quality';
+    if (percentage < 1) return 'Good Data Quality';
+    if (percentage < 5) return 'Acceptable Data Quality';
+    if (percentage < 10) return 'Data Quality Concerns';
+    return 'Poor Data Quality';
+  }
+
+  getImpactDescription(percentage: number): string {
+    if (percentage === 0) {
+      return 'No outliers detected. Your data is clean and ready for analysis without preprocessing concerns.';
+    }
+    if (percentage < 1) {
+      return 'Very few outliers detected. These may represent natural variation or rare but valid cases.';
+    }
+    if (percentage < 5) {
+      return 'Moderate number of outliers. Consider investigating patterns and deciding on treatment strategies.';
+    }
+    if (percentage < 10) {
+      return 'Significant outliers detected. Recommend thorough investigation of causes and data cleaning.';
+    }
+    return 'High level of outliers may indicate data quality issues or require specialized handling strategies.';
+  }
+
+  getOutlierSeverityColor(severity: string): 'primary' | 'accent' | 'warn' {
+    switch (severity) {
+      case 'none': return 'primary';
+      case 'low': return 'primary';
+      case 'moderate': return 'accent';
+      case 'high': case 'critical': return 'warn';
+      default: return 'primary';
+    }
+  }
+
+  getColumnDataTypeIcon(column: string): string {
+    // You can enhance this based on actual column metadata
+    return 'functions'; // Default for numeric columns
+  }
+
+  getMethodResultClass(percentage: number): string {
+    if (percentage === 0) return 'result-clean';
+    if (percentage < 2) return 'result-low';
+    if (percentage < 8) return 'result-moderate';
+    return 'result-high';
+  }
+
+  getRecommendedMethodIcon(method: string): string {
+    switch (method) {
+      case 'iqr': return 'straighten';
+      case 'zscore': return 'show_chart';
+      case 'modified_zscore': return 'analytics';
+      default: return 'recommend';
+    }
+  }
+
+  getMethodRecommendationReason(column: string, method: string): string {
+    const data = this.getOutlierData(column);
+    
+    switch (method) {
+      case 'iqr':
+        return 'IQR method is recommended for this column because it\'s robust to extreme values and works well with moderate skewness.';
+      case 'zscore':
+        return 'Z-Score method is recommended for this large dataset with normally distributed values.';
+      case 'modified_zscore':
+        return 'Modified Z-Score is recommended due to high variability or skewness in the data distribution.';
+      default:
+        return 'This method provides the most reliable results for the current data characteristics.';
+    }
+  }
+
+  getOutlierValueSeverity(value: number, column: string): 'primary' | 'accent' | 'warn' {
+    // This could be enhanced with more sophisticated logic
+    return 'warn'; // Default color for outlier values
+  }
+
+  getOutlierValueContext(column: string, values: number[]): string {
+    if (!values || values.length === 0) return '';
+    
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    
+    if (values.length === 1) {
+      return `This extreme value is significantly different from the typical range.`;
+    }
+    
+    return `These values range from ${min.toFixed(2)} to ${max.toFixed(2)}, representing the most extreme cases in your dataset.`;
+  }
+
+  getColumnOutlierInsights(column: string): Array<{type: string, icon: string, message: string}> {
+    const data = this.getOutlierData(column);
+    const insights: Array<{type: string, icon: string, message: string}> = [];
+    
+    if (!data || data.total_outliers === 0) {
+      insights.push({
+        type: 'primary',
+        icon: 'check_circle',
+        message: 'No outliers detected - this column has consistent, well-behaved data.'
+      });
+      return insights;
+    }
+    
+    const severity = data.severity;
+    const outlierCount = data.total_outliers;
+    
+    if (severity === 'low') {
+      insights.push({
+        type: 'primary',
+        icon: 'info',
+        message: `${outlierCount} outliers detected - these may represent natural variation or special cases worth investigating.`
+      });
+    } else if (severity === 'moderate') {
+      insights.push({
+        type: 'accent',
+        icon: 'warning',
+        message: `${outlierCount} outliers suggest some data points deviate significantly. Consider investigating causes.`
+      });
+    } else if (severity === 'high' || severity === 'critical') {
+      insights.push({
+        type: 'warn',
+        icon: 'error',
+        message: `${outlierCount} outliers indicate potential data quality issues or highly variable processes.`
+      });
+    }
+    
+    // Add method-specific insights
+    const methods = data.methods;
+    if (methods) {
+      const iqrCount = methods.iqr?.outlier_count || 0;
+      const zscoreCount = methods.zscore?.outlier_count || 0;
+      
+      if (Math.abs(iqrCount - zscoreCount) > outlierCount * 0.5) {
+        insights.push({
+          type: 'accent',
+          icon: 'compare',
+          message: 'Detection methods show significant disagreement - data may have complex distribution patterns.'
+        });
+      }
+    }
+    
+    return insights;
+  }
+
+  // Enhanced Bias/Fairness Helper Methods
+  getBiasRiskDescription(riskLevel: string): string {
+    switch (riskLevel?.toLowerCase()) {
+      case 'high':
+        return 'Significant bias patterns detected. Immediate attention required to ensure fair and ethical data usage.';
+      case 'medium':
+        return 'Moderate bias indicators found. Review and mitigation strategies recommended before model development.';
+      case 'low':
+        return 'Minimal bias concerns detected. Continue with standard fairness monitoring practices.';
+      default:
+        return 'Bias risk assessment unavailable. Consider manual review of sensitive attributes.';
+    }
+  }
+
+  getSensitiveAttrSeverity(confidence: string): 'primary' | 'accent' | 'warn' {
+    switch (confidence?.toLowerCase()) {
+      case 'high': return 'warn';
+      case 'medium': return 'accent';
+      default: return 'primary';
+    }
+  }
+
+  getBiasScoreClass(score: number): string {
+    if (score >= 0.7) return 'bias-high';
+    if (score >= 0.4) return 'bias-medium';
+    return 'bias-low';
+  }
+
+  getImbalanceSeverityColor(severity: string): 'primary' | 'accent' | 'warn' {
+    switch (severity?.toLowerCase()) {
+      case 'severe': case 'critical': return 'warn';
+      case 'moderate': case 'medium': return 'accent';
+      default: return 'primary';
+    }
+  }
+
+  getImbalanceImpactDescription(imbalanceData: any): string {
+    const ratio = imbalanceData.imbalance_ratio || 1;
+    const severity = imbalanceData.severity?.toLowerCase() || 'mild';
+    
+    if (severity === 'severe' || ratio > 10) {
+      return `Severe class imbalance detected (${ratio}:1 ratio). This may lead to biased predictions favoring the majority class. Consider resampling techniques, cost-sensitive learning, or ensemble methods.`;
+    } else if (severity === 'moderate' || ratio > 3) {
+      return `Moderate class imbalance observed (${ratio}:1 ratio). Monitor model performance across all classes and consider balancing techniques if accuracy differs significantly between classes.`;
+    } else {
+      return `Mild class imbalance detected (${ratio}:1 ratio). Generally acceptable for most machine learning applications, but monitor minority class performance.`;
+    }
+  }
+
+  getImbalanceSolutions(severity: string): Array<{icon: string, method: string, description: string}> {
+    const solutions: Array<{icon: string, method: string, description: string}> = [];
+    
+    switch (severity?.toLowerCase()) {
+      case 'severe':
+      case 'critical':
+        solutions.push(
+          {
+            icon: 'add_circle',
+            method: 'SMOTE/ADASYN',
+            description: 'Generate synthetic minority samples using advanced oversampling techniques for severe imbalances.'
+          },
+          {
+            icon: 'tune',
+            method: 'Cost-Sensitive Learning',
+            description: 'Adjust model training to penalize misclassification of minority classes more heavily.'
+          },
+          {
+            icon: 'layers',
+            method: 'Ensemble Methods',
+            description: 'Use ensemble techniques like BalancedRandomForest or EasyEnsemble for robust predictions.'
+          }
+        );
+        break;
+      case 'moderate':
+      case 'medium':
+        solutions.push(
+          {
+            icon: 'balance',
+            method: 'Stratified Sampling',
+            description: 'Ensure proportional representation across classes in training and validation sets.'
+          },
+          {
+            icon: 'remove_circle',
+            method: 'Random Undersampling',
+            description: 'Reduce majority class samples to balance the dataset while preserving data quality.'
+          },
+          {
+            icon: 'settings',
+            method: 'Threshold Tuning',
+            description: 'Optimize classification thresholds to improve minority class prediction accuracy.'
+          }
+        );
+        break;
+      default:
+        solutions.push(
+          {
+            icon: 'analytics',
+            method: 'Performance Monitoring',
+            description: 'Track precision, recall, and F1-score for all classes to ensure balanced performance.'
+          },
+          {
+            icon: 'visibility',
+            method: 'Regular Assessment',
+            description: 'Periodically evaluate model fairness and bias metrics during development and production.'
+          }
+        );
+    }
+    
+    return solutions;
+  }
+
+  getFairnessFlagSeverity(severity: string): string {
+    switch (severity?.toLowerCase()) {
+      case 'high': return 'error';
+      case 'medium': return 'warning';
+      default: return 'info';
+    }
+  }
+
+  getFairnessFlagColor(severity: string): 'primary' | 'accent' | 'warn' {
+    switch (severity?.toLowerCase()) {
+      case 'high': return 'warn';
+      case 'medium': return 'accent';
+      default: return 'primary';
+    }
+  }
+
+  getHighPriorityRecommendations(): any[] {
+    if (!this.basicResults?.bias_fairness_flags?.recommendations) return [];
+    return this.basicResults.bias_fairness_flags.recommendations
+      .filter((rec: any) => rec.priority === 'high' || rec.includes('urgent') || rec.includes('critical'));
+  }
+
+  getMediumPriorityRecommendations(): any[] {
+    if (!this.basicResults?.bias_fairness_flags?.recommendations) return [];
+    return this.basicResults.bias_fairness_flags.recommendations
+      .filter((rec: any) => rec.priority === 'medium' || (!rec.includes('urgent') && !rec.includes('critical') && !rec.includes('optional')));
+  }
+
+  getLowPriorityRecommendations(): any[] {
+    if (!this.basicResults?.bias_fairness_flags?.recommendations) return [];
+    return this.basicResults.bias_fairness_flags.recommendations
+      .filter((rec: any) => rec.priority === 'low' || rec.includes('optional') || rec.includes('consider'));
+  }
+
+  getRecommendationCategories(): Array<{title: string, icon: string, recommendations: any[]}> {
+    if (!this.basicResults?.bias_fairness_flags?.recommendations) return [];
+    
+    const categories = [
+      {
+        title: 'Data Collection & Quality',
+        icon: 'storage',
+        recommendations: this.basicResults.bias_fairness_flags.recommendations
+          .filter((rec: any) => typeof rec === 'string' ? 
+            rec.toLowerCase().includes('data') || rec.toLowerCase().includes('collection') || rec.toLowerCase().includes('quality') :
+            rec.category === 'data'
+          ).map((rec: any) => this.formatRecommendation(rec))
+      },
+      {
+        title: 'Model Development & Training',
+        icon: 'model_training',
+        recommendations: this.basicResults.bias_fairness_flags.recommendations
+          .filter((rec: any) => typeof rec === 'string' ? 
+            rec.toLowerCase().includes('model') || rec.toLowerCase().includes('training') || rec.toLowerCase().includes('algorithm') :
+            rec.category === 'model'
+          ).map((rec: any) => this.formatRecommendation(rec))
+      },
+      {
+        title: 'Evaluation & Monitoring',
+        icon: 'monitoring',
+        recommendations: this.basicResults.bias_fairness_flags.recommendations
+          .filter((rec: any) => typeof rec === 'string' ? 
+            rec.toLowerCase().includes('monitor') || rec.toLowerCase().includes('evaluate') || rec.toLowerCase().includes('assess') :
+            rec.category === 'monitoring'
+          ).map((rec: any) => this.formatRecommendation(rec))
+      },
+      {
+        title: 'Governance & Compliance',
+        icon: 'gavel',
+        recommendations: this.basicResults.bias_fairness_flags.recommendations
+          .filter((rec: any) => typeof rec === 'string' ? 
+            rec.toLowerCase().includes('compliance') || rec.toLowerCase().includes('governance') || rec.toLowerCase().includes('legal') :
+            rec.category === 'governance'
+          ).map((rec: any) => this.formatRecommendation(rec))
+      }
+    ].filter(category => category.recommendations.length > 0);
+
+    // If no categorized recommendations, create a general category
+    if (categories.length === 0) {
+      categories.push({
+        title: 'General Recommendations',
+        icon: 'lightbulb',
+        recommendations: this.basicResults.bias_fairness_flags.recommendations
+          .map((rec: any) => this.formatRecommendation(rec))
+      });
+    }
+
+    return categories;
+  }
+
+  formatRecommendation(rec: any): any {
+    if (typeof rec === 'string') {
+      return {
+        title: this.extractRecommendationTitle(rec),
+        description: rec,
+        priority: this.inferPriority(rec),
+        actions: this.extractActionItems(rec)
+      };
+    }
+    return rec;
+  }
+
+  extractRecommendationTitle(text: string): string {
+    // Extract the first sentence or up to 50 characters as title
+    const firstSentence = text.split('.')[0];
+    return firstSentence.length > 50 ? firstSentence.substring(0, 47) + '...' : firstSentence;
+  }
+
+  inferPriority(text: string): string {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('urgent') || lowerText.includes('critical') || lowerText.includes('immediate')) {
+      return 'high';
+    }
+    if (lowerText.includes('recommend') || lowerText.includes('should') || lowerText.includes('important')) {
+      return 'medium';
+    }
+    return 'low';
+  }
+
+  extractActionItems(text: string): string[] {
+    // Simple extraction of action items (sentences starting with action verbs)
+    const sentences = text.split('.');
+    return sentences
+      .filter(sentence => {
+        const trimmed = sentence.trim().toLowerCase();
+        return trimmed.startsWith('implement') || trimmed.startsWith('establish') || 
+               trimmed.startsWith('monitor') || trimmed.startsWith('review') ||
+               trimmed.startsWith('ensure') || trimmed.startsWith('develop');
+      })
+      .map(sentence => sentence.trim())
+      .slice(0, 3); // Limit to 3 action items
+  }
+
+  getPriorityIcon(priority: string): string {
+    switch (priority?.toLowerCase()) {
+      case 'high': return 'priority_high';
+      case 'medium': return 'info';
+      case 'low': return 'low_priority';
+      default: return 'help_outline';
+    }
+  }
+
+  // Enhanced Dimensionality & PCA Helper Methods
+  getDimensionalityReductionClass(potential?: string): string {
+    switch (potential?.toLowerCase()) {
+      case 'high': return 'high-potential';
+      case 'medium': return 'medium-potential';
+      case 'low': return 'low-potential';
+      default: return 'unknown-potential';
+    }
+  }
+
+  getDimensionalityRecommendationSummary(): string {
+    const potential = this.basicResults?.dimensionality_insights?.overview?.reduction_potential?.toLowerCase();
+    switch (potential) {
+      case 'high': return 'Reduce Now';
+      case 'medium': return 'Consider Reduction';
+      case 'low': return 'Keep Current';
+      default: return 'Evaluate';
+    }
+  }
+
+  getPCAVarianceInsight(percentage: number, components?: number, total?: number): string {
+    if (!components || !total) return 'Insufficient data for analysis';
+    
+    const reduction = ((total - components) / total * 100).toFixed(0);
+    if (percentage === 95) {
+      if (components / total < 0.5) {
+        return `Excellent! You can reduce dimensions by ${reduction}% while keeping 95% of information.`;
+      } else if (components / total < 0.8) {
+        return `Good reduction potential: ${reduction}% fewer dimensions with minimal information loss.`;
+      } else {
+        return `Limited reduction potential: Most components needed to preserve 95% variance.`;
+      }
+    } else { // 90%
+      if (components / total < 0.3) {
+        return `Outstanding! ${reduction}% dimension reduction with only 10% information loss.`;
+      } else if (components / total < 0.6) {
+        return `Good trade-off: ${reduction}% reduction with acceptable information loss.`;
+      } else {
+        return `Conservative approach: ${reduction}% reduction with 90% variance preserved.`;
+      }
+    }
+  }
+
+  getReductionPotentialClass(potential: string): string {
+    switch (potential?.toLowerCase()) {
+      case 'high': return 'potential-high';
+      case 'medium': return 'potential-medium';
+      case 'low': return 'potential-low';
+      default: return 'potential-unknown';
+    }
+  }
+
+  getReductionPotentialExplanation(potential: string): string {
+    switch (potential?.toLowerCase()) {
+      case 'high':
+        return 'Strong dimensionality reduction recommended. Your data has significant redundancy that can be safely removed.';
+      case 'medium':
+        return 'Moderate reduction possible. Consider PCA for computational efficiency while monitoring information loss.';
+      case 'low':
+        return 'Limited reduction potential. Most features contribute unique information to your dataset.';
+      default:
+        return 'Unable to determine reduction potential. Further analysis required.';
+    }
+  }
+
+  getPCAComponentsArray(): Array<{component: number, variance: number}> {
+    if (!this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances) return [];
+    
+    return this.basicResults.dimensionality_insights.pca_analysis.component_variances
+      .map((variance: number, index: number) => ({
+        component: index + 1,
+        variance: variance
+      }))
+      .slice(0, 10); // Show first 10 components
+  }
+
+  getComponentDescription(componentNum: number, variance: number): string {
+    const percentage = (variance * 100).toFixed(1);
+    
+    if (componentNum === 1) {
+      return `Primary component capturing ${percentage}% of total data variance`;
+    } else if (componentNum <= 3) {
+      return `Key component explaining ${percentage}% of remaining variance`;
+    } else if (variance > 0.05) {
+      return `Significant component with ${percentage}% variance contribution`;
+    } else {
+      return `Minor component contributing ${percentage}% to total variance`;
+    }
+  }
+
+  getCumulativeVarianceArray(): Array<{cumulative: number}> {
+    if (!this.basicResults?.dimensionality_insights?.pca_analysis?.cumulative_variances) return [];
+    
+    return this.basicResults.dimensionality_insights.pca_analysis.cumulative_variances
+      .map((cumVar: number) => ({ cumulative: cumVar }))
+      .slice(0, 15); // Show first 15 cumulative values
+  }
+
+  getCumulativeLabel(cumulative: number): string {
+    const percentage = cumulative * 100;
+    if (percentage >= 95) return 'Excellent coverage';
+    if (percentage >= 90) return 'Very good coverage';
+    if (percentage >= 80) return 'Good coverage';
+    if (percentage >= 70) return 'Moderate coverage';
+    return 'Limited coverage';
+  }
+
+  getPCABusinessInsights(): Array<{type: string, icon: string, title: string, description: string, actions?: string[]}> {
+    const insights: Array<{type: string, icon: string, title: string, description: string, actions?: string[]}> = [];
+    const pcaData = this.basicResults?.dimensionality_insights?.pca_analysis;
+    
+    if (!pcaData) return insights;
+
+    // Performance Impact Insight
+    const total = pcaData?.total_components;
+    const for95 = pcaData?.components_for_95_variance;
+    if (total && for95) {
+      const reduction = ((total - for95) / total * 100).toFixed(0);
+      insights.push({
+        type: 'performance',
+        icon: 'speed',
+        title: 'Performance Optimization',
+        description: `Reducing to ${for95} components can improve model training speed by approximately ${reduction}% while preserving 95% of data information.`,
+        actions: [
+          'Implement PCA preprocessing pipeline',
+          'Benchmark model performance before/after reduction',
+          'Monitor for any accuracy degradation'
+        ]
+      });
+    }
+
+    // Storage Impact
+    if (total && for95 && total > 20) {
+      insights.push({
+        type: 'storage',
+        icon: 'storage',
+        title: 'Storage & Memory Benefits',
+        description: `Dimensionality reduction can significantly reduce memory usage and storage requirements for large datasets.`,
+        actions: [
+          'Calculate exact storage savings',
+          'Update data pipeline for reduced dimensions',
+          'Consider compressed data formats'
+        ]
+      });
+    }
+
+    // Visualization Benefits
+    if (for95 && for95 <= 3) {
+      insights.push({
+        type: 'visualization',
+        icon: 'visibility',
+        title: 'Enhanced Visualization',
+        description: `With ${for95} key components, you can create effective 2D/3D visualizations to understand data patterns and relationships.`,
+        actions: [
+          'Create 2D/3D scatter plots',
+          'Use components for cluster visualization',
+          'Develop interactive data exploration tools'
+        ]
+      });
+    }
+
+    // Noise Reduction
+    const potential = pcaData?.dimensionality_reduction_potential;
+    if (potential === 'high' || potential === 'medium') {
+      insights.push({
+        type: 'quality',
+        icon: 'filter_alt',
+        title: 'Noise Reduction',
+        description: `PCA can help remove noise and redundant information, potentially improving model performance and interpretability.`,
+        actions: [
+          'Compare model accuracy with/without PCA',
+          'Analyze feature importance in reduced space',
+          'Validate results on test dataset'
+        ]
+      });
+    }
+
+    return insights;
+  }
+
+  getClusteringInsight(optimalClusters?: number): string {
+    if (!optimalClusters) return 'Clustering analysis incomplete';
+    
+    if (optimalClusters === 1) {
+      return 'Your data appears homogeneous with no distinct groupings';
+    } else if (optimalClusters <= 3) {
+      return `Clear data structure with ${optimalClusters} distinct groups`;
+    } else if (optimalClusters <= 7) {
+      return `Complex structure with ${optimalClusters} identifiable clusters`;
+    } else {
+      return `Highly complex data with ${optimalClusters} potential groupings`;
+    }
+  }
+
+  getClusteringQualityClass(quality?: string): string {
+    switch (quality?.toLowerCase()) {
+      case 'excellent': case 'very good': return 'quality-excellent';
+      case 'good': case 'moderate': return 'quality-good';
+      case 'fair': case 'poor': return 'quality-fair';
+      default: return 'quality-unknown';
+    }
+  }
+
+  formatClusteringQuality(quality?: string): string {
+    return quality?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
+  }
+
+  getClusteringQualityExplanation(quality: string): string {
+    switch (quality?.toLowerCase()) {
+      case 'excellent':
+        return 'Clusters are very well-separated and distinct. Ideal for dimensionality reduction.';
+      case 'very good':
+        return 'Clear cluster boundaries with minimal overlap. Good candidate for reduction.';
+      case 'good':
+        return 'Reasonable cluster separation. Dimensionality reduction should preserve structure.';
+      case 'moderate':
+        return 'Some cluster overlap present. Monitor cluster preservation after reduction.';
+      case 'fair':
+        return 'Clusters are somewhat overlapping. Careful validation needed after reduction.';
+      case 'poor':
+        return 'Weak cluster structure. Dimensionality reduction may blur group boundaries.';
+      default:
+        return 'Cluster quality assessment unavailable.';
+    }
+  }
+
+  getSilhouetteExplanation(score: number): string {
+    if (score >= 0.7) {
+      return 'Excellent cluster separation. Strong, well-defined groups.';
+    } else if (score >= 0.5) {
+      return 'Good cluster structure. Reasonable separation between groups.';
+    } else if (score >= 0.25) {
+      return 'Moderate clustering. Some overlap between groups exists.';
+    } else if (score >= 0) {
+      return 'Weak clustering structure. Groups are not well-separated.';
+    } else {
+      return 'Poor clustering. Data points may be in wrong clusters.';
+    }
+  }
+
+  getStabilityClass(stability: string): string {
+    switch (stability?.toLowerCase()) {
+      case 'high': case 'stable': return 'stability-high';
+      case 'medium': case 'moderate': return 'stability-medium';
+      case 'low': case 'unstable': return 'stability-low';
+      default: return 'stability-unknown';
+    }
+  }
+
+  getStabilityExplanation(stability: string): string {
+    switch (stability?.toLowerCase()) {
+      case 'high':
+        return 'Clusters remain consistent across different data samples. Highly reliable structure.';
+      case 'stable':
+        return 'Good stability with minor variations. Structure is generally reliable.';
+      case 'medium':
+        return 'Moderate stability. Some variation in cluster assignments expected.';
+      case 'moderate':
+        return 'Reasonable consistency with some sensitivity to data changes.';
+      case 'low':
+        return 'Low stability. Cluster assignments may vary significantly.';
+      case 'unstable':
+        return 'Unstable clustering. Results may not be reproducible.';
+      default:
+        return 'Stability assessment unavailable.';
+    }
+  }
+
+  getClusterCharacteristics(): any[] {
+    return this.basicResults?.dimensionality_insights?.clustering_analysis?.cluster_characteristics || [];
+  }
+
+  getStrategicRecommendations(): Array<{priority: string, title: string, description: string, benefits?: string[]}> {
+    const recommendations: Array<{priority: string, title: string, description: string, benefits?: string[]}> = [];
+    const dimData = this.basicResults?.dimensionality_insights;
+    
+    if (!dimData) return recommendations;
+
+    const pcaData = dimData.pca_analysis;
+    const clusterData = dimData.clustering_analysis;
+
+    // High Priority Recommendations
+    if (pcaData?.dimensionality_reduction_potential === 'high') {
+      recommendations.push({
+        priority: 'high',
+        title: 'Implement Immediate Dimensionality Reduction',
+        description: `Your data shows excellent potential for dimensionality reduction. Implementing PCA can significantly improve performance while preserving data quality.`,
+        benefits: [
+          'Faster model training and inference',
+          'Reduced computational costs',
+          'Lower storage requirements',
+          'Improved visualization capabilities'
+        ]
+      });
+    }
+
+    // Medium Priority Recommendations
+    if (clusterData?.optimal_clusters && clusterData.optimal_clusters > 1) {
+      recommendations.push({
+        priority: 'medium',
+        title: 'Leverage Cluster Structure for Optimization',
+        description: `Your data has ${clusterData.optimal_clusters} distinct clusters. This structure can be used to optimize analysis and improve model performance.`,
+        benefits: [
+          'Better feature engineering opportunities',
+          'Improved model interpretability',
+          'Targeted analysis for each cluster',
+          'Enhanced anomaly detection'
+        ]
+      });
+    }
+
+    // Strategic Planning
+    if (pcaData?.total_components && pcaData.total_components > 50) {
+      recommendations.push({
+        priority: 'medium',
+        title: 'Develop Systematic Dimensionality Strategy',
+        description: `With ${pcaData.total_components} features, develop a comprehensive strategy for feature selection and dimensionality management.`,
+        benefits: [
+          'Consistent approach across projects',
+          'Improved model maintenance',
+          'Better resource utilization',
+          'Enhanced team productivity'
+        ]
+      });
+    }
+
+    return recommendations;
+  }
+
+  getTechnicalRecommendations(): Array<{icon: string, method: string, description: string, steps?: string[]}> {
+    const recommendations: Array<{icon: string, method: string, description: string, steps?: string[]}> = [];
+    const dimData = this.basicResults?.dimensionality_insights;
+    
+    if (!dimData) return recommendations;
+
+    // PCA Implementation
+    if (dimData.pca_analysis?.dimensionality_reduction_potential !== 'low') {
+      recommendations.push({
+        icon: 'compress',
+        method: 'Principal Component Analysis (PCA)',
+        description: 'Reduce dimensionality while preserving maximum variance in your data.',
+        steps: [
+          'Standardize your features to unit variance',
+          'Apply PCA transformation to training data',
+          'Determine optimal number of components (95% variance)',
+          'Transform test data using fitted PCA model',
+          'Validate model performance on reduced dataset'
+        ]
+      });
+    }
+
+    // Clustering-based Approach
+    if (dimData.clustering_analysis?.optimal_clusters && dimData.clustering_analysis.optimal_clusters > 1) {
+      recommendations.push({
+        icon: 'group_work',
+        method: 'Cluster-Aware Dimensionality Reduction',
+        description: 'Use cluster structure to guide feature selection and reduction.',
+        steps: [
+          'Identify and validate optimal cluster assignments',
+          'Analyze feature importance within each cluster',
+          'Apply cluster-specific dimensionality reduction',
+          'Combine reduced representations',
+          'Evaluate cluster preservation in reduced space'
+        ]
+      });
+    }
+
+    // Feature Selection
+    recommendations.push({
+      icon: 'tune',
+      method: 'Feature Selection Techniques',
+      description: 'Select most informative features using statistical methods.',
+      steps: [
+        'Calculate feature importance scores',
+        'Apply correlation analysis to remove redundancy',
+        'Use statistical tests for feature relevance',
+        'Implement recursive feature elimination',
+        'Cross-validate final feature set'
+      ]
+    });
+
+    // Hybrid Approach
+    if (dimData.pca_analysis && dimData.clustering_analysis) {
+      recommendations.push({
+        icon: 'merge',
+        method: 'Hybrid PCA-Clustering Approach',
+        description: 'Combine PCA and clustering insights for optimal dimensionality reduction.',
+        steps: [
+          'Apply initial PCA to reduce obvious redundancy',
+          'Perform clustering on PCA-transformed data',
+          'Refine component selection based on cluster preservation',
+          'Validate final model on original cluster structure',
+          'Document transformation pipeline for production'
+        ]
+      });
+    }
+
+    return recommendations;
+  }
+
+  // Math helper for templates
+  Math = Math;
+
+  // PCA Component Features Helper Methods
+  getPCAComponentFeatures(): any[] {
+    if (!this.basicResults?.dimensionality_insights?.pca_analysis?.component_features) {
+      return [];
+    }
+    return this.basicResults.dimensionality_insights.pca_analysis.component_features;
+  }
+
+  getTopFeaturesForComponent(component: any): any[] {
+    return component?.top_features || [];
+  }
+
+  getFeatureContributionClass(percentage: number): string {
+    if (percentage >= 30) return 'high-contribution';
+    if (percentage >= 20) return 'medium-contribution';
+    if (percentage >= 10) return 'low-contribution';
+    return 'minimal-contribution';
+  }
+
+  getFeatureContributionIcon(percentage: number): string {
+    if (percentage >= 30) return 'trending_up';
+    if (percentage >= 20) return 'trending_neutral';
+    if (percentage >= 10) return 'trending_down';
+    return 'remove';
+  }
+
+  getLoadingDirection(loading: number): string {
+    return loading >= 0 ? 'positive' : 'negative';
+  }
+
+  getLoadingDirectionIcon(loading: number): string {
+    return loading >= 0 ? 'north' : 'south';
+  }
+
+  getComponentContributionExplanation(component: any): string {
+    if (!component?.top_features?.length) return '';
+    
+    const topFeature = component.top_features[0];
+    const componentNum = component.component?.replace('PC', '') || '1';
+    
+    return `PC${componentNum} is primarily driven by ${topFeature.feature} (${topFeature.percentage.toFixed(1)}% contribution)`;
+  }
+
+  formatLoadingValue(loading: number): string {
+    return loading.toFixed(3);
+  }
+
+  getVarianceInterpretation(variance: number): string {
+    const percentage = variance * 100;
+    if (percentage >= 50) return 'Dominant component - captures majority of data variation';
+    if (percentage >= 25) return 'Major component - significant portion of data variation';
+    if (percentage >= 10) return 'Important component - notable data variation';
+    if (percentage >= 5) return 'Moderate component - meaningful variation';
+    return 'Minor component - limited variation captured';
+  }
+
 
 
 

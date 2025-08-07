@@ -20,6 +20,46 @@ export interface AdvancedStatsRequest {
   options: string[];
 }
 
+export interface PCAFeatureContribution {
+  feature: string;
+  loading: number;
+  contribution: number;
+  percentage: number;
+}
+
+export interface PCAComponent {
+  component: string;
+  variance_explained: number;
+  variance_percentage: number;
+  top_features: PCAFeatureContribution[];
+}
+
+export interface PCAAnalysis {
+  total_components: number;
+  components_for_95_variance: number;
+  components_for_90_variance: number;
+  explained_variance_ratio: number[];
+  component_variances: number[];
+  cumulative_variance: number[];
+  cumulative_variances: number[];
+  first_component_variance: number;
+  dimensionality_reduction_potential: string;
+  component_features: PCAComponent[];
+  feature_names: string[];
+}
+
+export interface DimensionalityInsights {
+  pca_analysis: PCAAnalysis;
+  clustering_analysis?: any;
+  recommendations?: string[];
+  data_complexity?: any;
+  overview?: {
+    total_features?: number;
+    reduction_potential?: string;
+    data_complexity?: string;
+  };
+}
+
 export interface BasicStatsResponse {
   dataset_id: string;
   descriptive_stats?: any;
@@ -35,7 +75,7 @@ export interface BasicStatsResponse {
   // Advanced analysis components
   feature_engineering_ideas?: any;
   multicollinearity_assessment?: any;
-  dimensionality_insights?: any;
+  dimensionality_insights?: DimensionalityInsights;
   baseline_model_sanity?: any;
   drift_stability_analysis?: any;
   bias_fairness_flags?: any;

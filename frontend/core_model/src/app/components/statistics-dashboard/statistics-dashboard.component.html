@@ -747,11 +747,11 @@
                         </div>
                         <div class="stat-row">
                           <span class="stat-label">Distribution Type:</span>
-                          <span class="stat-value">{{ basicResults.distribution_analysis?.histograms?.[column]?.distribution_type || 'Unknown' }}</span>
+                          <span class="stat-value">{{ basicResults.distribution_analysis?.histograms?.[column]?.distribution_type ? basicResults.distribution_analysis.histograms[column].distribution_type : 'Unknown' }}</span>
                         </div>
                         <div class="stat-row">
                           <span class="stat-label">Bins Count:</span>
-                          <span class="stat-value">{{ basicResults.distribution_analysis?.histograms?.[column]?.bins?.length || 0 }}</span>
+                          <span class="stat-value">{{ basicResults.distribution_analysis?.histograms?.[column]?.bins?.length ? basicResults.distribution_analysis.histograms[column].bins.length : 0 }}</span>
                         </div>
                       </div>
                     </div>
@@ -776,16 +776,16 @@
                 <!-- Data Completeness Score -->
                 <div class="completeness-score-section">
                   <div class="score-display">
-                    <div class="score-circle" [ngClass]="getCompletenessScoreClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
-                      <span class="score-value">{{ basicResults.missing_data_summary?.complete_rows_percentage || 0 | number:'1.0-0' }}%</span>
+                    <div class="score-circle" [ngClass]="getCompletenessScoreClass(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0)">
+                      <span class="score-value">{{ (basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0) | number:'1.0-0' }}%</span>
                       <span class="score-label">Complete</span>
                     </div>
                   </div>
                   
                   <div class="completeness-details">
                     <h4>Data Quality Assessment</h4>
-                    <p class="assessment-text" [ngClass]="getCompletenessTextClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
-                      {{ getCompletenessAssessment(basicResults.missing_data_summary?.complete_rows_percentage || 0) }}
+                    <p class="assessment-text" [ngClass]="getCompletenessTextClass(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0)">
+                      {{ getCompletenessAssessment(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0) }}
                     </p>
                   </div>
                 </div>
@@ -797,14 +797,14 @@
                       <mat-icon>error_outline</mat-icon>
                     </div>
                     <div class="metric-content">
-                      <span class="metric-value" [ngClass]="{'critical': (basicResults.missing_data_summary?.total_missing || 0) > 1000}">
-                        {{ basicResults.missing_data_summary?.total_missing || 0 | number }}
+                      <span class="metric-value" [ngClass]="{'critical': (basicResults.missing_data_summary?.total_missing ? basicResults.missing_data_summary.total_missing : 0) > 1000}">
+                        {{ (basicResults.missing_data_summary?.total_missing ? basicResults.missing_data_summary.total_missing : 0) | number }}
                       </span>
                       <span class="metric-label">Missing Values</span>
                       <div class="metric-bar">
-                        <div class="metric-fill missing-fill" [style.width.%]="basicResults.missing_data_summary?.total_percentage || 0"></div>
+                        <div class="metric-fill missing-fill" [style.width.%]="basicResults.missing_data_summary?.total_percentage ? basicResults.missing_data_summary.total_percentage : 0"></div>
                       </div>
-                      <span class="metric-percentage">{{ basicResults.missing_data_summary?.total_percentage || 0 | number:'1.1-1' }}%</span>
+                      <span class="metric-percentage">{{ (basicResults.missing_data_summary?.total_percentage ? basicResults.missing_data_summary.total_percentage : 0) | number:'1.1-1' }}%</span>
                     </div>
                   </div>
 
@@ -814,13 +814,13 @@
                     </div>
                     <div class="metric-content">
                       <span class="metric-value success">
-                        {{ basicResults.missing_data_summary?.complete_rows || 0 | number }}
+                        {{ (basicResults.missing_data_summary?.complete_rows ? basicResults.missing_data_summary.complete_rows : 0) | number }}
                       </span>
                       <span class="metric-label">Complete Rows</span>
                       <div class="metric-bar">
-                        <div class="metric-fill complete-fill" [style.width.%]="basicResults.missing_data_summary?.complete_rows_percentage || 0"></div>
+                        <div class="metric-fill complete-fill" [style.width.%]="basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0"></div>
                       </div>
-                      <span class="metric-percentage">{{ basicResults.missing_data_summary?.complete_rows_percentage || 0 | number:'1.1-1' }}%</span>
+                      <span class="metric-percentage">{{ (basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0) | number:'1.1-1' }}%</span>
                     </div>
                   </div>
 
@@ -829,13 +829,13 @@
                       <mat-icon>analytics</mat-icon>
                     </div>
                     <div class="metric-content">
-                      <span class="metric-value" [ngClass]="getUsabilityClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
-                        {{ getUsabilityRating(basicResults.missing_data_summary?.complete_rows_percentage || 0) }}
+                      <span class="metric-value" [ngClass]="getUsabilityClass(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0)">
+                        {{ getUsabilityRating(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0) }}
                       </span>
                       <span class="metric-label">Data Usability</span>
                       <div class="usability-indicator">
-                        <mat-icon [ngClass]="getUsabilityIconClass(basicResults.missing_data_summary?.complete_rows_percentage || 0)">
-                          {{ getUsabilityIcon(basicResults.missing_data_summary?.complete_rows_percentage || 0) }}
+                        <mat-icon [ngClass]="getUsabilityIconClass(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0)">
+                          {{ getUsabilityIcon(basicResults.missing_data_summary?.complete_rows_percentage ? basicResults.missing_data_summary.complete_rows_percentage : 0) }}
                         </mat-icon>
                       </div>
                     </div>
@@ -1013,10 +1013,10 @@
                         <div class="primary-strategy">
                           <strong>{{ column.suggested_strategy.primary }}</strong>
                         </div>
-                        <div class="alternative-strategies" *ngIf="column.suggested_strategy.alternatives?.length > 0">
+                        <div class="alternative-strategies" *ngIf="column.suggested_strategy.alternatives && column.suggested_strategy.alternatives.length > 0">
                           <span class="alternatives-label">Alternatives:</span>
                           <div class="alternatives-chips">
-                            <mat-chip *ngFor="let alt of column.suggested_strategy.alternatives" color="accent" size="small">
+                            <mat-chip *ngFor="let alt of (column.suggested_strategy?.alternatives || [])" color="accent" size="small">
                               {{ alt }}
                             </mat-chip>
                           </div>
@@ -1028,7 +1028,7 @@
               </div>
 
               <!-- Enhanced Recommendations -->
-              <div class="missing-analysis-section recommendations-enhanced" *ngIf="basicResults.missing_value_analysis.recommendations?.length > 0">
+              <div class="missing-analysis-section recommendations-enhanced" *ngIf="basicResults.missing_value_analysis.recommendations && basicResults.missing_value_analysis.recommendations.length > 0">
                 <h3>
                   <mat-icon>auto_awesome</mat-icon>
                   AI-Powered Recommendations
@@ -1118,7 +1118,7 @@
                   </div>
                   
                   <!-- Duplicate Groups (if any) -->
-                  <div *ngIf="basicResults.duplicates_analysis.full_duplicates.duplicate_groups?.length > 0" class="duplicate-groups">
+                  <div *ngIf="basicResults.duplicates_analysis.full_duplicates.duplicate_groups && basicResults.duplicates_analysis.full_duplicates.duplicate_groups.length > 0" class="duplicate-groups">
                     <h4>Sample Duplicate Groups</h4>
                     <div *ngFor="let group of basicResults.duplicates_analysis.full_duplicates.duplicate_groups" class="duplicate-group">
                       <div class="group-header">
@@ -1182,7 +1182,7 @@
               </div>
 
               <!-- Recommendations -->
-              <div class="duplicates-analysis-section" *ngIf="basicResults.duplicates_analysis.recommendations?.length > 0">
+              <div class="duplicates-analysis-section" *ngIf="basicResults.duplicates_analysis.recommendations && basicResults.duplicates_analysis.recommendations.length > 0">
                 <h3>
                   <mat-icon>recommend</mat-icon>
                   Recommendations
@@ -1294,7 +1294,7 @@
                             {{ element.issues_count }} issues
                           </mat-chip>
                           <div *ngIf="element.issues_count > 0" class="issues-list">
-                            <div *ngFor="let issue of element.issues" class="issue-item">
+                            <div *ngFor="let issue of (element.issues || [])" class="issue-item">
                               <mat-icon>{{ issue.includes('Critical') ? 'error' : 'warning' }}</mat-icon>
                               <span>{{ issue }}</span>
                             </div>
@@ -1310,7 +1310,7 @@
               </div>
 
               <!-- Global Issues -->
-              <div class="global-issues-section" *ngIf="basicResults.type_integrity_validation.global_issues?.length > 0">
+              <div class="global-issues-section" *ngIf="basicResults.type_integrity_validation.global_issues && basicResults.type_integrity_validation.global_issues.length > 0">
                 <h3>
                   <mat-icon>public</mat-icon>
                   Global Data Structure Issues
@@ -1327,7 +1327,7 @@
               </div>
 
               <!-- Recommendations -->
-              <div class="validation-recommendations-section" *ngIf="basicResults.type_integrity_validation.recommendations?.length > 0">
+              <div class="validation-recommendations-section" *ngIf="basicResults.type_integrity_validation.recommendations && basicResults.type_integrity_validation.recommendations.length > 0">
                 <h3>
                   <mat-icon>lightbulb</mat-icon>
                   Data Quality Recommendations
@@ -1571,94 +1571,287 @@
             </mat-card-header>
             
             <mat-card-content>
-              <!-- Summary -->
+              <!-- Enhanced Summary with Explanations -->
               <div class="outlier-summary-section" *ngIf="basicResults.outlier_detection.summary">
                 <h3>
                   <mat-icon>summarize</mat-icon>
                   Outlier Detection Summary
                 </h3>
                 
+                <!-- What are Outliers? -->
+                <div class="outlier-explanation-section">
+                  <div class="explanation-card">
+                    <h4>
+                      <mat-icon>help_outline</mat-icon>
+                      Understanding Outliers
+                    </h4>
+                    <p class="explanation-text">
+                      <strong>Outliers</strong> are data points that significantly differ from the majority of your dataset. 
+                      They can indicate data entry errors, rare but valid occurrences, or measurement anomalies. 
+                      Understanding outliers is crucial for:
+                    </p>
+                    <ul class="explanation-list">
+                      <li><strong>Data Quality:</strong> Identifying potential errors or inconsistencies</li>
+                      <li><strong>Business Insights:</strong> Discovering exceptional cases or opportunities</li>
+                      <li><strong>Model Performance:</strong> Deciding whether to include or exclude extreme values</li>
+                      <li><strong>Risk Assessment:</strong> Spotting unusual patterns that need investigation</li>
+                    </ul>
+                  </div>
+                </div>
+                
                 <div class="outlier-metrics">
                   <div class="metric-card outlier-card">
-                    <h4>Total Outliers</h4>
-                    <div class="metric-value" [ngClass]="{'warning': basicResults.outlier_detection.summary.total_outlier_count > 0}">
-                      {{ basicResults.outlier_detection.summary.total_outlier_count | number }}
+                    <div class="metric-header">
+                      <mat-icon>error_outline</mat-icon>
+                      <h4>Total Outliers Found</h4>
+                    </div>
+                    <div class="metric-content">
+                      <div class="metric-value" [ngClass]="getOutlierSeverityClass(basicResults.outlier_detection.summary.outlier_percentage)">
+                        {{ basicResults.outlier_detection.summary.total_outlier_count | number }}
+                      </div>
+                      <div class="metric-description">
+                        {{ getOutlierSeverityDescription(basicResults.outlier_detection.summary.outlier_percentage) }}
+                      </div>
                     </div>
                   </div>
                   
                   <div class="metric-card outlier-card">
-                    <h4>Outlier Percentage</h4>
-                    <div class="metric-value" [ngClass]="{'warning': basicResults.outlier_detection.summary.outlier_percentage > 5}">
-                      {{ basicResults.outlier_detection.summary.outlier_percentage | number:'1.2-2' }}%
+                    <div class="metric-header">
+                      <mat-icon>pie_chart</mat-icon>
+                      <h4>Outlier Percentage</h4>
+                    </div>
+                    <div class="metric-content">
+                      <div class="metric-value" [ngClass]="getOutlierPercentageClass(basicResults.outlier_detection.summary.outlier_percentage)">
+                        {{ basicResults.outlier_detection.summary.outlier_percentage | number:'1.2-2' }}%
+                      </div>
+                      <div class="outlier-progress-bar">
+                        <div class="progress-fill" [style.width.%]="Math.min(basicResults.outlier_detection.summary.outlier_percentage, 20)"></div>
+                      </div>
+                      <small class="metric-note">{{ getOutlierPercentageInterpretation(basicResults.outlier_detection.summary.outlier_percentage) }}</small>
                     </div>
                   </div>
                   
                   <div class="metric-card outlier-card">
-                    <h4>Columns Affected</h4>
-                    <div class="metric-value">
-                      {{ basicResults.outlier_detection.summary.columns_with_outliers | number }}
+                    <div class="metric-header">
+                      <mat-icon>view_column</mat-icon>
+                      <h4>Affected Columns</h4>
+                    </div>
+                    <div class="metric-content">
+                      <div class="metric-value">
+                        {{ basicResults.outlier_detection.summary.columns_with_outliers | number }}
+                      </div>
+                      <div class="fraction-display">
+                        out of {{ basicResults.outlier_detection.summary.total_numeric_columns | number }} numeric columns
+                      </div>
+                      <mat-chip [color]="getColumnAffectedColor(basicResults.outlier_detection.summary.columns_with_outliers, basicResults.outlier_detection.summary.total_numeric_columns)" selected>
+                        {{ getColumnAffectedLabel(basicResults.outlier_detection.summary.columns_with_outliers, basicResults.outlier_detection.summary.total_numeric_columns) }}
+                      </mat-chip>
                     </div>
                   </div>
                   
                   <div class="metric-card outlier-card">
-                    <h4>Numeric Columns</h4>
-                    <div class="metric-value">
-                      {{ basicResults.outlier_detection.summary.total_numeric_columns | number }}
+                    <div class="metric-header">
+                      <mat-icon>assessment</mat-icon>
+                      <h4>Detection Methods</h4>
+                    </div>
+                    <div class="metric-content">
+                      <div class="methods-used">
+                        <mat-chip color="primary" selected>IQR Method</mat-chip>
+                        <mat-chip color="primary" selected>Z-Score</mat-chip>
+                        <mat-chip color="primary" selected>Modified Z-Score</mat-chip>
+                        <mat-chip color="primary" selected *ngIf="hasMultivariateOutliers()">Isolation Forest</mat-chip>
+                      </div>
+                      <small class="methods-note">Multiple methods ensure robust detection</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Business Impact Assessment -->
+                <div class="business-impact-section">
+                  <h4>
+                    <mat-icon>business</mat-icon>
+                    Business Impact Assessment
+                  </h4>
+                  <div class="impact-assessment">
+                    <div class="impact-item" [ngClass]="getImpactClass(basicResults.outlier_detection.summary.outlier_percentage)">
+                      <mat-icon>{{ getImpactIcon(basicResults.outlier_detection.summary.outlier_percentage) }}</mat-icon>
+                      <div class="impact-content">
+                        <strong>{{ getImpactTitle(basicResults.outlier_detection.summary.outlier_percentage) }}</strong>
+                        <p>{{ getImpactDescription(basicResults.outlier_detection.summary.outlier_percentage) }}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Univariate Outliers -->
+              <!-- Enhanced Column-wise Analysis -->
               <div class="univariate-outliers-section" *ngIf="getOutlierDetectionColumns().length > 0">
                 <h3>
                   <mat-icon>timeline</mat-icon>
                   Column-wise Outlier Analysis
                 </h3>
                 
-                <div class="outlier-analysis-grid">
-                  <div *ngFor="let column of getOutlierDetectionColumns()" class="outlier-analysis-card">
-                    <h4>{{ column }}</h4>
-                    
-                    <div class="outlier-severity">
-                      <mat-chip [color]="getOutlierSeverityClass(getOutlierData(column).severity)" selected>
-                        {{ getOutlierData(column).severity | titlecase }} Severity
-                      </mat-chip>
-                      <span class="outlier-count">{{ getOutlierData(column).total_outliers | number }} outliers</span>
+                <!-- Method Explanations -->
+                <div class="methods-explanation">
+                  <h4>
+                    <mat-icon>info</mat-icon>
+                    Detection Methods Explained
+                  </h4>
+                  <div class="methods-grid-explanation">
+                    <div class="method-explanation-card">
+                      <h5>
+                        <mat-icon>straighten</mat-icon>
+                        IQR (Interquartile Range) Method
+                      </h5>
+                      <p><strong>How it works:</strong> Identifies values beyond 1.5 × IQR from Q1 and Q3</p>
+                      <p><strong>Best for:</strong> Symmetric distributions, moderate skewness</p>
+                      <p><strong>Advantage:</strong> Robust to extreme values, widely accepted</p>
                     </div>
                     
+                    <div class="method-explanation-card">
+                      <h5>
+                        <mat-icon>show_chart</mat-icon>
+                        Z-Score Method
+                      </h5>
+                      <p><strong>How it works:</strong> Flags values more than 3 standard deviations from mean</p>
+                      <p><strong>Best for:</strong> Normal distributions, large datasets</p>
+                      <p><strong>Advantage:</strong> Based on statistical theory, interpretable</p>
+                    </div>
+                    
+                    <div class="method-explanation-card">
+                      <h5>
+                        <mat-icon>analytics</mat-icon>
+                        Modified Z-Score Method
+                      </h5>
+                      <p><strong>How it works:</strong> Uses median and MAD instead of mean and std</p>
+                      <p><strong>Best for:</strong> Skewed distributions, small datasets</p>
+                      <p><strong>Advantage:</strong> More robust to outliers than standard Z-score</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="outlier-analysis-grid">
+                  <div *ngFor="let column of getOutlierDetectionColumns()" class="outlier-analysis-card">
+                    <div class="column-header">
+                      <h4>
+                        <mat-icon>{{ getColumnDataTypeIcon(column) }}</mat-icon>
+                        {{ column }}
+                      </h4>
+                      <div class="outlier-severity">
+                        <mat-chip [color]="getOutlierSeverityColor(getOutlierData(column).severity)" selected>
+                          {{ getOutlierData(column).severity | titlecase }} Risk
+                        </mat-chip>
+                        <span class="outlier-count">{{ getOutlierData(column).total_outliers | number }} outliers detected</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Method Comparison -->
                     <div class="outlier-methods-summary">
-                      <h5>Detection Methods</h5>
-                      <div class="methods-grid">
-                        <div class="method-item">
-                          <span class="method-name">IQR Method:</span>
-                          <span class="method-result">{{ getOutlierMethodData(column, 'iqr').outlier_count | number }} ({{ getOutlierMethodData(column, 'iqr').outlier_percentage | number:'1.1-1' }}%)</span>
+                      <h5>
+                        <mat-icon>compare_arrows</mat-icon>
+                        Method Comparison & Results
+                      </h5>
+                      <div class="methods-comparison-grid">
+                        <div class="method-comparison-item">
+                          <div class="method-header">
+                            <mat-icon>straighten</mat-icon>
+                            <span class="method-name">IQR Method</span>
+                          </div>
+                          <div class="method-results">
+                            <div class="result-number" [ngClass]="getMethodResultClass(getOutlierMethodData(column, 'iqr').outlier_percentage)">
+                              {{ getOutlierMethodData(column, 'iqr').outlier_count | number }}
+                            </div>
+                            <div class="result-percentage">{{ getOutlierMethodData(column, 'iqr').outlier_percentage | number:'1.1-1' }}%</div>
+                            <div class="method-bounds" *ngIf="getOutlierMethodData(column, 'iqr').lower_bound">
+                              <small>Bounds: {{ getOutlierMethodData(column, 'iqr').lower_bound | number:'1.2-2' }} to {{ getOutlierMethodData(column, 'iqr').upper_bound | number:'1.2-2' }}</small>
+                            </div>
+                          </div>
                         </div>
-                        <div class="method-item">
-                          <span class="method-name">Z-Score:</span>
-                          <span class="method-result">{{ getOutlierMethodData(column, 'zscore').outlier_count | number }} ({{ getOutlierMethodData(column, 'zscore').outlier_percentage | number:'1.1-1' }}%)</span>
+                        
+                        <div class="method-comparison-item">
+                          <div class="method-header">
+                            <mat-icon>show_chart</mat-icon>
+                            <span class="method-name">Z-Score</span>
+                          </div>
+                          <div class="method-results">
+                            <div class="result-number" [ngClass]="getMethodResultClass(getOutlierMethodData(column, 'zscore').outlier_percentage)">
+                              {{ getOutlierMethodData(column, 'zscore').outlier_count | number }}
+                            </div>
+                            <div class="result-percentage">{{ getOutlierMethodData(column, 'zscore').outlier_percentage | number:'1.1-1' }}%</div>
+                            <div class="method-threshold">
+                              <small>Threshold: |z| > {{ getOutlierMethodData(column, 'zscore').threshold }}</small>
+                            </div>
+                          </div>
                         </div>
-                        <div class="method-item">
-                          <span class="method-name">Modified Z-Score:</span>
-                          <span class="method-result">{{ getOutlierMethodData(column, 'modified_zscore').outlier_count | number }} ({{ getOutlierMethodData(column, 'modified_zscore').outlier_percentage | number:'1.1-1' }}%)</span>
+                        
+                        <div class="method-comparison-item">
+                          <div class="method-header">
+                            <mat-icon>analytics</mat-icon>
+                            <span class="method-name">Modified Z-Score</span>
+                          </div>
+                          <div class="method-results">
+                            <div class="result-number" [ngClass]="getMethodResultClass(getOutlierMethodData(column, 'modified_zscore').outlier_percentage)">
+                              {{ getOutlierMethodData(column, 'modified_zscore').outlier_count | number }}
+                            </div>
+                            <div class="result-percentage">{{ getOutlierMethodData(column, 'modified_zscore').outlier_percentage | number:'1.1-1' }}%</div>
+                            <div class="method-threshold">
+                              <small>Threshold: |score| > {{ getOutlierMethodData(column, 'modified_zscore').threshold }}</small>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
+                    <!-- Recommended Method & Reasoning -->
                     <div class="recommended-method">
-                      <strong>Recommended Method:</strong>
-                      <mat-chip color="primary" selected>{{ formatOutlierMethod(getOutlierData(column).best_method) }}</mat-chip>
+                      <h5>
+                        <mat-icon>recommend</mat-icon>
+                        AI Recommendation
+                      </h5>
+                      <div class="recommendation-content">
+                        <div class="recommended-method-chip">
+                          <mat-chip color="primary" selected>
+                            <mat-icon>{{ getRecommendedMethodIcon(getOutlierData(column).best_method) }}</mat-icon>
+                            {{ formatOutlierMethod(getOutlierData(column).best_method) }}
+                          </mat-chip>
+                        </div>
+                        <div class="recommendation-reasoning">
+                          <p><strong>Why this method?</strong> {{ getMethodRecommendationReason(column, getOutlierData(column).best_method) }}</p>
+                        </div>
+                      </div>
                     </div>
                     
-                    <!-- Sample Outlier Values -->
-                    <div class="sample-outliers" *ngIf="getOutlierData(column).sample_outlier_values?.length > 0">
-                      <h5>Sample Outlier Values</h5>
-                      <div class="outlier-values">
-                        <mat-chip *ngFor="let value of getOutlierData(column).sample_outlier_values" 
-                                  color="warn" 
-                                  selected>
-                          {{ value | number:'1.2-2' }}
-                        </mat-chip>
+                    <!-- Sample Outlier Values with Context -->
+                    <div class="sample-outliers" *ngIf="getOutlierData(column).sample_outlier_values && getOutlierData(column).sample_outlier_values.length > 0">
+                      <h5>
+                        <mat-icon>visibility</mat-icon>
+                        Sample Outlier Values
+                      </h5>
+                      <div class="outlier-values-section">
+                        <div class="outlier-values">
+                          <mat-chip *ngFor="let value of getOutlierData(column).sample_outlier_values" 
+                                    [color]="getOutlierValueSeverity(value, column)" 
+                                    selected>
+                            {{ value | number:'1.2-2' }}
+                          </mat-chip>
+                        </div>
+                        <div class="outlier-context">
+                          <small>{{ getOutlierValueContext(column, getOutlierData(column).sample_outlier_values) }}</small>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Business Insights for this Column -->
+                    <div class="column-business-insights">
+                      <h5>
+                        <mat-icon>lightbulb</mat-icon>
+                        Business Insights
+                      </h5>
+                      <div class="insights-list">
+                        <div *ngFor="let insight of getColumnOutlierInsights(column)" class="insight-item">
+                          <mat-icon [color]="insight.type">{{ insight.icon }}</mat-icon>
+                          <span>{{ insight.message }}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1724,17 +1917,491 @@
                 </div>
               </div>
 
-              <!-- Recommendations -->
-              <div class="outlier-recommendations-section" *ngIf="basicResults.outlier_detection.recommendations?.length > 0">
+
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Dimensionality Insights -->
+          <mat-card *ngIf="basicResults?.dimensionality_insights" class="result-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>scatter_plot</mat-icon>
+                Dimensionality Insights & Analysis
+              </mat-card-title>
+              <mat-card-subtitle>Comprehensive PCA and clustering analysis for optimal dimensionality reduction</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <!-- Overview Summary -->
+              <div class="dimensionality-overview-section">
                 <h3>
-                  <mat-icon>psychology</mat-icon>
-                  Outlier Handling Recommendations
+                  <mat-icon>analytics</mat-icon>
+                  Dimensionality Assessment Overview
                 </h3>
                 
-                <div class="recommendations-list">
-                  <div *ngFor="let recommendation of basicResults.outlier_detection.recommendations" class="recommendation-item">
-                    <mat-icon [ngClass]="getRecommendationIconClass(recommendation)">{{ getRecommendationIcon(recommendation) }}</mat-icon>
-                    <span [innerHTML]="recommendation"></span>
+                <div class="overview-grid">
+                  <div class="overview-card">
+                    <div class="overview-icon">
+                      <mat-icon>straighten</mat-icon>
+                    </div>
+                    <div class="overview-content">
+                      <h4>{{ basicResults?.dimensionality_insights?.overview?.total_features || 'N/A' }}</h4>
+                      <span>Original Features</span>
+                    </div>
+                  </div>
+                  
+                  <div class="overview-card">
+                    <div class="overview-icon reduction-potential" [ngClass]="getDimensionalityReductionClass(basicResults?.dimensionality_insights?.overview?.reduction_potential)">
+                      <mat-icon>compress</mat-icon>
+                    </div>
+                    <div class="overview-content">
+                      <h4>{{ (basicResults?.dimensionality_insights?.overview?.reduction_potential || 'Unknown') | titlecase }}</h4>
+                      <span>Reduction Potential</span>
+                    </div>
+                  </div>
+                  
+                  <div class="overview-card">
+                    <div class="overview-icon">
+                      <mat-icon>group_work</mat-icon>
+                    </div>
+                    <div class="overview-content">
+                      <h4>{{ basicResults?.dimensionality_insights?.overview?.data_complexity || 'N/A' }}</h4>
+                      <span>Data Complexity</span>
+                    </div>
+                  </div>
+                  
+                  <div class="overview-card">
+                    <div class="overview-icon">
+                      <mat-icon>psychology</mat-icon>
+                    </div>
+                    <div class="overview-content">
+                      <h4>{{ getDimensionalityRecommendationSummary() }}</h4>
+                      <span>Recommendation</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Detailed PCA Analysis -->
+              <div class="dimensionality-section pca-section" *ngIf="basicResults?.dimensionality_insights?.pca_analysis">
+                <h3>
+                  <mat-icon>compress</mat-icon>
+                  Principal Component Analysis (PCA)
+                </h3>
+                
+                <!-- PCA Explanation -->
+                <div class="pca-explanation">
+                  <div class="explanation-card">
+                    <h4>
+                      <mat-icon>info</mat-icon>
+                      What is PCA?
+                    </h4>
+                    <p>
+                      Principal Component Analysis (PCA) identifies the most important directions of variance in your data. 
+                      It transforms your original features into a smaller set of uncorrelated components that capture the most information. 
+                      This helps reduce complexity while preserving the essential patterns in your dataset.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- PCA Key Metrics -->
+                <div class="pca-metrics-grid">
+                  <div class="metric-card primary">
+                    <div class="metric-header">
+                      <mat-icon>layers</mat-icon>
+                      <h4>Original Dimensions</h4>
+                    </div>
+                    <div class="metric-value large">{{ basicResults?.dimensionality_insights?.pca_analysis?.total_components || 0 }}</div>
+                    <div class="metric-description">Total features in your dataset</div>
+                  </div>
+                  
+                  <div class="metric-card success">
+                    <div class="metric-header">
+                      <mat-icon>filter_95</mat-icon>
+                      <h4>95% Variance</h4>
+                    </div>
+                    <div class="metric-value large highlight">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_95_variance || 0 }}</div>
+                    <div class="metric-description">Components needed for 95% variance</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getPCAVarianceInsight(95, basicResults?.dimensionality_insights?.pca_analysis?.components_for_95_variance, basicResults?.dimensionality_insights?.pca_analysis?.total_components) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="metric-card info">
+                    <div class="metric-header">
+                      <mat-icon>filter_90</mat-icon>
+                      <h4>90% Variance</h4>
+                    </div>
+                    <div class="metric-value large">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_90_variance || 0 }}</div>
+                    <div class="metric-description">Components needed for 90% variance</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getPCAVarianceInsight(90, basicResults?.dimensionality_insights?.pca_analysis?.components_for_90_variance, basicResults?.dimensionality_insights?.pca_analysis?.total_components) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="metric-card accent">
+                    <div class="metric-header">
+                      <mat-icon>trending_down</mat-icon>
+                      <h4>Reduction Potential</h4>
+                    </div>
+                    <div class="metric-value text" [ngClass]="getReductionPotentialClass(basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential || '')">
+                      {{ (basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential || 'Unknown') | titlecase }}
+                    </div>
+                    <div class="metric-description">Opportunity for dimensionality reduction</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getReductionPotentialExplanation(basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential || '') }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Component Variance Breakdown -->
+                <div class="pca-variance-section" *ngIf="(basicResults?.dimensionality_insights?.pca_analysis?.component_variances || []).length > 0">
+                  <h4>
+                    <mat-icon>bar_chart</mat-icon>
+                    Component Variance Breakdown
+                  </h4>
+                  
+                  <div class="variance-explanation">
+                    <p>Each principal component captures a different amount of variance from your original data. 
+                    The first few components typically capture the most information:</p>
+                  </div>
+                  
+                  <div class="variance-components-grid">
+                    <div *ngFor="let component of getPCAComponentsArray(); let i = index" class="component-card">
+                      <div class="component-header">
+                        <span class="component-label">PC{{ i + 1 }}</span>
+                        <span class="component-percentage">{{ (component.variance * 100).toFixed(1) }}%</span>
+                      </div>
+                      <div class="component-bar">
+                        <div class="component-fill" [style.width.%]="component.variance * 100"></div>
+                      </div>
+                      <div class="component-description">
+                        {{ getComponentDescription(i + 1, component.variance) }}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Cumulative Variance Chart -->
+                  <div class="cumulative-variance-section" *ngIf="basicResults?.dimensionality_insights?.pca_analysis?.cumulative_variances && (basicResults?.dimensionality_insights?.pca_analysis?.cumulative_variances?.length || 0) > 0">
+                    <h5>
+                      <mat-icon>timeline</mat-icon>
+                      Cumulative Variance Explained
+                    </h5>
+                    <div class="cumulative-insight">
+                      <p>This shows how much total variance is captured as you add more components:</p>
+                    </div>
+                    <div class="cumulative-grid">
+                      <div *ngFor="let cumVar of getCumulativeVarianceArray(); let i = index" 
+                           class="cumulative-item" 
+                           [ngClass]="{'milestone': cumVar.cumulative >= 0.8, 'optimal': cumVar.cumulative >= 0.9}">
+                        <span class="cum-component">{{ i + 1 }} component{{ i > 0 ? 's' : '' }}</span>
+                        <div class="cum-bar-container">
+                          <div class="cum-bar">
+                            <div class="cum-fill" [style.width.%]="cumVar.cumulative * 100"></div>
+                          </div>
+                          <span class="cum-percentage">{{ (cumVar.cumulative * 100).toFixed(1) }}%</span>
+                        </div>
+                        <span class="cum-label">{{ getCumulativeLabel(cumVar.cumulative) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PCA Component Features Analysis -->
+                <div class="pca-components-features-section" *ngIf="getPCAComponentFeatures().length > 0">
+                  <h4>
+                    <mat-icon>view_column</mat-icon>
+                    Component Feature Analysis
+                  </h4>
+                  
+                  <div class="components-features-explanation">
+                    <p>Each principal component is a combination of your original features. Here's how your columns contribute to each component:</p>
+                  </div>
+                  
+                  <div class="components-features-grid">
+                    <div *ngFor="let component of getPCAComponentFeatures(); let i = index" class="component-features-card">
+                      <div class="component-features-header">
+                        <div class="component-title">
+                          <mat-icon>scatter_plot</mat-icon>
+                          <h5>{{ component.component }}</h5>
+                          <span class="variance-badge">{{ component.variance_percentage.toFixed(1) }}%</span>
+                        </div>
+                        <div class="component-interpretation">
+                          <mat-icon>info</mat-icon>
+                          <span>{{ getVarianceInterpretation(component.variance_explained) }}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="component-explanation">
+                        <p class="component-summary">{{ getComponentContributionExplanation(component) }}</p>
+                      </div>
+                      
+                      <div class="features-contribution-list">
+                        <h6>
+                          <mat-icon>list_alt</mat-icon>
+                          Top Contributing Features
+                        </h6>
+                        
+                        <div class="features-list">
+                          <div *ngFor="let feature of getTopFeaturesForComponent(component); let j = index" 
+                               class="feature-contribution-item"
+                               [ngClass]="getFeatureContributionClass(feature.percentage)">
+                            <div class="feature-rank">{{ j + 1 }}</div>
+                            
+                            <div class="feature-info">
+                              <div class="feature-name">
+                                <mat-icon>{{ getFeatureContributionIcon(feature.percentage) }}</mat-icon>
+                                <span class="column-name">{{ feature.feature }}</span>
+                              </div>
+                              
+                              <div class="feature-stats">
+                                <div class="contribution-bar-container">
+                                  <div class="contribution-bar">
+                                    <div class="contribution-fill" [style.width.%]="feature.percentage"></div>
+                                  </div>
+                                  <span class="contribution-percentage">{{ feature.percentage.toFixed(1) }}%</span>
+                                </div>
+                                
+                                <div class="loading-info">
+                                  <span class="loading-label">Loading:</span>
+                                  <span class="loading-value" [ngClass]="getLoadingDirection(feature.loading)">
+                                    <mat-icon>{{ getLoadingDirectionIcon(feature.loading) }}</mat-icon>
+                                    {{ formatLoadingValue(feature.loading) }}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="feature-explanation" *ngIf="i < 3">
+                          <mat-icon>help_outline</mat-icon>
+                          <span class="explanation-text">
+                            <strong>Loading direction:</strong> 
+                            Positive loadings mean the feature increases with the component, 
+                            negative means it decreases. The magnitude shows importance.
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- PCA Business Insights -->
+                <div class="pca-insights-section">
+                  <h4>
+                    <mat-icon>insights</mat-icon>
+                    Business Impact & Recommendations
+                  </h4>
+                  
+                  <div class="insights-grid">
+                    <div class="insight-card" *ngFor="let insight of getPCABusinessInsights()">
+                      <div class="insight-icon" [ngClass]="insight.type">
+                        <mat-icon>{{ insight.icon }}</mat-icon>
+                      </div>
+                      <div class="insight-content">
+                        <h5>{{ insight.title }}</h5>
+                        <p>{{ insight.description }}</p>
+                        <div class="insight-actions" *ngIf="insight.actions && insight.actions.length > 0">
+                          <span class="actions-label">Recommended Actions:</span>
+                          <ul class="actions-list">
+                            <li *ngFor="let action of (insight.actions || [])">{{ action }}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clustering Structure Analysis -->
+              <div class="dimensionality-section clustering-section" *ngIf="basicResults?.dimensionality_insights?.clustering_analysis">
+                <h3>
+                  <mat-icon>group_work</mat-icon>
+                  Clustering Structure Analysis
+                </h3>
+                
+                <!-- Clustering Explanation -->
+                <div class="clustering-explanation">
+                  <div class="explanation-card">
+                    <h4>
+                      <mat-icon>info</mat-icon>
+                      Understanding Data Clustering
+                    </h4>
+                    <p>
+                      Clustering analysis reveals natural groupings in your data. This helps understand data structure, 
+                      identify patterns, and determine if dimensionality reduction will preserve important relationships 
+                      between different groups of observations.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Clustering Metrics -->
+                <div class="clustering-metrics-grid">
+                  <div class="cluster-metric-card optimal">
+                    <div class="metric-header">
+                      <mat-icon>scatter_plot</mat-icon>
+                      <h4>Optimal Clusters</h4>
+                    </div>
+                    <div class="metric-value large">{{ basicResults?.dimensionality_insights?.clustering_analysis?.optimal_clusters || 0 }}</div>
+                    <div class="metric-description">Natural groupings detected</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getClusteringInsight(basicResults?.dimensionality_insights?.clustering_analysis?.optimal_clusters) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="cluster-metric-card quality">
+                    <div class="metric-header">
+                      <mat-icon>verified</mat-icon>
+                      <h4>Clustering Quality</h4>
+                    </div>
+                    <div class="metric-value text" [ngClass]="getClusteringQualityClass(basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation)">
+                      {{ formatClusteringQuality(basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation) }}
+                    </div>
+                    <div class="metric-description">How well-defined the clusters are</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getClusteringQualityExplanation(basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="cluster-metric-card silhouette" *ngIf="basicResults?.dimensionality_insights?.clustering_analysis?.silhouette_score">
+                    <div class="metric-header">
+                      <mat-icon>assessment</mat-icon>
+                      <h4>Silhouette Score</h4>
+                    </div>
+                    <div class="metric-value large">{{ basicResults?.dimensionality_insights?.clustering_analysis?.silhouette_score | number:'1.3-3' }}</div>
+                    <div class="metric-description">Cluster separation measure (-1 to 1)</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getSilhouetteExplanation(basicResults?.dimensionality_insights?.clustering_analysis?.silhouette_score) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="cluster-metric-card stability" *ngIf="basicResults?.dimensionality_insights?.clustering_analysis?.cluster_stability">
+                    <div class="metric-header">
+                      <mat-icon>stability</mat-icon>
+                      <h4>Cluster Stability</h4>
+                    </div>
+                    <div class="metric-value text" [ngClass]="getStabilityClass(basicResults?.dimensionality_insights?.clustering_analysis?.cluster_stability)">
+                      {{ basicResults?.dimensionality_insights?.clustering_analysis?.cluster_stability | titlecase }}
+                    </div>
+                    <div class="metric-description">Consistency across different samples</div>
+                    <div class="metric-insight">
+                      <mat-icon>lightbulb</mat-icon>
+                      <span>{{ getStabilityExplanation(basicResults?.dimensionality_insights?.clustering_analysis?.cluster_stability) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cluster Characteristics -->
+                <div class="cluster-characteristics-section" *ngIf="basicResults?.dimensionality_insights?.clustering_analysis?.cluster_characteristics?.length > 0">
+                  <h4>
+                    <mat-icon>category</mat-icon>
+                    Cluster Characteristics
+                  </h4>
+                  
+                  <div class="cluster-characteristics-grid">
+                    <div *ngFor="let cluster of getClusterCharacteristics(); let i = index" class="cluster-char-card">
+                      <div class="cluster-header">
+                        <mat-icon>group</mat-icon>
+                        <h5>Cluster {{ i + 1 }}</h5>
+                        <span class="cluster-size">{{ cluster.size || 'N/A' }} points</span>
+                      </div>
+                      
+                      <div class="cluster-details">
+                        <div class="cluster-property" *ngIf="cluster.dominant_features">
+                          <span class="property-label">Key Features:</span>
+                          <span class="property-value">{{ cluster.dominant_features.join(', ') }}</span>
+                        </div>
+                        <div class="cluster-property" *ngIf="cluster.variance_explained">
+                          <span class="property-label">Variance Explained:</span>
+                          <span class="property-value">{{ (cluster.variance_explained * 100).toFixed(1) }}%</span>
+                        </div>
+                        <div class="cluster-property" *ngIf="cluster.description">
+                          <span class="property-label">Description:</span>
+                          <span class="property-value">{{ cluster.description }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comprehensive Recommendations -->
+              <div class="dimensionality-section recommendations-section">
+                <h3>
+                  <mat-icon>recommend</mat-icon>
+                  Comprehensive Dimensionality Recommendations
+                </h3>
+                
+                <div class="recommendations-comprehensive">
+                  <!-- Strategic Recommendations -->
+                  <div class="recommendation-category">
+                    <h4>
+                      <mat-icon>strategy</mat-icon>
+                      Strategic Recommendations
+                    </h4>
+                    <div class="strategic-recommendations">
+                      <div *ngFor="let rec of getStrategicRecommendations()" class="strategic-rec-card">
+                        <div class="rec-priority" [ngClass]="'priority-' + rec.priority">
+                          <mat-icon>{{ getPriorityIcon(rec.priority) }}</mat-icon>
+                        </div>
+                        <div class="rec-content">
+                          <h5>{{ rec.title }}</h5>
+                          <p>{{ rec.description }}</p>
+                          <div class="rec-benefits" *ngIf="(rec.benefits || []).length > 0">
+                            <span class="benefits-label">Benefits:</span>
+                            <ul class="benefits-list">
+                              <li *ngFor="let benefit of (rec.benefits || [])">{{ benefit }}</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Technical Implementation -->
+                  <div class="recommendation-category">
+                    <h4>
+                      <mat-icon>build</mat-icon>
+                      Technical Implementation
+                    </h4>
+                    <div class="technical-recommendations">
+                      <div *ngFor="let tech of getTechnicalRecommendations()" class="tech-rec-card">
+                        <div class="tech-icon">
+                          <mat-icon>{{ tech.icon }}</mat-icon>
+                        </div>
+                        <div class="tech-content">
+                          <h5>{{ tech.method }}</h5>
+                          <p>{{ tech.description }}</p>
+                          <div class="tech-steps" *ngIf="(tech.steps || []).length > 0">
+                            <span class="steps-label">Implementation Steps:</span>
+                            <ol class="steps-list">
+                              <li *ngFor="let step of (tech.steps || [])">{{ step }}</li>
+                            </ol>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- General Recommendations -->
+                  <div class="recommendation-category" *ngIf="(basicResults?.dimensionality_insights?.recommendations?.length || 0) > 0">
+                    <h4>
+                      <mat-icon>tips_and_updates</mat-icon>
+                      Additional Insights
+                    </h4>
+                    <div class="general-recommendations">
+                      <div *ngFor="let recommendation of (basicResults?.dimensionality_insights?.recommendations || [])" class="general-rec-item">
+                        <mat-icon>arrow_forward</mat-icon>
+                        <span>{{ recommendation }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1784,7 +2451,7 @@
         <!-- Advanced Results -->
         <div class="results-section" *ngIf="advancedResults">
           <!-- Regression Analysis -->
-          <mat-card *ngIf="advancedResults.regression_analysis" class="result-card">
+          <mat-card *ngIf="advancedResults?.regression_analysis" class="result-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>trending_up</mat-icon>
@@ -1794,21 +2461,21 @@
             
             <mat-card-content>
               <div class="regression-content">
-                <div class="metrics-grid" *ngIf="advancedResults.regression_analysis.metrics">
+                <div class="metrics-grid" *ngIf="advancedResults?.regression_analysis?.metrics">
                   <div class="metric-item">
                     <span class="metric-label">R² Score</span>
-                    <span class="metric-value">{{ formatNumber(advancedResults.regression_analysis.metrics.r2_score) }}</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.r2_score) }}</span>
                   </div>
                   <div class="metric-item">
                     <span class="metric-label">Mean Squared Error</span>
-                    <span class="metric-value">{{ formatNumber(advancedResults.regression_analysis.metrics.mse) }}</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mse) }}</span>
                   </div>
                   <div class="metric-item">
                     <span class="metric-label">Mean Absolute Error</span>
-                    <span class="metric-value">{{ formatNumber(advancedResults.regression_analysis.metrics.mae) }}</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mae) }}</span>
                   </div>
                 </div>
-                <div class="feature-importance" *ngIf="advancedResults.regression_analysis.feature_importance">
+                <div class="feature-importance" *ngIf="advancedResults?.regression_analysis?.feature_importance">
                   <h4>Feature Importance</h4>
                   <div class="importance-list">
                     <div class="importance-item" *ngFor="let item of getFeatureImportanceEntries()">
@@ -1825,7 +2492,7 @@
           </mat-card>
 
           <!-- Clustering Results -->
-          <mat-card *ngIf="advancedResults.clustering_results" class="result-card">
+          <mat-card *ngIf="advancedResults?.clustering_results" class="result-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>scatter_plot</mat-icon>
@@ -1835,21 +2502,21 @@
             
             <mat-card-content>
               <div class="clustering-content">
-                <div class="cluster-summary" *ngIf="advancedResults.clustering_results.summary">
-                  <p><strong>Number of Clusters:</strong> {{ advancedResults.clustering_results.summary.n_clusters }}</p>
-                  <p><strong>Silhouette Score:</strong> {{ formatNumber(advancedResults.clustering_results.summary.silhouette_score) }}</p>
-                  <p><strong>Inertia:</strong> {{ formatNumber(advancedResults.clustering_results.summary.inertia) }}</p>
+                <div class="cluster-summary" *ngIf="advancedResults?.clustering_results?.summary">
+                  <p><strong>Number of Clusters:</strong> {{ advancedResults?.clustering_results?.summary?.n_clusters }}</p>
+                  <p><strong>Silhouette Score:</strong> {{ formatNumber(advancedResults?.clustering_results?.summary?.silhouette_score) }}</p>
+                  <p><strong>Inertia:</strong> {{ formatNumber(advancedResults?.clustering_results?.summary?.inertia) }}</p>
                 </div>
-                <div class="cluster-details" *ngIf="advancedResults.clustering_results.cluster_centers">
+                <div class="cluster-details" *ngIf="advancedResults?.clustering_results?.cluster_centers">
                   <h4>Cluster Centers</h4>
-                  <pre>{{ advancedResults.clustering_results.cluster_centers | json }}</pre>
+                  <pre>{{ advancedResults?.clustering_results?.cluster_centers | json }}</pre>
                 </div>
               </div>
             </mat-card-content>
           </mat-card>
 
           <!-- PCA Analysis -->
-          <mat-card *ngIf="advancedResults.pca_analysis" class="result-card">
+          <mat-card *ngIf="advancedResults?.pca_analysis" class="result-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>compress</mat-icon>
@@ -1859,10 +2526,10 @@
             
             <mat-card-content>
               <div class="pca-content">
-                <div class="pca-summary" *ngIf="advancedResults.pca_analysis.explained_variance_ratio">
+                <div class="pca-summary" *ngIf="advancedResults?.pca_analysis?.explained_variance_ratio">
                   <h4>Explained Variance by Component</h4>
                   <div class="variance-list">
-                    <div class="variance-item" *ngFor="let variance of advancedResults.pca_analysis.explained_variance_ratio; let i = index">
+                    <div class="variance-item" *ngFor="let variance of advancedResults?.pca_analysis?.explained_variance_ratio; let i = index">
                       <span class="component-label">PC{{ i + 1 }}</span>
                       <div class="variance-bar">
                         <div class="variance-fill" [style.width.%]="(variance * 100)"></div>
@@ -1871,15 +2538,15 @@
                     </div>
                   </div>
                 </div>
-                <div class="cumulative-variance" *ngIf="advancedResults.pca_analysis.cumulative_variance">
-                  <p><strong>Total Variance Explained:</strong> {{ (advancedResults.pca_analysis.cumulative_variance * 100).toFixed(2) }}%</p>
+                <div class="cumulative-variance" *ngIf="advancedResults?.pca_analysis?.cumulative_variance">
+                  <p><strong>Total Variance Explained:</strong> {{ (advancedResults?.pca_analysis?.cumulative_variance * 100).toFixed(2) }}%</p>
                 </div>
               </div>
             </mat-card-content>
           </mat-card>
 
           <!-- Time Series Analysis -->
-          <mat-card *ngIf="advancedResults.time_series_analysis" class="result-card">
+          <mat-card *ngIf="advancedResults?.time_series_analysis" class="result-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>timeline</mat-icon>
@@ -1889,13 +2556,13 @@
             
             <mat-card-content>
               <div class="timeseries-content">
-                <pre>{{ advancedResults.time_series_analysis | json }}</pre>
+                <pre>{{ advancedResults?.time_series_analysis | json }}</pre>
               </div>
             </mat-card-content>
           </mat-card>
 
           <!-- Anomaly Detection -->
-          <mat-card *ngIf="advancedResults.anomaly_detection" class="result-card">
+          <mat-card *ngIf="advancedResults?.anomaly_detection" class="result-card">
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>warning</mat-icon>
@@ -1905,18 +2572,18 @@
             
             <mat-card-content>
               <div class="anomaly-content">
-                <div class="anomaly-summary" *ngIf="advancedResults.anomaly_detection.summary">
-                  <p><strong>Anomalies Detected:</strong> {{ advancedResults.anomaly_detection.summary.n_anomalies }}</p>
-                  <p><strong>Anomaly Rate:</strong> {{ (advancedResults.anomaly_detection.summary.anomaly_rate * 100).toFixed(2) }}%</p>
+                <div class="anomaly-summary" *ngIf="advancedResults?.anomaly_detection?.summary">
+                  <p><strong>Anomalies Detected:</strong> {{ advancedResults?.anomaly_detection?.summary?.n_anomalies }}</p>
+                  <p><strong>Anomaly Rate:</strong> {{ (advancedResults?.anomaly_detection?.summary?.anomaly_rate * 100).toFixed(2) }}%</p>
                 </div>
-                <div class="anomaly-details" *ngIf="advancedResults.anomaly_detection.anomaly_indices">
+                <div class="anomaly-details" *ngIf="advancedResults?.anomaly_detection?.anomaly_indices">
                   <h4>Anomalous Records (indices)</h4>
                   <mat-chip-set>
-                    <mat-chip *ngFor="let index of advancedResults.anomaly_detection.anomaly_indices.slice(0, 10)">
+                    <mat-chip *ngFor="let index of (advancedResults?.anomaly_detection?.anomaly_indices || []).slice(0, 10)">
                       {{ index }}
                     </mat-chip>
-                    <mat-chip *ngIf="advancedResults.anomaly_detection.anomaly_indices.length > 10">
-                      +{{ advancedResults.anomaly_detection.anomaly_indices.length - 10 }} more
+                    <mat-chip *ngIf="(advancedResults?.anomaly_detection?.anomaly_indices?.length || 0) > 10">
+                      +{{ (advancedResults?.anomaly_detection?.anomaly_indices?.length || 0) - 10 }} more
                     </mat-chip>
                   </mat-chip-set>
                 </div>
@@ -1936,7 +2603,7 @@
             
             <mat-card-content>
               <!-- Transformation Ideas -->
-              <div class="feature-section" *ngIf="basicResults?.feature_engineering_ideas?.transformation_ideas?.length > 0">
+              <div class="feature-section" *ngIf="(basicResults?.feature_engineering_ideas?.transformation_ideas || []).length > 0">
                 <h3>
                   <mat-icon>transform</mat-icon>
                   Transformation Suggestions
@@ -1951,7 +2618,7 @@
                     <div class="suggestions">
                       <strong>Suggestions:</strong>
                       <ul>
-                        <li *ngFor="let suggestion of idea.suggestions">{{ suggestion }}</li>
+                        <li *ngFor="let suggestion of (idea.suggestions || [])">{{ suggestion }}</li>
                       </ul>
                     </div>
                     <mat-chip [color]="getPriorityColor(idea.priority)" selected>
@@ -1962,7 +2629,7 @@
               </div>
 
               <!-- Interaction Features -->
-              <div class="feature-section" *ngIf="basicResults?.feature_engineering_ideas?.interaction_features?.length > 0">
+              <div class="feature-section" *ngIf="(basicResults?.feature_engineering_ideas?.interaction_features || []).length > 0">
                 <h3>
                   <mat-icon>link</mat-icon>
                   Interaction Features
@@ -1989,7 +2656,7 @@
               </div>
 
               <!-- Encoding Suggestions -->
-              <div class="feature-section" *ngIf="basicResults?.feature_engineering_ideas?.encoding_suggestions?.length > 0">
+              <div class="feature-section" *ngIf="(basicResults?.feature_engineering_ideas?.encoding_suggestions || []).length > 0">
                 <h3>
                   <mat-icon>code</mat-icon>
                   Encoding Recommendations
@@ -2053,7 +2720,7 @@
               </div>
 
               <!-- Key Findings -->
-              <div class="documentation-section" *ngIf="basicResults?.documentation_summary?.key_findings?.length > 0">
+              <div class="documentation-section" *ngIf="(basicResults?.documentation_summary?.key_findings || []).length > 0">
                 <h3>
                   <mat-icon>insights</mat-icon>
                   Key Findings
@@ -2068,7 +2735,7 @@
               </div>
 
               <!-- Analysis Recommendations -->
-              <div class="documentation-section" *ngIf="basicResults?.documentation_summary?.analysis_recommendations?.length > 0">
+              <div class="documentation-section" *ngIf="(basicResults?.documentation_summary?.analysis_recommendations || []).length > 0">
                 <h3>
                   <mat-icon>lightbulb</mat-icon>
                   Analysis Recommendations
@@ -2096,7 +2763,7 @@
             
             <mat-card-content>
               <!-- High Correlations -->
-              <div class="multicollinearity-section" *ngIf="basicResults?.multicollinearity_assessment?.correlation_analysis?.high_correlations?.length > 0">
+              <div class="multicollinearity-section" *ngIf="(basicResults?.multicollinearity_assessment?.correlation_analysis?.high_correlations || []).length > 0">
                 <h3>
                   <mat-icon>warning</mat-icon>
                   High Correlations Detected
@@ -2134,7 +2801,7 @@
               </div>
 
               <!-- VIF Analysis -->
-              <div class="multicollinearity-section" *ngIf="basicResults?.multicollinearity_assessment?.vif_analysis?.length > 0">
+              <div class="multicollinearity-section" *ngIf="(basicResults?.multicollinearity_assessment?.vif_analysis || []).length > 0">
                 <h3>
                   <mat-icon>analytics</mat-icon>
                   Variance Inflation Factor (VIF) Analysis
@@ -2154,7 +2821,7 @@
               </div>
 
               <!-- Recommendations -->
-              <div class="multicollinearity-section" *ngIf="basicResults?.multicollinearity_assessment?.recommendations?.length > 0">
+              <div class="multicollinearity-section" *ngIf="(basicResults?.multicollinearity_assessment?.recommendations || []).length > 0">
                 <h3>
                   <mat-icon>lightbulb</mat-icon>
                   Recommendations
@@ -2162,86 +2829,6 @@
                 
                 <div class="recommendations-list">
                   <div *ngFor="let recommendation of basicResults?.multicollinearity_assessment?.recommendations" class="recommendation-item">
-                    <mat-icon>arrow_forward</mat-icon>
-                    <span>{{ recommendation }}</span>
-                  </div>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <!-- Dimensionality Insights -->
-          <mat-card *ngIf="basicResults?.dimensionality_insights" class="result-card">
-            <mat-card-header>
-              <mat-card-title>
-                <mat-icon>scatter_plot</mat-icon>
-                Dimensionality Insights
-              </mat-card-title>
-              <mat-card-subtitle>PCA and clustering analysis for dimensionality reduction</mat-card-subtitle>
-            </mat-card-header>
-            
-            <mat-card-content>
-              <!-- PCA Analysis -->
-              <div class="dimensionality-section" *ngIf="basicResults?.dimensionality_insights?.pca_analysis">
-                <h3>
-                  <mat-icon>compress</mat-icon>
-                  Principal Component Analysis
-                </h3>
-                
-                <div class="pca-summary">
-                  <div class="pca-metrics">
-                    <div class="metric-item">
-                      <span class="metric-label">Original Dimensions:</span>
-                      <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.total_components }}</span>
-                    </div>
-                    <div class="metric-item">
-                      <span class="metric-label">Components for 95% Variance:</span>
-                      <span class="metric-value highlight">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_95_variance }}</span>
-                    </div>
-                    <div class="metric-item">
-                      <span class="metric-label">Components for 90% Variance:</span>
-                      <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_90_variance }}</span>
-                    </div>
-                    <div class="metric-item">
-                      <span class="metric-label">Reduction Potential:</span>
-                      <span class="metric-value" [ngClass]="{'success': basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential === 'high'}">
-                        {{ basicResults?.dimensionality_insights?.pca_analysis?.dimensionality_reduction_potential | titlecase }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Clustering Analysis -->
-              <div class="dimensionality-section" *ngIf="basicResults?.dimensionality_insights?.clustering_analysis">
-                <h3>
-                  <mat-icon>group_work</mat-icon>
-                  Clustering Structure Analysis
-                </h3>
-                
-                <div class="clustering-summary">
-                  <div class="clustering-metrics">
-                    <div class="metric-item">
-                      <span class="metric-label">Optimal Clusters:</span>
-                      <span class="metric-value highlight">{{ basicResults?.dimensionality_insights?.clustering_analysis?.optimal_clusters }}</span>
-                    </div>
-                    <div class="metric-item">
-                      <span class="metric-label">Clustering Quality:</span>
-                      <span class="metric-value">{{ basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Recommendations -->
-              <div class="dimensionality-section" *ngIf="basicResults?.dimensionality_insights?.recommendations?.length > 0">
-                <h3>
-                  <mat-icon>recommend</mat-icon>
-                  Dimensionality Recommendations
-                </h3>
-                
-                <div class="recommendations-list">
-                  <div *ngFor="let recommendation of basicResults?.dimensionality_insights?.recommendations" class="recommendation-item">
                     <mat-icon>arrow_forward</mat-icon>
                     <span>{{ recommendation }}</span>
                   </div>
@@ -2330,78 +2917,280 @@
                 <mat-icon>balance</mat-icon>
                 Bias & Fairness Assessment
               </mat-card-title>
-              <mat-card-subtitle>Detect potential bias and fairness issues in the dataset</mat-card-subtitle>
+              <mat-card-subtitle>Comprehensive analysis of potential bias and fairness issues in the dataset</mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
-              <!-- Bias Risk Level -->
+              <!-- Bias Risk Summary -->
               <div class="bias-summary-section">
                 <h3>
                   <mat-icon>report</mat-icon>
                   Overall Bias Risk Assessment
                 </h3>
                 
-                <div class="bias-risk-display">
-                  <mat-chip [color]="getBiasRiskColor(basicResults?.bias_fairness_flags?.bias_risk_level || 'low')" selected>
-                    {{ basicResults?.bias_fairness_flags?.bias_risk_level | titlecase }} Risk
-                  </mat-chip>
-                </div>
-              </div>
-
-              <!-- Sensitive Attributes -->
-              <div class="bias-section" *ngIf="basicResults?.bias_fairness_flags?.potential_sensitive_attributes?.length > 0">
-                <h3>
-                  <mat-icon>visibility_off</mat-icon>
-                  Potential Sensitive Attributes
-                </h3>
-                
-                <div class="sensitive-attributes-grid">
-                  <div *ngFor="let attr of basicResults?.bias_fairness_flags?.potential_sensitive_attributes" class="sensitive-attr-card">
-                    <h4>{{ attr.column }}</h4>
-                    <div class="attr-details">
-                      <mat-chip color="warn" selected>{{ attr.type | titlecase }}</mat-chip>
-                      <span class="unique-count">{{ attr.unique_values }} unique values</span>
+                <div class="bias-overview-grid">
+                  <div class="risk-assessment-card">
+                    <div class="risk-level-display">
+                      <mat-icon [ngClass]="getBiasRiskColor(basicResults?.bias_fairness_flags?.bias_risk_level || 'low')">
+                        {{ basicResults?.bias_fairness_flags?.bias_risk_level === 'high' ? 'warning' : 
+                           basicResults?.bias_fairness_flags?.bias_risk_level === 'medium' ? 'info' : 'check_circle' }}
+                      </mat-icon>
+                      <div class="risk-content">
+                        <h4>{{ basicResults?.bias_fairness_flags?.bias_risk_level | titlecase }} Risk Level</h4>
+                        <p>{{ getBiasRiskDescription(basicResults?.bias_fairness_flags?.bias_risk_level || 'low') }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="bias-metrics-card">
+                    <div class="metric-grid">
+                      <div class="metric-item">
+                        <span class="metric-label">Sensitive Attributes</span>
+                        <span class="metric-value">{{ basicResults?.bias_fairness_flags?.potential_sensitive_attributes?.length || 0 }}</span>
+                      </div>
+                      <div class="metric-item">
+                        <span class="metric-label">Class Imbalances</span>
+                        <span class="metric-value">{{ getClassImbalanceArray().length }}</span>
+                      </div>
+                      <div class="metric-item">
+                        <span class="metric-label">Fairness Flags</span>
+                        <span class="metric-value">{{ basicResults?.bias_fairness_flags?.fairness_flags?.length || 0 }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Class Imbalance -->
+              <!-- Sensitive Attributes Analysis -->
+              <div class="bias-section" *ngIf="basicResults?.bias_fairness_flags?.potential_sensitive_attributes?.length > 0">
+                <h3>
+                  <mat-icon>visibility_off</mat-icon>
+                  Potential Sensitive Attributes Analysis
+                </h3>
+                
+                <div class="sensitive-attributes-grid">
+                  <div *ngFor="let attr of basicResults?.bias_fairness_flags?.potential_sensitive_attributes" class="sensitive-attr-card">
+                    <div class="attr-header">
+                      <h4>{{ attr.column }}</h4>
+                      <mat-chip [color]="getSensitiveAttrSeverity(attr.confidence || 'medium')" selected>
+                        {{ attr.confidence | titlecase }} Confidence
+                      </mat-chip>
+                    </div>
+                    
+                    <div class="attr-details">
+                      <div class="detail-row">
+                        <mat-icon>category</mat-icon>
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">{{ attr.type | titlecase }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <mat-icon>data_array</mat-icon>
+                        <span class="detail-label">Unique Values:</span>
+                        <span class="detail-value">{{ attr.unique_values }}</span>
+                      </div>
+                      <div class="detail-row" *ngIf="attr.distribution_bias">
+                        <mat-icon>donut_small</mat-icon>
+                        <span class="detail-label">Distribution Bias:</span>
+                        <span class="detail-value bias-score" [ngClass]="getBiasScoreClass(attr.distribution_bias)">
+                          {{ attr.distribution_bias | number:'1.2-2' }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="attr-insights" *ngIf="attr.insights">
+                      <h5>
+                        <mat-icon>lightbulb</mat-icon>
+                        Business Impact
+                      </h5>
+                      <p class="insight-text">{{ attr.insights }}</p>
+                    </div>
+
+                    <div class="attr-recommendations" *ngIf="attr.recommendations?.length > 0">
+                      <h5>
+                        <mat-icon>psychology</mat-icon>
+                        Recommendations
+                      </h5>
+                      <ul class="recommendations-list">
+                        <li *ngFor="let rec of (attr.recommendations || [])" class="recommendation-item">
+                          <mat-icon class="rec-icon">arrow_right</mat-icon>
+                          {{ rec }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Class Imbalance Analysis -->
               <div class="bias-section" *ngIf="getClassImbalanceArray().length > 0">
                 <h3>
                   <mat-icon>donut_small</mat-icon>
                   Class Imbalance Analysis
                 </h3>
                 
-                <div class="imbalance-grid">
+                <div class="imbalance-analysis-grid">
                   <div *ngFor="let imbalance of getClassImbalanceArray()" class="imbalance-card">
-                    <h4>{{ imbalance.key }}</h4>
-                    <div class="imbalance-details">
-                      <div class="imbalance-ratio">
-                        Ratio: {{ imbalance.value.imbalance_ratio | number:'1.1-1' }}:1
-                      </div>
-                      <div class="majority-class">
-                        Majority: {{ imbalance.value.majority_class }} ({{ imbalance.value.majority_percentage | number:'1.1-1' }}%)
-                      </div>
-                      <mat-chip [color]="imbalance.value.severity === 'severe' ? 'warn' : 'accent'" selected>
-                        {{ imbalance.value.severity | titlecase }}
+                    <div class="imbalance-header">
+                      <h4>{{ imbalance.key }}</h4>
+                      <mat-chip [color]="getImbalanceSeverityColor(imbalance.value.severity)" selected>
+                        {{ imbalance.value.severity | titlecase }} Imbalance
                       </mat-chip>
+                    </div>
+                    
+                    <div class="imbalance-metrics">
+                      <div class="metric-visual">
+                        <div class="ratio-display">
+                          <span class="ratio-value">{{ imbalance.value.imbalance_ratio | number:'1.1-1' }}:1</span>
+                          <span class="ratio-label">Imbalance Ratio</span>
+                        </div>
+                      </div>
+                      
+                      <div class="distribution-details">
+                        <div class="class-detail">
+                          <mat-icon>trending_up</mat-icon>
+                          <span class="class-label">Majority Class:</span>
+                          <span class="class-value">{{ imbalance.value.majority_class }}</span>
+                          <span class="class-percentage">({{ imbalance.value.majority_percentage | number:'1.1-1' }}%)</span>
+                        </div>
+                        <div class="class-detail">
+                          <mat-icon>trending_down</mat-icon>
+                          <span class="class-label">Minority Class:</span>
+                          <span class="class-value">{{ imbalance.value.minority_class || 'Others' }}</span>
+                          <span class="class-percentage">({{ (100 - imbalance.value.majority_percentage) | number:'1.1-1' }}%)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="imbalance-impact">
+                      <h5>
+                        <mat-icon>assessment</mat-icon>
+                        Impact Assessment
+                      </h5>
+                      <p class="impact-description">{{ getImbalanceImpactDescription(imbalance.value) }}</p>
+                    </div>
+
+                    <div class="imbalance-solutions" *ngIf="getImbalanceSolutions(imbalance.value.severity).length > 0">
+                      <h5>
+                        <mat-icon>build</mat-icon>
+                        Recommended Solutions
+                      </h5>
+                      <div class="solutions-list">
+                        <div *ngFor="let solution of getImbalanceSolutions(imbalance.value.severity)" class="solution-item">
+                          <mat-icon class="solution-icon">{{ solution.icon }}</mat-icon>
+                          <div class="solution-content">
+                            <strong>{{ solution.method }}</strong>
+                            <p>{{ solution.description }}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Recommendations -->
+              <!-- Fairness Flags -->
+              <div class="bias-section" *ngIf="basicResults?.bias_fairness_flags?.fairness_flags?.length > 0">
+                <h3>
+                  <mat-icon>flag</mat-icon>
+                  Fairness Flags & Alerts
+                </h3>
+                
+                <div class="fairness-flags-grid">
+                  <div *ngFor="let flag of basicResults?.bias_fairness_flags?.fairness_flags" class="fairness-flag-card">
+                    <div class="flag-header">
+                      <mat-icon [ngClass]="getFairnessFlagSeverity(flag.severity)">
+                        {{ flag.severity === 'high' ? 'error' : flag.severity === 'medium' ? 'warning' : 'info' }}
+                      </mat-icon>
+                      <h4>{{ flag.flag_type | titlecase }} Issue</h4>
+                      <mat-chip [color]="getFairnessFlagColor(flag.severity)" selected>
+                        {{ flag.severity | titlecase }}
+                      </mat-chip>
+                    </div>
+                    
+                    <div class="flag-details">
+                      <p class="flag-description">{{ flag.description }}</p>
+                      <div class="flag-metrics" *ngIf="flag.metrics">
+                        <div *ngFor="let metric of getObjectKeys(flag.metrics || {})" class="metric-row">
+                          <span class="metric-name">{{ formatKeyName(metric) }}:</span>
+                          <span class="metric-value">{{ formatSummaryValue(flag.metrics?.[metric]) }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flag-recommendations" *ngIf="flag.mitigation_strategies?.length > 0">
+                      <h5>
+                        <mat-icon>shield</mat-icon>
+                        Mitigation Strategies
+                      </h5>
+                      <ul class="mitigation-list">
+                        <li *ngFor="let strategy of (flag.mitigation_strategies || [])" class="mitigation-item">
+                          <mat-icon class="strategy-icon">security</mat-icon>
+                          {{ strategy }}
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bias Mitigation Recommendations -->
               <div class="bias-section" *ngIf="basicResults?.bias_fairness_flags?.recommendations?.length > 0">
                 <h3>
                   <mat-icon>gavel</mat-icon>
-                  Fairness Recommendations
+                  Comprehensive Fairness Recommendations
                 </h3>
                 
-                <div class="recommendations-list">
-                  <div *ngFor="let recommendation of basicResults?.bias_fairness_flags?.recommendations" class="recommendation-item">
-                    <mat-icon>arrow_forward</mat-icon>
-                    <span>{{ recommendation }}</span>
+                <div class="comprehensive-recommendations">
+                  <div class="recommendations-overview">
+                    <div class="overview-stats">
+                      <div class="stat-card">
+                        <mat-icon>priority_high</mat-icon>
+                        <div class="stat-content">
+                          <span class="stat-value">{{ getHighPriorityRecommendations().length }}</span>
+                          <span class="stat-label">High Priority</span>
+                        </div>
+                      </div>
+                      <div class="stat-card">
+                        <mat-icon>info</mat-icon>
+                        <div class="stat-content">
+                          <span class="stat-value">{{ getMediumPriorityRecommendations().length }}</span>
+                          <span class="stat-label">Medium Priority</span>
+                        </div>
+                      </div>
+                      <div class="stat-card">
+                        <mat-icon>low_priority</mat-icon>
+                        <div class="stat-content">
+                          <span class="stat-value">{{ getLowPriorityRecommendations().length }}</span>
+                          <span class="stat-label">Low Priority</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="categorized-recommendations">
+                    <div *ngFor="let category of getRecommendationCategories()" class="recommendation-category">
+                      <h4>
+                        <mat-icon>{{ category.icon }}</mat-icon>
+                        {{ category.title }}
+                      </h4>
+                      <div class="category-recommendations">
+                        <div *ngFor="let rec of category.recommendations" class="recommendation-card">
+                          <div class="rec-priority" [ngClass]="'priority-' + rec.priority">
+                            <mat-icon>{{ getPriorityIcon(rec.priority) }}</mat-icon>
+                          </div>
+                          <div class="rec-content">
+                            <h5>{{ rec.title }}</h5>
+                            <p>{{ rec.description }}</p>
+                            <div class="rec-actions" *ngIf="rec.actions?.length > 0">
+                              <span class="actions-label">Action Items:</span>
+                              <ul class="actions-list">
+                                <li *ngFor="let action of (rec.actions || [])">{{ action }}</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

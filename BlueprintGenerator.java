@@ -266,3 +266,276 @@ public Map<String,Object> blueprint(@RequestPart("prdFile") MultipartFile prd,
 
   <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
 </dependencies>
+####################
+EPIC A — Foundations & Repo Plumbing
+Sprint 1 (Week 1)
+A1. Monorepo setup & scaffolding
+Desc: Create monorepo with backend/ (Spring Boot) and frontend/ (Angular). Add basic build/run.
+
+AC:
+
+mvn -q -DskipTests package succeeds in /backend
+
+npm i && ng build succeeds in /frontend
+
+Root README.md with dev instructions
+
+Estimate: 4h
+
+Notes: Use Node 18+, Java 17
+
+Deliverables: repo initialized; CI placeholder workflow
+
+A2. Backend base (Web, Validation, JDBC, Tika, Spring AI)
+Desc: Add dependencies and a hello endpoint.
+
+AC: /actuator/health and /api/hello return 200
+
+Estimate: 4h
+
+Deliverables: pom.xml, Application.java, HelloController
+
+A3. Dual DataSources (Oracle + Vertica) via Hikari + JdbcTemplate
+Desc: Wire oracleJdbc and verticaJdbc beans from application.yml.
+
+AC: App starts with env vars; test queries use each JdbcTemplate
+
+Estimate: 6h
+
+Dependencies: A2
+
+Deliverables: DataSourceConfig.java, sample /api/db/ping
+
+A4. Angular app shell (Material, dark theme, routing)
+Desc: Set up Angular 17, Material dark, base routes, proxy to 8080.
+
+AC: ng serve shows shell; API proxy works
+
+Estimate: 6h
+
+Deliverables: styles.scss, app.routes.ts, proxy config
+
+EPIC B — AI Blueprint & Round-Trip JSON
+Sprint 2 (Week 2)
+B1. PRD ingestion service
+Desc: Parse .pdf/.docx/.md/.txt → plain text via Apache Tika.
+
+AC: /api/prd/preview returns first 2k chars
+
+Estimate: 4h
+
+Deliverables: PrdTextExtractor.java
+
+B2. Blueprint generator (strict schema)
+Desc: Spring AI class that returns round-trip JSON (requirements + pathStrategy + fileManifest).
+
+AC: /api/ai/blueprint returns valid JSON per schema; fails clearly on invalid
+
+Estimate: 8h
+
+Dependencies: B1, A2
+
+Deliverables: BlueprintGenerator.java, JSON records, JSON Schema (optional)
+
+B3. Path & size validators
+Desc: Validate file paths (no .., no absolute), cap files and bytes.
+
+AC: Requests with bad paths/oversized files are rejected with 400 + reason
+
+Estimate: 3h
+
+Deliverables: PathValidator.java, SizeQuota.java
+
+B4. Jobs API (create → status → download)
+Desc: Async job controller with in-memory store (to be swapped with queue later).
+
+AC: POST /api/generate returns jobId; /status streams progress; /download streams zip
+
+Estimate: 8h
+
+Dependencies: B1–B3
+
+Deliverables: GenerationController.java, simple job runner
+
+EPIC C — Direct-Files Codegen (No Templates)
+Sprint 3 (Week 3)
+C1. Manifest prompt & parser
+Desc: System + user prompts to produce fileManifest (no code yet); parse into DTO.
+
+AC: PRD → manifest lists all files needed (backend + frontend)
+
+Estimate: 6h
+
+Dependencies: B2
+
+Deliverables: Manifest DTOs, prompt strings
+
+C2. File content prompt (batched)
+Desc: System prompt to return full file contents in JSON {files:[{path,language,content}]}.
+
+AC: Batch request (8 files) returns valid JSON with compilable file contents (basic smoke)
+
+Estimate: 8h
+
+Dependencies: C1
+
+Deliverables: AiCodeGenService.getFiles(...)
+
+C3. Writer + zipper
+Desc: Write validated files to temp dir; zip entire tree.
+
+AC: Zip contains expected paths; content is exact
+
+Estimate: 4h
+
+Dependencies: B3
+
+Deliverables: FileWriterZipper.java
+
+C4. End-to-end happy path
+Desc: Upload PRD → manifest → file batches → zip → download
+
+AC: Sample PRD yields a runnable project skeleton; backend compiles, frontend builds
+
+Estimate: 6h
+
+Dependencies: C1–C3
+
+EPIC D — Build Sandbox, Autofix, and Safety
+Sprint 4 (Week 4)
+D1. Dockerized build sandbox
+Desc: Run backend mvn -q -DskipTests package and frontend npm ci && ng build in ephemeral containers.
+
+AC: Sandbox returns PASS/FAIL + logs; job times out gracefully (e.g., 120s each)
+
+Estimate: 8h
+
+Deliverables: Dockerfile.backend, Dockerfile.frontend, sandbox runner
+
+D2. Autofix loop (single-file repair)
+Desc: On compile errors, re-prompt AI with file path + error log to regenerate just that file.
+
+AC: ≥70% of simple build failures fixed automatically on first retry
+
+Estimate: 8h
+
+Dependencies: D1, C2
+
+Deliverables: AutoFixService.java, “fix prompt”
+
+D3. Static checks & allowlists
+Desc: Semgrep (Java) + ESLint/TS; dependency allowlist for backend/frontend.
+
+AC: Unknown deps fail generation; lint passes in CI
+
+Estimate: 6h
+
+Deliverables: .semgrep.yml, .eslintrc.cjs, allowlist JSON
+
+D4. Secrets & env handling
+Desc: Force ${ENV} placeholders; emit .env.example; refuse hardcoded creds.
+
+AC: Any literal password/url in code triggers rejection
+
+Estimate: 3h
+
+EPIC E — UI/UX: Generator Form & Progress
+Sprint 5 (Week 5)
+E1. Generator form (Angular)
+Desc: Dark theme form for versions, DBs, PRD upload, optional datasource props; sticky “Generate” button.
+
+AC: Form validation; multipart submit; progress card shows live step/status
+
+Estimate: 8h
+
+Deliverables: GeneratorFormComponent, GenerateApiService
+
+E2. Status polling + download
+Desc: Poll /status; auto-download zip on COMPLETED.
+
+AC: File downloads with correct name; error toast on FAILED
+
+Estimate: 3h
+
+Dependencies: B4
+
+E3. README preview modal
+Desc: After generation, show “How to run” modal with copy-paste commands.
+
+AC: README uses actual package and ports; copy buttons work
+
+Estimate: 2h
+
+EPIC F — Observability & Ops
+Sprint 6 (Week 6)
+F1. Metrics & logging
+Desc: Track: gen time, build time, token usage (if available), retries, success rate.
+
+AC: /actuator/prometheus exposes counters/histograms
+
+Estimate: 6h
+
+F2. Persistence & queue
+Desc: Replace in-memory jobs with Postgres (or Redis) + a queue (e.g., RabbitMQ/SQS).
+
+AC: Jobs survive restarts; workers can scale to N replicas
+
+Estimate: 10h
+
+Dependencies: F1, B4
+
+F3. Audit & reproducibility
+Desc: Save PRD hash, prompts, responses, model/version, and diffs per jobId (complying with policy).
+
+AC: Admin endpoint lists job lineage; redactions applied
+
+Estimate: 8h
+
+EPIC G — Stretch (Optional)
+G1. Hybrid infra templates (safer builds for pom.xml, angular.json, DataSourceConfig, etc.) — 1–2 days
+
+G2. JSON Schema validation for blueprint & file batches — 1 day
+
+G3. Parameterized dashboards & date pickers — 1–2 days
+
+G4. Multi-tenant auth + rate limiting — 2–3 days
+
+Sample Jira Ticket (copy & adapt)
+Title: C2 — AI file content generation (batched)
+Type: Story
+Desc: Implement AiCodeGenService.getFiles(projectName, paths) using Spring AI. Prompt returns JSON with full file contents for a batch of paths.
+AC:
+
+Given a manifest with N paths, when requesting any 8 paths, service returns valid JSON with files[].path exactly matching and content non-empty.
+
+Package names in Java files match path.
+
+SQL uses ? placeholders; no string concatenation.
+
+On invalid JSON, service retries once; logs raw payload.
+Estimate: 8h
+Dependencies: C1
+Attachments: Prompts, sample PRD
+
+Environments & Commands (DoD snippets)
+Backend run:
+OPENAI_API_KEY=... ORACLE_URL=... VERTICA_URL=... mvn spring-boot:run
+
+Frontend run:
+npm i && ng serve --proxy-config proxy.conf.json
+
+Sandbox builds:
+docker run --rm -v $PWD/backend:/app backend-builder mvn -q -DskipTests package
+docker run --rm -v $PWD/frontend:/app frontend-builder npm ci && npm run build
+
+Risk Register (mini)
+R1 Model variance → Pin system prompts; cache successful blueprint/file batches.
+
+R2 Token/cost spikes → Batch 8 files; reject >150 files; gzip PRD text; summarize PRD first.
+
+R3 Build flakiness → Hybrid templates for infra + autofix loop for domain files.
+
+R4 Secrets leakage → Env placeholders + scanner; block literals.
+
+R5 Path traversal → Strict sanitizer + allowlist root folders.
+

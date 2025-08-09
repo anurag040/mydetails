@@ -239,3 +239,30 @@ public Map<String,Object> blueprint(@RequestPart("prdFile") MultipartFile prd,
         "typed", result.blueprint()
     );
 }
+##################
+<dependencies>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+  <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId></dependency>
+
+  <!-- Spring AI -->
+  <dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+    <version>1.0.0-M3</version>
+  </dependency>
+
+  <!-- Templating + ZIP + parsing -->
+  <dependency><groupId>org.freemarker</groupId><artifactId>freemarker</artifactId></dependency>
+  <dependency><groupId>org.apache.commons</groupId><artifactId>commons-compress</artifactId><version>1.26.2</version></dependency>
+  <dependency><groupId>org.apache.tika</groupId><artifactId>tika-core</artifactId><version>2.9.2</version></dependency>
+  <dependency><groupId>org.apache.tika</groupId><artifactId>tika-parsers-standard-package</artifactId><version>2.9.2</version></dependency>
+  <dependency><groupId>org.apache.pdfbox</groupId><artifactId>pdfbox</artifactId><version>3.0.2</version></dependency>
+  <dependency><groupId>org.apache.poi</groupId><artifactId>poi-ooxml</artifactId><version>5.2.5</version></dependency>
+
+  <!-- Drivers -->
+  <dependency><groupId>com.oracle.database.jdbc</groupId><artifactId>ojdbc11</artifactId><version>23.4.0.24.05</version></dependency>
+  <dependency><groupId>com.vertica</groupId><artifactId>vertica-jdbc</artifactId><version>24.1.0-0</version></dependency>
+
+  <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><optional>true</optional></dependency>
+</dependencies>

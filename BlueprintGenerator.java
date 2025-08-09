@@ -210,3 +210,32 @@ public class BlueprintGenerator {
         }
     }
 }
+
+
+
+
+##############
+// In any @RestController or @Service
+@Autowired BlueprintGenerator generator;
+
+@PostMapping("/api/ai/blueprint")
+public Map<String,Object> blueprint(@RequestPart("prdFile") MultipartFile prd,
+                                    @RequestParam String angularVersion,
+                                    @RequestParam String database,
+                                    @RequestParam(required=false) String oracleUrl,
+                                    @RequestParam(required=false) String oracleUser,
+                                    @RequestParam(required=false) String oraclePass,
+                                    @RequestParam(required=false) String verticaUrl,
+                                    @RequestParam(required=false) String verticaUser,
+                                    @RequestParam(required=false) String verticaPass) {
+    var result = generator.generateFromFile(
+        prd, angularVersion, database,
+        oracleUrl, oracleUser, oraclePass,
+        verticaUrl, verticaUser, verticaPass
+    );
+    // You can return raw JSON string OR the typed object
+    return Map.of(
+        "raw", result.rawJson(),
+        "typed", result.blueprint()
+    );
+}

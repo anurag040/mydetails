@@ -1,0 +1,4 @@
+<button mat-icon-button (click)="toggle()" [matTooltip]="hint">
+  <mat-icon *ngIf="isDark(); else sun">dark_mode</mat-icon>
+  <ng-template #sun><mat-icon>light_mode</mat-icon></ng-template>
+</button>

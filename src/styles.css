@@ -1,0 +1,395 @@
+/* ====== Design Tokens (Light & Dark) ====== */
+:root {
+  --bg: #f6f8fc;
+  --bg-elev: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --s/* ====== Stepper / Labels ====== */
+.mat-horizontal-stepper-header-container,
+.mat-vertical-content { margin-bottom: 14px; }
+.mat-step-header {
+  background: var(--step-header-bg);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+}
+.mat-step-header .mat-step-icon {
+  background: transparent; border: 1.5px solid var(--field-stroke);
+}
+.mat-step-header .mat-step-icon-selected,
+.mat-step-header .mat-step-icon-state-done {
+  border-color: var(--step-header-active); color: var(--step-header-active);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
+}
+.mat-step-header .mat-step-label { color: var(--step-label); font-weight: 700; }
+.mat-step-header .mat-step-label.mat-step-label-active { color: var(--step-label-active); }
+/* Hide tiny "Editable" tag (we also blanked it via intl) */
+.mat-step-header .mat-step-editable { display: none !important; }
+
+/* Dark theme neon effects for stepper */
+:root.theme-dark .mat-step-header {
+  backdrop-filter: blur(8px);
+  background: rgba(17, 25, 44, 0.7);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+:root.theme-dark .mat-step-header .mat-step-icon-selected,
+:root.theme-dark .mat-step-header .mat-step-icon-state-done {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  border-color: var(--accent);
+  box-shadow: 
+    0 0 20px rgba(34, 211, 238, 0.6),
+    0 0 40px rgba(34, 211, 238, 0.3);
+  color: #000;
+  font-weight: 700;
+}
+
+:root.theme-dark .mat-step-header .mat-step-label-active {
+  color: var(--accent);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+}-primary: #2f6fed;
+  --accent: #0ea5e9;
+
+  --chip-bg: #eef4ff;
+  --chip-text: #1e3a8a;
+
+  --ok: #059669;
+  --warn: #d97706;
+  --danger: #dc2626;
+
+  --shadow-sm: 0 2px 10px rgba(15, 23, 42, .06);
+  --shadow-md: 0 10px 30px rgba(15, 23, 42, .08);
+  --radius: 16px;
+
+  --step-header-bg: #ffffff;
+  --step-header-active: var(--primary);
+  --step-label: #324158;
+  --step-label-active: #0f172a;
+
+  --field-bg: #ffffff;
+  --field-stroke: #cfd7e5;
+  --field-stroke-active: var(--primary);
+}
+
+/* DARK: neon obvious */
+:root.theme-dark {
+  --bg: #0b1120;
+  --bg-elev: rgba(14, 22, 40, 0.86);
+  --text: #e6edf6;
+  --muted: #9fb0c6;
+  --stroke: #1e2a40;
+
+  --primary: #7cb7ff;   /* electric blue */
+  --accent: #22d3ee;    /* neon cyan */
+
+  --chip-bg: rgba(34, 211, 238, 0.18);
+  --chip-text: #c9f6ff;
+
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --danger: #f87171;
+
+  --shadow-sm: 0 6px 20px rgba(0, 0, 0, .35);
+  --shadow-md: 0 20px 50px rgba(0, 0, 0, .45);
+  --radius: 18px;
+
+  --step-header-bg: rgba(17, 25, 44, 0.6);
+  --step-header-active: var(--accent);
+  --step-label: #b8c6da;
+  --step-label-active: #e6edf6;
+
+  --field-bg: rgba(12, 20, 38, 0.74);
+  --field-stroke: #26344d;
+  --field-stroke-active: var(--accent);
+}
+
+/* ====== Base ====== */
+html, body {
+  height: 100%;
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  font-family: Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Big neon background that WON’T break overlays */
+:root.theme-dark body::before {
+  content: "";
+  position: fixed;
+  inset: -15% -10% -10% -10%;
+  z-index: -1;
+  background:
+    radial-gradient(900px 500px at 15% 0%, rgba(34,211,238,0.25), transparent 60%),
+    radial-gradient(800px 420px at 85% 20%, rgba(124,183,255,0.22), transparent 60%),
+    linear-gradient(180deg, rgba(18,28,50,0.92), rgba(9,14,28,0.97));
+  pointer-events: none;
+}
+
+.app-shell { min-height: 100%; display: grid; grid-template-rows: auto 1fr; }
+.app-toolbar {
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--stroke);
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; position: sticky; top: 0; z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+.app-title { font-weight: 800; letter-spacing: .3px; }
+:root.theme-dark .app-title { text-shadow: 0 0 12px rgba(34,211,238,.45); }
+
+.content-wrap { padding: 24px; max-width: 1280px; margin: 0 auto; }
+
+/* ====== Surfaces / Cards ====== */
+.surface {
+  background: var(--bg-elev);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: visible; /* Allow dropdowns to extend outside */
+}
+:root.theme-dark .surface {
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 0 1px rgba(124, 183, 255, 0.12),
+    0 8px 30px rgba(0, 0, 0, 0.45),
+    0 0 25px rgba(34, 211, 238, 0.18),
+    inset 0 1px 0 rgba(124, 183, 255, 0.15); /* inner highlight */
+}
+
+/* ====== Summary Chips ====== */
+.summary-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.summary-chip {
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  font-size: 12px; padding: 6px 12px;
+  display: inline-flex; align-items: center; gap: 6px;
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.22);
+}
+
+/* Dark theme neon effects for chips */
+:root.theme-dark .summary-chip {
+  background: rgba(34, 211, 238, 0.18);
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 
+    0 0 20px rgba(34, 211, 238, 0.3),
+    inset 0 1px 0 rgba(34, 211, 238, 0.2);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
+
+/* ====== Stepper / Labels ====== */
+.mat-horizontal-stepper-header-container,
+.mat-vertical-content { margin-bottom: 14px; }
+.mat-step-header {
+  background: var(--step-header-bg);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+}
+.mat-step-header .mat-step-icon {
+  background: transparent; border: 1.5px solid var(--field-stroke);
+}
+.mat-step-header .mat-step-icon-selected,
+.mat-step-header .mat-step-icon-state-done {
+  border-color: var(--step-header-active); color: var(--step-header-active);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
+}
+.mat-step-header .mat-step-label { color: var(--step-label); font-weight: 700; }
+.mat-step-header .mat-step-label.mat-step-label-active { color: var(--step-label-active); }
+/* Hide tiny “Editable” tag (we also blanked it via intl) */
+.mat-step-header .mat-step-editable { display: none !important; }
+
+/* ====== Form fields / Select panels ====== */
+.mat-mdc-form-field { 
+  width: 100%; 
+  position: relative;
+  overflow: visible; /* Ensure dropdowns can extend outside */
+}
+.mdc-text-field--outlined { background: var(--field-bg) !important; border-radius: 12px !important; }
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing { border-color: var(--field-stroke) !important; }
+.mdc-text-field--focused .mdc-notched-outline__leading,
+.mdc-text-field--focused .mdc-notched-outline__notch,
+.mdc-text-field--focused .mdc-notched-outline__trailing { border-color: var(--field-stroke-active) !important; }
+.mat-mdc-form-field-infix { padding-top: 16px !important; padding-bottom: 14px !important; }
+
+/* Dark theme neon effects for form fields */
+:root.theme-dark .mdc-text-field--focused .mdc-notched-outline__leading,
+:root.theme-dark .mdc-text-field--focused .mdc-notched-outline__notch,
+:root.theme-dark .mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.35);
+}
+
+:root.theme-dark .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+  color: var(--accent) !important;
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
+
+/* Select panel (use CDK default positioning; just style) */
+.mat-mdc-select-panel {
+  background: var(--bg-elev) !important;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-md);
+  max-height: min(60vh, 480px);
+  border-radius: 8px;
+  transform: none !important; /* Prevent transform conflicts */
+  will-change: auto !important; /* Reset any will-change that might interfere */
+  z-index: 1100 !important; /* Ensure panels are above other elements */
+}
+
+/* Dark theme neon effects for select panels */
+:root.theme-dark .mat-mdc-select-panel {
+  background: rgba(14, 22, 40, 0.95) !important;
+  backdrop-filter: blur(12px);
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(34, 211, 238, 0.25),
+    0 0 0 1px rgba(34, 211, 238, 0.2);
+}
+
+:root.theme-dark .mat-mdc-option:hover {
+  background: rgba(34, 211, 238, 0.12) !important;
+}
+
+:root.theme-dark .mat-mdc-option.mdc-list-item--selected {
+  background: rgba(34, 211, 238, 0.18) !important;
+  color: var(--accent);
+}
+
+/* Close button styling for multiple select options */
+.mat-mdc-option.close-option {
+  border-top: 1px solid var(--stroke);
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: var(--bg-elev);
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  text-align: center;
+  color: var(--primary) !important;
+  font-weight: 600;
+}
+
+.mat-mdc-option.close-option .close-btn-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mat-mdc-option.close-option:hover {
+  background: rgba(47, 111, 237, 0.08) !important;
+}
+
+.mat-mdc-option.close-option:hover .close-btn-text {
+  color: var(--primary);
+}
+
+/* Prevent the close option from being selected */
+.mat-mdc-option.close-option .mdc-list-item__primary-text {
+  color: var(--primary) !important;
+}
+
+/* Ensure close option doesn't get selected styling */
+.mat-mdc-option.close-option.mdc-list-item--selected {
+  background: rgba(47, 111, 237, 0.08) !important;
+}
+
+/* Ensure the select trigger doesn't have positioning issues */
+.mat-mdc-select {
+  position: relative;
+}
+
+.mat-mdc-select-trigger {
+  position: relative;
+  overflow: visible;
+}
+
+/* Ensure overlay container works properly */
+.cdk-overlay-container {
+  position: fixed !important;
+  z-index: 1000 !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  /* Prevent backdrop-filter inheritance issues */
+  backdrop-filter: none !important;
+  transform: none !important;
+}
+
+.cdk-overlay-pane {
+  pointer-events: auto;
+  position: absolute;
+  transform-origin: top left;
+  z-index: 1100;
+}
+
+/* Checkboxes */
+.mdc-checkbox__background { border-color: var(--field-stroke) !important; }
+.mdc-checkbox--selected .mdc-checkbox__background,
+.mdc-checkbox--selected .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+  border-color: var(--field-stroke-active) !important;
+  background-color: var(--field-stroke-active) !important;
+}
+
+/* Ensure checkmarks are visible in all themes */
+.mat-mdc-checkbox.mat-mdc-checkbox-checked .mdc-checkbox__checkmark {
+  color: white !important;
+}
+
+/* Dark theme neon effects for checkboxes */
+:root.theme-dark .mdc-checkbox--selected .mdc-checkbox__background,
+:root.theme-dark .mdc-checkbox--selected .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+  background: linear-gradient(135deg, var(--accent), var(--primary)) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
+}
+
+:root.theme-dark .mat-mdc-checkbox.mat-mdc-checkbox-checked .mdc-checkbox__checkmark {
+  color: white !important;
+}
+
+/* Buttons */
+.mdc-button--raised, .mdc-button--unelevated { border-radius: 12px !important; box-shadow: var(--shadow-sm) !important; }
+.mdc-button--outlined { border-radius: 12px !important; border-color: var(--field-stroke) !important; }
+
+/* Dark theme neon effects for buttons */
+:root.theme-dark .mat-mdc-raised-button.mat-primary {
+  background: linear-gradient(135deg, var(--accent), var(--primary)) !important;
+  box-shadow: 
+    0 4px 15px rgba(34, 211, 238, 0.25),
+    0 0 20px rgba(34, 211, 238, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+:root.theme-dark .mat-mdc-raised-button.mat-primary:hover {
+  box-shadow: 
+    0 6px 20px rgba(34, 211, 238, 0.35),
+    0 0 30px rgba(34, 211, 238, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+:root.theme-dark .mat-mdc-outlined-button {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+:root.theme-dark .mat-mdc-outlined-button:hover {
+  background: rgba(34, 211, 238, 0.08) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+}
+
+/* Focus ring */
+*:focus-visible { outline: 2px solid var(--field-stroke-active); outline-offset: 2px; }
+
+/* Smooth visuals */
+* { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }

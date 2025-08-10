@@ -78,6 +78,15 @@ export class ApiService {
     return this.http.get(`${this.baseUrl}/statistics/${datasetId}/summary`);
   }
 
+  // Regression Analysis endpoint
+  performRegressionAnalysis(datasetId: string, xColumn: string, yColumn: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/advanced/regression`, {
+      dataset_id: datasetId,
+      x_column: xColumn,
+      y_column: yColumn
+    });
+  }
+
   // Analysis endpoints
   performFullAnalysis(datasetId: string): Observable<AnalysisResponse> {
     return this.http.post<AnalysisResponse>(`${this.baseUrl}/analysis/full`, { dataset_id: datasetId });

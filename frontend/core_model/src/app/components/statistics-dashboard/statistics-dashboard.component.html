@@ -2448,6 +2448,65 @@
           </mat-card-actions>
         </mat-card>
 
+        <!-- Regression Analysis Controls -->
+        <mat-card class="options-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>trending_up</mat-icon>
+              Regression Analysis
+            </mat-card-title>
+            <mat-card-subtitle>
+              Perform linear regression between two numeric variables
+              <!-- Debug info -->
+              <div style="font-size: 0.8em; color: #666; margin-top: 8px;">
+                Debug: Found {{ getNumericColumns().length }} numeric columns
+                <button mat-icon-button (click)="debugRegressionData()" title="Debug in Console">
+                  <mat-icon style="font-size: 16px;">bug_report</mat-icon>
+                </button>
+              </div>
+            </mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div *ngIf="!getNumericColumns().length" style="text-align: center; padding: 20px; color: #666;">
+              <mat-icon style="font-size: 48px; height: 48px; width: 48px;">error_outline</mat-icon>
+              <p style="margin: 12px 0;">No numeric columns available for regression analysis.</p>
+              <p style="margin: 0; font-size: 0.9em;">Please ensure your dataset contains at least two numeric variables.</p>
+            </div>
+            
+            <div class="regression-controls" style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px; position: relative; z-index: 100;" *ngIf="getNumericColumns().length">
+              <mat-form-field appearance="outline" style="min-width: 200px; position: relative; z-index: 101;">
+                <mat-label>X Variable (Independent)</mat-label>
+                <mat-select [(ngModel)]="regressionXColumn" [disabled]="regressionLoading" panelClass="regression-dropdown">
+                  <mat-option *ngFor="let col of getNumericColumns()" [value]="col">{{ col }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" style="min-width: 200px; position: relative; z-index: 101;">
+                <mat-label>Y Variable (Dependent)</mat-label>
+                <mat-select [(ngModel)]="regressionYColumn" [disabled]="regressionLoading" panelClass="regression-dropdown">
+                  <mat-option *ngFor="let col of getNumericColumns()" [value]="col">{{ col }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <button mat-raised-button 
+                      color="primary" 
+                      (click)="runRegressionAnalysis()" 
+                      [disabled]="regressionLoading || !regressionXColumn || !regressionYColumn">
+                <mat-icon>trending_up</mat-icon>
+                Run Regression
+              </button>
+              
+              <mat-spinner *ngIf="regressionLoading" diameter="24"></mat-spinner>
+            </div>
+            
+            <div *ngIf="regressionError" style="color: red; margin-top: 12px;">
+              <mat-icon>error</mat-icon>
+              {{ regressionError }}
+            </div>
+          </mat-card-content>
+        </mat-card>
+
         <!-- Advanced Results -->
         <div class="results-section" *ngIf="advancedResults">
           <!-- Regression Analysis -->
@@ -2455,26 +2514,77 @@
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>trending_up</mat-icon>
-                Regression Analysis
+                Regression Analysis Results
               </mat-card-title>
+              <mat-card-subtitle *ngIf="advancedResults?.regression_analysis?.equation">
+                {{ advancedResults?.regression_analysis?.equation }}
+              </mat-card-subtitle>
             </mat-card-header>
             
             <mat-card-content>
               <div class="regression-content">
-                <div class="metrics-grid" *ngIf="advancedResults?.regression_analysis?.metrics">
-                  <div class="metric-item">
-                    <span class="metric-label">R² Score</span>
-                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.r2_score) }}</span>
-                  </div>
-                  <div class="metric-item">
-                    <span class="metric-label">Mean Squared Error</span>
-                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mse) }}</span>
-                  </div>
-                  <div class="metric-item">
-                    <span class="metric-label">Mean Absolute Error</span>
-                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mae) }}</span>
+                <!-- Model Performance Metrics -->
+                <div class="metrics-section" *ngIf="advancedResults?.regression_analysis?.metrics">
+                  <h4>Model Performance</h4>
+                  <div class="metrics-grid">
+                    <div class="metric-item">
+                      <span class="metric-label">R² Score (Test)</span>
+                      <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.r2_score) }}</span>
+                      <span class="metric-description">Coefficient of determination</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">R² Score (Train)</span>
+                      <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.train_r2_score) }}</span>
+                      <span class="metric-description">Training performance</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">Mean Squared Error</span>
+                      <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mse) }}</span>
+                      <span class="metric-description">Lower is better</span>
+                    </div>
+                    <div class="metric-item">
+                      <span class="metric-label">Mean Absolute Error</span>
+                      <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mae) }}</span>
+                      <span class="metric-description">Average prediction error</span>
+                    </div>
                   </div>
                 </div>
+
+                <!-- Model Parameters -->
+                <div class="parameters-section" *ngIf="advancedResults?.regression_analysis?.model_parameters">
+                  <h4>Model Parameters</h4>
+                  <div class="parameters-grid">
+                    <div class="parameter-item">
+                      <span class="parameter-label">Coefficient</span>
+                      <span class="parameter-value">{{ formatNumber(advancedResults?.regression_analysis?.model_parameters?.coefficient) }}</span>
+                    </div>
+                    <div class="parameter-item">
+                      <span class="parameter-label">Intercept</span>
+                      <span class="parameter-value">{{ formatNumber(advancedResults?.regression_analysis?.model_parameters?.intercept) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Data Information -->
+                <div class="data-info-section" *ngIf="advancedResults?.regression_analysis?.data_info">
+                  <h4>Data Information</h4>
+                  <div class="data-info-grid">
+                    <div class="info-item">
+                      <span class="info-label">Total Samples</span>
+                      <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_samples }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Training Samples</span>
+                      <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_train }}</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Test Samples</span>
+                      <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_test }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Feature Importance -->
                 <div class="feature-importance" *ngIf="advancedResults?.regression_analysis?.feature_importance">
                   <h4>Feature Importance</h4>
                   <div class="importance-list">
@@ -2485,6 +2595,19 @@
                       </div>
                       <span class="importance-value">{{ formatNumber(item.value) }}</span>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Regression Plot -->
+                <div class="regression-plot" *ngIf="regressionChartData">
+                  <h4>Regression Plot</h4>
+                  <div style="position: relative; height: 400px; margin-top: 16px;">
+                    <canvas 
+                      baseChart
+                      [data]="regressionChartData"
+                      [options]="regressionChartOptions"
+                      [type]="'scatter'">
+                    </canvas>
                   </div>
                 </div>
               </div>

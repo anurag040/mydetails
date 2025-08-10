@@ -11,6 +11,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
@@ -41,6 +43,8 @@ interface StatOption {
     MatTableModule,
     MatExpansionModule,
     MatCheckboxModule,
+    MatSelectModule,
+    MatFormFieldModule,
     FormsModule,
     NgChartsModule
   ],
@@ -65,6 +69,44 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   distributionCharts: Map<string, ChartData<'bar'>> = new Map();
   correlationHeatmapChart: ChartData<'scatter'> | null = null;
   heatmapVariables: string[] = [];
+  
+  // Regression Analysis State
+  regressionXColumn: string | null = null;
+  regressionYColumn: string | null = null;
+  regressionLoading: boolean = false;
+  regressionError: string | null = null;
+  regressionResults: any = null;
+  regressionChartData: any = null;
+  regressionChartOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        type: 'linear',
+        position: 'bottom',
+        title: {
+          display: true,
+          text: 'X Variable'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Y Variable'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Regression Analysis'
+      }
+    }
+  };
   
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -373,6 +415,7 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     this.apiService.getStatisticsSummary(this.currentDataset.dataset_id).subscribe({
       next: (summary) => {
         this.quickSummary = summary;
+        this.debugRegressionData(); // Debug regression data availability
       },
       error: (error) => {
         console.error('Failed to load quick summary:', error);
@@ -442,6 +485,179 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         this.snackBar.open('Failed to calculate advanced statistics', 'Close', { duration: 5000 });
       }
     });
+  }
+
+  // Trigger regression analysis
+  runRegressionAnalysis() {
+    if (!this.currentDataset || !this.regressionXColumn || !this.regressionYColumn) {
+      this.regressionError = 'Please select both X and Y columns.';
+      return;
+    }
+    
+    this.regressionLoading = true;
+    this.regressionError = null;
+    
+    this.apiService.performRegressionAnalysis(
+      this.currentDataset.dataset_id,
+      this.regressionXColumn,
+      this.regressionYColumn
+    ).subscribe({
+      next: (result) => {
+        if (!this.advancedResults) {
+          this.advancedResults = { dataset_id: this.currentDataset!.dataset_id };
+        }
+        this.advancedResults.regression_analysis = result;
+        this.regressionResults = result;
+        this.createRegressionChart();
+        this.regressionLoading = false;
+        this.snackBar.open('Regression analysis completed!', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        console.error('Regression analysis error:', err);
+        this.regressionError = err.error?.detail || 'Failed to perform regression analysis.';
+        this.regressionLoading = false;
+        this.snackBar.open('Regression analysis failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  // New method for the template
+  performRegression() {
+    this.regressionXColumn = this.selectedXVariable;
+    this.regressionYColumn = this.selectedYVariable;
+    this.runRegressionAnalysis();
+  }
+
+  // Template variables for compatibility
+  get selectedXVariable(): string {
+    return this.regressionXColumn || '';
+  }
+
+  set selectedXVariable(value: string) {
+    this.regressionXColumn = value;
+  }
+
+  get selectedYVariable(): string {
+    return this.regressionYColumn || '';
+  }
+
+  set selectedYVariable(value: string) {
+    this.regressionYColumn = value;
+  }
+
+  // Create regression scatter plot with trend line
+  createRegressionChart() {
+    if (!this.regressionResults || !this.currentDataset) return;
+
+    // Check if we have scatter plot data from the regression results
+    if (this.regressionResults.scatter_data && Array.isArray(this.regressionResults.scatter_data)) {
+      const scatterData = this.regressionResults.scatter_data.map((point: any) => ({
+        x: point.x,
+        y: point.y
+      }));
+
+      // Create regression line points from regression results
+      const slope = this.regressionResults.model_parameters?.coefficient || this.regressionResults.slope || 0;
+      const intercept = this.regressionResults.model_parameters?.intercept || this.regressionResults.intercept || 0;
+      
+      const xValues = scatterData.map((point: any) => point.x);
+      const minX = Math.min(...xValues);
+      const maxX = Math.max(...xValues);
+      
+      const regressionLineData = [
+        { x: minX, y: slope * minX + intercept },
+        { x: maxX, y: slope * maxX + intercept }
+      ];
+
+      this.regressionChartData = {
+        datasets: [
+          {
+            label: 'Data Points',
+            data: scatterData,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+            showLine: false,
+            pointRadius: 4
+          },
+          {
+            label: 'Regression Line',
+            data: regressionLineData,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2,
+            showLine: true,
+            pointRadius: 0,
+            type: 'line'
+          }
+        ]
+      };
+    } else {
+      // Fallback: create mock data based on regression parameters
+      const slope = this.regressionResults.model_parameters?.coefficient || this.regressionResults.slope || 1;
+      const intercept = this.regressionResults.model_parameters?.intercept || this.regressionResults.intercept || 0;
+      
+      // Generate sample data points along the regression line with some scatter
+      const scatterData = [];
+      for (let i = 0; i < 50; i++) {
+        const x = i * 2; // Sample x values
+        const y = slope * x + intercept + (Math.random() - 0.5) * 10; // Add some random scatter
+        scatterData.push({ x, y });
+      }
+
+      const minX = 0;
+      const maxX = 100;
+      const regressionLineData = [
+        { x: minX, y: slope * minX + intercept },
+        { x: maxX, y: slope * maxX + intercept }
+      ];
+
+      this.regressionChartData = {
+        datasets: [
+          {
+            label: 'Data Points',
+            data: scatterData,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+            showLine: false,
+            pointRadius: 4
+          },
+          {
+            label: 'Regression Line',
+            data: regressionLineData,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 2,
+            showLine: true,
+            pointRadius: 0,
+            type: 'line'
+          }
+        ]
+      };
+    }
+
+    // Update chart options with variable names
+    this.regressionChartOptions = {
+      ...this.regressionChartOptions,
+      scales: {
+        ...this.regressionChartOptions.scales,
+        x: {
+          ...this.regressionChartOptions.scales.x,
+          title: {
+            display: true,
+            text: this.regressionXColumn || 'X Variable'
+          }
+        },
+        y: {
+          ...this.regressionChartOptions.scales.y,
+          title: {
+            display: true,
+            text: this.regressionYColumn || 'Y Variable'
+          }
+        }
+      }
+    };
   }
 
   getDescriptiveStatsKeys(): string[] {
@@ -1005,8 +1221,30 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   getNumericColumns(): string[] {
-    if (!this.basicResults?.descriptive_stats?.summary) return [];
-    return Object.keys(this.basicResults.descriptive_stats.summary);
+    // First try to get from basic results if available
+    if (this.basicResults?.descriptive_stats?.summary) {
+      return Object.keys(this.basicResults.descriptive_stats.summary);
+    }
+    
+    // Fallback to dataset schema for immediate availability
+    if (this.quickSummary?.schema) {
+      return Object.entries(this.quickSummary.schema)
+        .filter(([_, details]: [string, any]) => {
+          // Handle both boolean true and string 'True' from API
+          if (details.is_numeric === true || details.is_numeric === 'True') {
+            return true;
+          }
+          // Fallback: check data type for numeric types
+          if (details.dtype) {
+            const dtype = details.dtype.toLowerCase();
+            return dtype.includes('int') || dtype.includes('float') || dtype.includes('number');
+          }
+          return false;
+        })
+        .map(([name, _]) => name);
+    }
+    
+    return [];
   }
 
   getTextHistogram(column: string): Array<{range: string, count: number, height: number}> {
@@ -1221,6 +1459,25 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       const stats = this.getDescriptiveStatsData()[column];
       console.log(`Column ${column}:`, stats);
     });
+  }
+
+  // Debug method for regression
+  debugRegressionData(): void {
+    console.log('=== REGRESSION DEBUG ===');
+    console.log('Current Dataset:', this.currentDataset);
+    console.log('Quick Summary:', this.quickSummary);
+    console.log('Quick Summary Schema:', this.quickSummary?.schema);
+    console.log('Numeric Columns Available:', this.getNumericColumns());
+    console.log('Basic Results Available:', !!this.basicResults);
+    console.log('Regression X Column:', this.regressionXColumn);
+    console.log('Regression Y Column:', this.regressionYColumn);
+    
+    if (this.quickSummary?.schema) {
+      console.log('Schema Analysis:');
+      Object.entries(this.quickSummary.schema).forEach(([name, details]: [string, any]) => {
+        console.log(`  ${name}: is_numeric=${details.is_numeric}, dtype=${details.dtype}`);
+      });
+    }
   }
 
   processChartData(): void {

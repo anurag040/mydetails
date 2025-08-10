@@ -10,6 +10,35 @@
       margin-top: 16px;
     }
   }
+
+  // Regression Dropdown Fix
+  .regression-controls {
+    position: relative;
+    z-index: 100 !important;
+    
+    mat-form-field {
+      position: relative;
+      z-index: 101 !important;
+      
+      .mat-mdc-form-field-subscript-wrapper {
+        z-index: 102 !important;
+      }
+    }
+  }
+
+  // Global dropdown panel fix
+  ::ng-deep .regression-dropdown-panel {
+    z-index: 10000 !important;
+    position: absolute !important;
+  }
+
+  .results-card {
+    margin-top: 16px;
+  }
+
+  .plot-card {
+    margin-top: 16px;
+  }
   
   .summary-card {
     margin-bottom: 20px;
@@ -398,6 +427,179 @@
         
         tr:hover {
           background: rgba(0, 255, 136, 0.05);
+        }
+      }
+
+      /* Regression Analysis Styles */
+      .regression-content {
+        .metrics-section,
+        .parameters-section,
+        .data-info-section {
+          margin-bottom: 24px;
+          padding: 20px;
+          background: rgba(26, 26, 26, 0.9);
+          border-radius: 12px;
+          border: 1px solid rgba(0, 255, 136, 0.2);
+          
+          h4 {
+            color: #00ff88;
+            margin: 0 0 16px 0;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            
+            &::before {
+              content: '';
+              width: 3px;
+              height: 20px;
+              background: linear-gradient(45deg, #00ff88, #00d966);
+              border-radius: 2px;
+            }
+          }
+        }
+        
+        .metrics-grid,
+        .parameters-grid,
+        .data-info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+        }
+        
+        .metric-item,
+        .parameter-item,
+        .info-item {
+          background: rgba(15, 15, 15, 0.8);
+          border: 1px solid rgba(0, 255, 136, 0.1);
+          border-radius: 8px;
+          padding: 16px;
+          text-align: center;
+          transition: all 0.3s ease;
+          
+          &:hover {
+            border-color: rgba(0, 255, 136, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.1);
+          }
+          
+          .metric-label,
+          .parameter-label,
+          .info-label {
+            color: #b0b0b0;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .metric-value,
+          .parameter-value,
+          .info-value {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.2em;
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 255, 136, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: block;
+          }
+          
+          .metric-description {
+            color: #888;
+            font-size: 0.8em;
+            margin-top: 8px;
+            font-style: italic;
+          }
+        }
+        
+        .feature-importance {
+          margin-top: 24px;
+          padding: 20px;
+          background: rgba(26, 26, 26, 0.9);
+          border-radius: 12px;
+          border: 1px solid rgba(0, 255, 136, 0.2);
+          
+          h4 {
+            color: #00ff88;
+            margin: 0 0 16px 0;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            
+            &::before {
+              content: '';
+              width: 3px;
+              height: 20px;
+              background: linear-gradient(45deg, #00ff88, #00d966);
+              border-radius: 2px;
+            }
+          }
+          
+          .importance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            
+            .importance-item {
+              display: flex;
+              align-items: center;
+              gap: 16px;
+              padding: 12px;
+              background: rgba(15, 15, 15, 0.8);
+              border: 1px solid rgba(0, 255, 136, 0.1);
+              border-radius: 8px;
+              transition: all 0.3s ease;
+              
+              &:hover {
+                border-color: rgba(0, 255, 136, 0.3);
+                transform: translateX(4px);
+              }
+              
+              .feature-name {
+                color: #00ff88;
+                font-weight: 600;
+                min-width: 120px;
+                font-size: 0.9em;
+              }
+              
+              .importance-bar {
+                flex: 1;
+                height: 8px;
+                background: rgba(0, 255, 136, 0.1);
+                border-radius: 4px;
+                overflow: hidden;
+                position: relative;
+                
+                .importance-fill {
+                  height: 100%;
+                  background: linear-gradient(90deg, #00ff88, #00d966);
+                  border-radius: 4px;
+                  transition: width 0.5s ease;
+                  box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+                }
+              }
+              
+              .importance-value {
+                color: #ffffff;
+                font-weight: 700;
+                font-family: 'Courier New', monospace;
+                font-size: 0.9em;
+                min-width: 60px;
+                text-align: right;
+              }
+            }
+          }
         }
       }
 

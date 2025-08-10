@@ -1,0 +1,558 @@
+<div class="project-generator" [class.dark-theme]="isDark()">
+  <!-- Header Section -->
+  <div class="header-section">
+    <mat-card class="header-card">
+      <mat-card-header>
+        <div mat-card-avatar class="header-avatar">
+          <mat-icon>rocket_launch</mat-icon>
+        </div>
+        <mat-card-title>Project Generator</mat-card-title>
+        <mat-card-subtitle>Configure, customize, and generate your full-stack project</mat-card-subtitle>
+        
+        <div class="header-actions">
+          <mat-slide-toggle
+            (change)="onToggleTheme($event.checked)"
+            [checked]="isDark()"
+            color="primary"
+            matTooltip="Toggle dark mode">
+            <mat-icon>{{ isDark() ? 'dark_mode' : 'light_mode' }}</mat-icon>
+          </mat-slide-toggle>
+        </div>
+      </mat-card-header>
+
+      <!-- Status Indicators -->
+      <mat-card-content>
+        <div class="status-indicators">
+          <mat-chip-set>
+            <mat-chip 
+              [color]="isValid() ? 'primary' : 'warn'"
+              [selected]="true">
+              <mat-icon matChipAvatar>{{ isValid() ? 'check_circle' : 'error' }}</mat-icon>
+              {{ isValid() ? 'Configuration Valid' : 'Please Complete Required Fields' }}
+            </mat-chip>
+            
+            <mat-chip 
+              *ngIf="isDirty()" 
+              color="accent" 
+              selected>
+              <mat-icon matChipAvatar>edit</mat-icon>
+              Unsaved Changes
+            </mat-chip>
+            
+            <mat-chip 
+              *ngIf="selectedDatabasesCount() > 0" 
+              color="primary">
+              <mat-icon matChipAvatar>storage</mat-icon>
+              {{ selectedDatabasesCount() }} Database{{ selectedDatabasesCount() > 1 ? 's' : '' }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section" *ngIf="isSubmitting()">
+          <mat-progress-bar 
+            mode="determinate" 
+            *ngIf="uploadProgress() !== null" 
+            [value]="uploadProgress()!">
+          </mat-progress-bar>
+          <div class="progress-text">
+            Generating project... {{ uploadProgress() }}%
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Configuration Form -->
+  <div class="form-section">
+    <form [formGroup]="form" (ngSubmit)="onGenerate()">
+      
+      <!-- Basic Configuration -->
+      <mat-expansion-panel 
+        class="config-panel"
+        [expanded]="panelOpenState().basic"
+        (expandedChange)="togglePanel('basic')">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>settings</mat-icon>
+            Basic Configuration
+          </mat-panel-title>
+          <mat-panel-description>
+            Core framework versions and project details
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="panel-content">
+          <!-- Framework Versions -->
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="version-field">
+              <mat-label>Spring Boot Version</mat-label>
+              <mat-select formControlName="springBootVersion" required>
+                <mat-option 
+                  *ngFor="let version of springBootVersions" 
+                  [value]="version.value">
+                  <div class="version-option">
+                    <span class="version-label">{{ version.label }}</span>
+                    <mat-icon 
+                      *ngIf="version.recommended" 
+                      class="recommended-icon"
+                      matTooltip="Recommended version">
+                      verified
+                    </mat-icon>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('springBootVersion') }}</mat-error>
+              <mat-hint>Choose the Spring Boot framework version</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="version-field">
+              <mat-label>Angular Version</mat-label>
+              <mat-select formControlName="angularVersion" required>
+                <mat-option 
+                  *ngFor="let version of angularVersions" 
+                  [value]="version.value">
+                  <div class="version-option">
+                    <span class="version-label">{{ version.label }}</span>
+                    <mat-icon 
+                      *ngIf="version.recommended" 
+                      class="recommended-icon"
+                      matTooltip="Recommended version">
+                      verified
+                    </mat-icon>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('angularVersion') }}</mat-error>
+              <mat-hint>Choose the Angular frontend version</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <!-- Version Selection Chips -->
+          <div class="selected-versions" *ngIf="f.springBootVersion.value || f.angularVersion.value">
+            <mat-chip-set>
+              <mat-chip 
+                *ngIf="f.springBootVersion.value" 
+                [color]="getVersionColor(f.springBootVersion.value, 'spring')"
+                selected>
+                <mat-icon 
+                  matChipAvatar 
+                  [fontIcon]="getVersionIcon(f.springBootVersion.value, 'spring')">
+                </mat-icon>
+                Spring Boot {{ f.springBootVersion.value }}
+              </mat-chip>
+              
+              <mat-chip 
+                *ngIf="f.angularVersion.value" 
+                [color]="getVersionColor(f.angularVersion.value, 'angular')"
+                selected>
+                <mat-icon 
+                  matChipAvatar 
+                  [fontIcon]="getVersionIcon(f.angularVersion.value, 'angular')">
+                </mat-icon>
+                Angular {{ f.angularVersion.value }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Project Identifiers -->
+          <div class="form-row triple">
+            <mat-form-field appearance="outline">
+              <mat-label>Group ID</mat-label>
+              <input 
+                matInput 
+                formControlName="groupId" 
+                placeholder="com.mycompany.app"
+                matTooltip="Java package naming convention"
+                required>
+              <mat-error>{{ getErrorMessage('groupId') }}</mat-error>
+              <mat-hint>Use reverse domain notation</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Artifact ID</mat-label>
+              <input 
+                matInput 
+                formControlName="artifactId" 
+                placeholder="my-awesome-project"
+                matTooltip="Project folder and JAR name"
+                required>
+              <mat-error>{{ getErrorMessage('artifactId') }}</mat-error>
+              <mat-hint>Lowercase, dash-separated</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Application Name</mat-label>
+              <input 
+                matInput 
+                formControlName="applicationName" 
+                placeholder="My Awesome Project"
+                matTooltip="Display name for your application"
+                required>
+              <mat-error>{{ getErrorMessage('applicationName') }}</mat-error>
+              <mat-hint>Human-readable project name</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Advanced Configuration -->
+      <mat-expansion-panel 
+        class="config-panel"
+        [expanded]="panelOpenState().advanced"
+        (expandedChange)="togglePanel('advanced')">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>tune</mat-icon>
+            Advanced Configuration
+          </mat-panel-title>
+          <mat-panel-description>
+            Database, authentication, and deployment options
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="panel-content">
+          <!-- Database Selection -->
+          <mat-form-field appearance="outline" class="multi-select-field">
+            <mat-label>Database Systems</mat-label>
+            <mat-select formControlName="databases" multiple required>
+              <mat-select-trigger>
+                <ng-container *ngIf="selectedDatabasesCount() > 0; else noDatabases">
+                  <mat-chip-set class="trigger-chips">
+                    <mat-chip 
+                      *ngFor="let db of f.databases.value" 
+                      [removable]="true" 
+                      (removed)="removeDb(db)"
+                      color="primary">
+                      {{ db }}
+                      <button matChipRemove>
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </mat-chip>
+                  </mat-chip-set>
+                </ng-container>
+                <ng-template #noDatabases>
+                  <span class="placeholder">Select database systems...</span>
+                </ng-template>
+              </mat-select-trigger>
+
+              <mat-option *ngFor="let db of databases" [value]="db">
+                <mat-icon class="db-icon">storage</mat-icon>
+                {{ db }}
+              </mat-option>
+            </mat-select>
+            <mat-error>{{ getErrorMessage('databases') }}</mat-error>
+            <mat-hint>Choose one or more database systems</mat-hint>
+          </mat-form-field>
+
+          <!-- Authentication Selection -->
+          <mat-form-field appearance="outline" class="multi-select-field">
+            <mat-label>Authentication Methods</mat-label>
+            <mat-select formControlName="authentication" multiple>
+              <mat-select-trigger>
+                <ng-container *ngIf="selectedAuthCount() > 0; else noAuth">
+                  <mat-chip-set class="trigger-chips">
+                    <mat-chip 
+                      *ngFor="let auth of f.authentication.value" 
+                      [removable]="true" 
+                      (removed)="removeAuth(auth)"
+                      color="accent">
+                      {{ auth }}
+                      <button matChipRemove>
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </mat-chip>
+                  </mat-chip-set>
+                </ng-container>
+                <ng-template #noAuth>
+                  <span class="placeholder">Select authentication methods...</span>
+                </ng-template>
+              </mat-select-trigger>
+
+              <mat-option *ngFor="let auth of authenticationOptions" [value]="auth">
+                <mat-icon class="auth-icon">security</mat-icon>
+                {{ auth }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Authentication and authorization methods</mat-hint>
+          </mat-form-field>
+
+          <!-- Deployment Options -->
+          <mat-form-field appearance="outline" class="multi-select-field">
+            <mat-label>Deployment Platforms</mat-label>
+            <mat-select formControlName="deployment" multiple>
+              <mat-select-trigger>
+                <ng-container *ngIf="selectedDeploymentCount() > 0; else noDeployment">
+                  <mat-chip-set class="trigger-chips">
+                    <mat-chip 
+                      *ngFor="let deploy of f.deployment.value" 
+                      [removable]="true" 
+                      (removed)="removeDeployment(deploy)"
+                      color="warn">
+                      {{ deploy }}
+                      <button matChipRemove>
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </mat-chip>
+                  </mat-chip-set>
+                </ng-container>
+                <ng-template #noDeployment>
+                  <span class="placeholder">Select deployment platforms...</span>
+                </ng-template>
+              </mat-select-trigger>
+
+              <mat-option *ngFor="let deploy of deploymentOptions" [value]="deploy">
+                <mat-icon class="deploy-icon">cloud</mat-icon>
+                {{ deploy }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Target deployment environments</mat-hint>
+          </mat-form-field>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Optional Features -->
+      <mat-expansion-panel 
+        class="config-panel"
+        [expanded]="panelOpenState().optional"
+        (expandedChange)="togglePanel('optional')">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>extension</mat-icon>
+            Optional Features
+          </mat-panel-title>
+          <mat-panel-description>
+            Additional components and PRD upload
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="panel-content">
+          <!-- Feature Toggles -->
+          <div class="feature-toggles">
+            <div class="toggle-group">
+              <div class="toggle-item">
+                <mat-slide-toggle formControlName="includeTests" color="primary">
+                  <div class="toggle-content">
+                    <mat-icon>quiz</mat-icon>
+                    <div>
+                      <strong>Unit Tests</strong>
+                      <span>Include JUnit and Angular testing frameworks</span>
+                    </div>
+                  </div>
+                </mat-slide-toggle>
+              </div>
+
+              <div class="toggle-item">
+                <mat-slide-toggle formControlName="includeSwagger" color="primary">
+                  <div class="toggle-content">
+                    <mat-icon>api</mat-icon>
+                    <div>
+                      <strong>Swagger Documentation</strong>
+                      <span>Auto-generated API documentation</span>
+                    </div>
+                  </div>
+                </mat-slide-toggle>
+              </div>
+
+              <div class="toggle-item">
+                <mat-slide-toggle formControlName="includeActuator" color="primary">
+                  <div class="toggle-content">
+                    <mat-icon>monitoring</mat-icon>
+                    <div>
+                      <strong>Spring Actuator</strong>
+                      <span>Health checks and metrics endpoints</span>
+                    </div>
+                  </div>
+                </mat-slide-toggle>
+              </div>
+
+              <div class="toggle-item">
+                <mat-slide-toggle formControlName="includeDocker" color="primary">
+                  <div class="toggle-content">
+                    <mat-icon>inventory_2</mat-icon>
+                    <div>
+                      <strong>Docker Configuration</strong>
+                      <span>Dockerfile and docker-compose setup</span>
+                    </div>
+                  </div>
+                </mat-slide-toggle>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- PRD Upload -->
+          <div class="prd-upload">
+            <h4>
+              <mat-icon>upload_file</mat-icon>
+              Project Requirements Document (PRD)
+            </h4>
+            <p class="prd-description">
+              Upload a PRD to generate tailored project structure and components
+            </p>
+
+            <div class="file-upload-area">
+              <mat-form-field appearance="outline" class="file-input-field">
+                <mat-label>PRD File (Optional)</mat-label>
+                <input 
+                  matInput 
+                  [value]="f.prdFile.value?.name || ''" 
+                  placeholder="No file selected"
+                  readonly>
+                <button
+                  mat-icon-button
+                  matSuffix
+                  color="primary"
+                  (click)="fileInput.click()"
+                  matTooltip="Choose PRD file">
+                  <mat-icon>attach_file</mat-icon>
+                </button>
+              </mat-form-field>
+
+              <input
+                #fileInput
+                type="file"
+                class="hidden-input"
+                (change)="onPRDSelected($event)"
+                accept=".pdf,.doc,.docx,.md,.txt,.json" />
+
+              <button 
+                mat-stroked-button 
+                *ngIf="f.prdFile.value" 
+                (click)="clearPRD(fileInput)"
+                color="warn"
+                class="clear-file-btn">
+                <mat-icon>delete</mat-icon>
+                Remove File
+              </button>
+            </div>
+
+            <div class="prd-info" *ngIf="f.prdFile.value">
+              <mat-icon class="file-icon">description</mat-icon>
+              <div class="file-details">
+                <strong>{{ f.prdFile.value.name }}</strong>
+                <span>{{ (f.prdFile.value.size / 1024 / 1024).toFixed(2) }} MB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Generate Button -->
+      <div class="generate-section">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          [disabled]="!isValid() || isSubmitting()"
+          class="generate-btn">
+          <mat-icon>{{ isSubmitting() ? 'hourglass_empty' : 'rocket_launch' }}</mat-icon>
+          {{ isSubmitting() ? 'Generating...' : 'Generate Project' }}
+        </button>
+        
+        <p class="generate-description">
+          This will create a customized full-stack project based on your configuration
+        </p>
+      </div>
+    </form>
+  </div>
+
+  <!-- Configuration Summary -->
+  <div class="summary-section">
+    <mat-card class="summary-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>preview</mat-icon>
+          Configuration Summary
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <mat-icon class="summary-icon">memory</mat-icon>
+            <div class="summary-content">
+              <strong>Backend</strong>
+              <span>{{ f.springBootVersion.value || 'Not selected' }}</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <mat-icon class="summary-icon">web</mat-icon>
+            <div class="summary-content">
+              <strong>Frontend</strong>
+              <span>Angular {{ f.angularVersion.value || 'Not selected' }}</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <mat-icon class="summary-icon">folder</mat-icon>
+            <div class="summary-content">
+              <strong>Project Name</strong>
+              <span>{{ f.applicationName.value || 'Not specified' }}</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <mat-icon class="summary-icon">storage</mat-icon>
+            <div class="summary-content">
+              <strong>Databases</strong>
+              <span>{{ selectedDatabasesCount() }} selected</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <mat-icon class="summary-icon">security</mat-icon>
+            <div class="summary-content">
+              <strong>Authentication</strong>
+              <span>{{ selectedAuthCount() }} method{{ selectedAuthCount() !== 1 ? 's' : '' }}</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <mat-icon class="summary-icon">cloud</mat-icon>
+            <div class="summary-content">
+              <strong>Deployment</strong>
+              <span>{{ selectedDeploymentCount() }} platform{{ selectedDeploymentCount() !== 1 ? 's' : '' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Options Preview -->
+        <div class="options-preview" *ngIf="selectedDatabasesCount() > 0">
+          <h4>Selected Options</h4>
+          
+          <div class="option-chips" *ngIf="selectedDatabasesCount() > 0">
+            <span class="chip-label">Databases:</span>
+            <mat-chip-set>
+              <mat-chip *ngFor="let db of f.databases.value" color="primary" selected>
+                {{ db }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <div class="option-chips" *ngIf="selectedAuthCount() > 0">
+            <span class="chip-label">Authentication:</span>
+            <mat-chip-set>
+              <mat-chip *ngFor="let auth of f.authentication.value" color="accent" selected>
+                {{ auth }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <div class="option-chips" *ngIf="selectedDeploymentCount() > 0">
+            <span class="chip-label">Deployment:</span>
+            <mat-chip-set>
+              <mat-chip *ngFor="let deploy of f.deployment.value" color="warn" selected>
+                {{ deploy }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

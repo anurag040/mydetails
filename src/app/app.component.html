@@ -1,0 +1,10 @@
+<header class="app-header" [class.dark]="themeService.isDark()">
+  <div class="title">Architect Forge</div>
+  <div class="spacer"></div>
+  <button mat-icon-button (click)="themeService.toggleTheme()" [attr.aria-label]="themeLabel()">
+    <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
+</header>
+<main class="app-main">
+  <router-outlet />
+</main>

@@ -1,0 +1,1 @@
+{"ast":null,"code":"import { WizardComponent } from './wizard/wizard.component';\nexport const routes = [{\n  path: '',\n  component: WizardComponent\n}, {\n  path: '**',\n  redirectTo: ''\n}];","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}

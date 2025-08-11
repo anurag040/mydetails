@@ -1,0 +1,71 @@
+<div class="wizard-shell">
+  <h1 class="hero-title gradient-text">Project Blueprint Generator</h1>
+  <div class="selection-bar" *ngIf="selectionChips().length">
+    <mat-chip-set>
+      <mat-chip *ngFor="let c of selectionChips()" color="primary" selected>{{ c }}</mat-chip>
+    </mat-chip-set>
+  </div>
+  <mat-horizontal-stepper [linear]="false" class="glass">
+    <mat-step label="Base Stack">
+      <form [formGroup]="baseForm" class="panel">
+        <div class="option-group">
+          <label class="group-label">Choose a base application stack</label>
+          <mat-radio-group formControlName="baseStack" class="radio-col">
+            <mat-radio-button *ngFor="let opt of baseStacks" [value]="opt.id">{{ opt.label }}</mat-radio-button>
+          </mat-radio-group>
+        </div>
+        <div class="actions"><button mat-raised-button color="primary" matStepperNext [disabled]="!baseForm.valid">Next</button></div>
+      </form>
+    </mat-step>
+    <mat-step label="Databases">
+      <form [formGroup]="dbForm" class="panel">
+        <label class="group-label">Select databases</label>
+        <mat-select formControlName="databases" multiple placeholder="Databases">
+          <mat-option *ngFor="let db of databaseOptions" [value]="db.id">{{ db.label }}</mat-option>
+        </mat-select>
+        <div class="chip-row" *ngIf="dbForm.value.databases?.length">
+          <mat-chip *ngFor="let db of dbForm.value.databases" color="primary" selected>{{ db }}</mat-chip>
+        </div>
+        <div class="actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-raised-button color="primary" matStepperNext>Next</button>
+        </div>
+      </form>
+    </mat-step>
+    <mat-step label="Auth & DevOps">
+      <form [formGroup]="metaForm" class="panel">
+        <label class="group-label">Authentication Providers</label>
+        <mat-select formControlName="auth" multiple placeholder="Auth Providers">
+          <mat-option *ngFor="let a of authOptions" [value]="a.id">{{ a.label }}</mat-option>
+        </mat-select>
+        <label class="group-label mt">DevOps / Tooling</label>
+        <mat-select formControlName="tooling" multiple placeholder="Tooling (Docker, CI, etc)">
+          <mat-option *ngFor="let t of toolingOptions" [value]="t.id">{{ t.label }}</mat-option>
+        </mat-select>
+        <div class="actions">
+          <button mat-button matStepperPrevious>Back</button>
+          <button mat-raised-button color="primary" matStepperNext>Review</button>
+        </div>
+      </form>
+    </mat-step>
+    <mat-step label="Review">
+      <div class="panel review">
+        <h2>Summary</h2>
+        <div class="summary-grid">
+          <div><strong>Base:</strong> {{ baseForm.value.baseStack }}</div>
+            <div><strong>Databases:</strong> {{ dbForm.value.databases?.join(', ') || '—' }}</div>
+            <div><strong>Auth:</strong> {{ metaForm.value.auth?.join(', ') || '—' }}</div>
+            <div><strong>Tooling:</strong> {{ metaForm.value.tooling?.join(', ') || '—' }}</div>
+            <div><strong>PRD:</strong> {{ prdFileName() || 'Not uploaded' }}</div>
+        </div>
+        <div class="upload mt">
+          <input type="file" (change)="onFile($event)" accept=".pdf,.doc,.docx,.md,.txt" />
+        </div>
+        <div class="actions">
+          <button mat-button matStepperPrevious>Edit</button>
+          <button mat-raised-button color="accent" (click)="emitGenerate()">Generate ZIP</button>
+        </div>
+      </div>
+    </mat-step>
+  </mat-horizontal-stepper>
+</div>

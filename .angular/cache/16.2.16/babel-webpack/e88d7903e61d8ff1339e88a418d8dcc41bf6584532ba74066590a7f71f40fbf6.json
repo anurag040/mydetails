@@ -1,0 +1,1 @@
+{"ast":null,"code":"\"use strict\";\n\n// Polyfills for Angular if needed. Zone.js already added via angular.json polyfills array if desired.\n// This file can stay mostly empty for modern evergreen browsers.","map":null,"metadata":{},"sourceType":"script","externalDependencies":[]}

@@ -1,0 +1,543 @@
+{
+  "meta": {
+    "prd_id": "PRD-ACME-001",
+    "name": "Customer Onboarding Portal",
+    "version": "1.0.0",
+    "owner": "Anurag Sharma",
+    "stakeholders": [
+      "Ops",
+      "Compliance",
+      "Support"
+    ],
+    "created_at": "2025-08-12T07:45:00Z",
+    "last_updated": "2025-08-12T07:45:00Z",
+    "source_prd": "Raw PRD text pasted or link here",
+    "tags": [
+      "onboarding",
+      "kyc"
+    ],
+    "status": "approved"
+  },
+  "tech_stack": {
+    "frontend": {
+      "framework": "Angular",
+      "language": "TypeScript",
+      "version": "17",
+      "ui_library": "Angular Material",
+      "state_mgmt": "NGRX",
+      "routing": true
+    },
+    "backend": {
+      "framework": "Spring Boot",
+      "language": "Java",
+      "version": "3.3.2",
+      "build_tool": "Maven",
+      "spring_boot_version": "3.3.2",
+      "java_version": "17"
+    },
+    "database": {
+      "engine": "PostgreSQL",
+      "version": "15",
+      "connection": "jdbc:postgresql://db:5432/onboarding",
+      "schemas": [
+        "public"
+      ]
+    },
+    "infra": {
+      "cloud": "Azure",
+      "containerization": true,
+      "orchestration": "Kubernetes",
+      "ci_cd": "GitHub Actions",
+      "artifact_registry": "Azure Container Registry"
+    }
+  },
+  "architecture": {
+    "style": "modular-monolith",
+    "modules": [
+      {
+        "id": "mod-auth",
+        "name": "Auth",
+        "description": "OIDC login + roles",
+        "depends_on": []
+      },
+      {
+        "id": "mod-kyc",
+        "name": "KYC",
+        "description": "KYC forms & checks",
+        "depends_on": [
+          "mod-auth"
+        ]
+      },
+      {
+        "id": "mod-admin",
+        "name": "Admin",
+        "description": "User mgmt & reports",
+        "depends_on": [
+          "mod-auth",
+          "mod-kyc"
+        ]
+      }
+    ],
+    "cross_cutting": {
+      "auth": "OIDC (Azure AD) with JWT to backend",
+      "logging": "SLF4J + ELK",
+      "monitoring": "Micrometer + Prometheus",
+      "caching": "Caffeine",
+      "i18n": true,
+      "feature_flags": true
+    },
+    "non_functional": {
+      "performance": "P95 < 300ms for API",
+      "availability": "99.9%",
+      "security": "OWASP ASVS L2",
+      "privacy": "PII masked at rest",
+      "compliance": "KYC/AML logging for 7 years"
+    }
+  },
+  "features": [
+    {
+      "id": "F001",
+      "title": "User Registration",
+      "description": "Signup with email OTP",
+      "priority": "P0",
+      "acceptance_criteria": [
+        "Given a unique email, when user signs up, then an OTP is sent",
+        "OTP expires in 5 minutes"
+      ],
+      "module_ref": "mod-auth"
+    },
+    {
+      "id": "F002",
+      "title": "KYC Form",
+      "description": "Multi-step form with document upload",
+      "priority": "P0",
+      "acceptance_criteria": [
+        "Must support PAN & Aadhaar fields",
+        "Uploads limited to 10MB per file"
+      ],
+      "module_ref": "mod-kyc",
+      "depends_on": [
+        "F001"
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "W001",
+      "name": "New Customer Signup",
+      "actors": [
+        "Guest",
+        "System"
+      ],
+      "preconditions": [
+        "Guest has not registered"
+      ],
+      "postconditions": [
+        "Account created, KYC pending"
+      ],
+      "steps": [
+        "Navigate to /signup",
+        "Enter email & password",
+        "Receive OTP, verify",
+        "Redirect to /kyc"
+      ],
+      "ui_pages": [
+        "pg-signup",
+        "pg-kyc"
+      ],
+      "apis": [
+        "api-auth",
+        "api-kyc"
+      ]
+    }
+  ],
+  "data": {
+    "models": [
+      {
+        "id": "m-user",
+        "name": "User",
+        "table": "users",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "pk": true,
+            "nullable": false,
+            "fk": false
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR(255)",
+            "nullable": false
+          },
+          {
+            "name": "password_hash",
+            "type": "VARCHAR(255)",
+            "nullable": false
+          },
+          {
+            "name": "created_at",
+            "type": "TIMESTAMP",
+            "nullable": false
+          }
+        ],
+        "validation_rules": [
+          "email must be valid"
+        ],
+        "indexes": [
+          "idx_users_email"
+        ]
+      },
+      {
+        "id": "m-kyc",
+        "name": "KycRecord",
+        "table": "kyc_records",
+        "fields": [
+          {
+            "name": "id",
+            "type": "UUID",
+            "pk": true,
+            "nullable": false,
+            "fk": false
+          },
+          {
+            "name": "user_id",
+            "type": "UUID",
+            "fk": true,
+            "references": "users.id",
+            "nullable": false
+          },
+          {
+            "name": "pan",
+            "type": "VARCHAR(10)",
+            "nullable": false
+          },
+          {
+            "name": "aadhaar",
+            "type": "VARCHAR(12)",
+            "nullable": true
+          },
+          {
+            "name": "status",
+            "type": "VARCHAR(16)",
+            "nullable": false
+          }
+        ]
+      }
+    ],
+    "seed_data": {
+      "roles": [
+        {
+          "name": "ADMIN"
+        },
+        {
+          "name": "USER"
+        }
+      ]
+    }
+  },
+  "apis": [
+    {
+      "id": "api-auth",
+      "name": "Auth API",
+      "base_path": "/api/auth",
+      "auth": "OIDC",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/register",
+          "operation_id": "registerUser",
+          "summary": "Register with email & password",
+          "request": {
+            "body_model_ref": "m-user"
+          },
+          "responses": [
+            {
+              "status": 201,
+              "model_ref": "m-user"
+            }
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/otp/verify",
+          "operation_id": "verifyOtp",
+          "request": {
+            "query_params": {
+              "email": "string",
+              "otp": "string"
+            }
+          },
+          "responses": [
+            {
+              "status": 200,
+              "model_ref": "m-user"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "api-kyc",
+      "name": "KYC API",
+      "base_path": "/api/kyc",
+      "auth": "JWT",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/submit",
+          "operation_id": "submitKyc",
+          "request": {
+            "body_model_ref": "m-kyc"
+          },
+          "responses": [
+            {
+              "status": 202,
+              "model_ref": "m-kyc"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "frontend": {
+    "routes": [
+      "/signup",
+      "/kyc",
+      "/admin"
+    ],
+    "pages": [
+      {
+        "id": "pg-signup",
+        "name": "Signup Page",
+        "route": "/signup",
+        "layout": "centered-card",
+        "auth_required": false,
+        "widgets": [
+          {
+            "type": "Form",
+            "props": {
+              "fields": [
+                "email",
+                "password"
+              ],
+              "submitApi": "api-auth.registerUser"
+            }
+          },
+          {
+            "type": "OtpDialog",
+            "props": {
+              "verifyApi": "api-auth.verifyOtp"
+            }
+          }
+        ]
+      },
+      {
+        "id": "pg-kyc",
+        "name": "KYC Page",
+        "route": "/kyc",
+        "layout": "two-column",
+        "auth_required": true,
+        "widgets": [
+          {
+            "type": "Stepper",
+            "props": {
+              "steps": [
+                "Personal",
+                "Documents",
+                "Review"
+              ]
+            }
+          },
+          {
+            "type": "Upload",
+            "props": {
+              "maxSizeMB": 10,
+              "accept": [
+                "image/*",
+                "application/pdf"
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "components": [
+      {
+        "id": "cmp-otp",
+        "name": "OtpDialogComponent",
+        "inputs": [
+          "email"
+        ],
+        "outputs": [
+          "verified"
+        ]
+      }
+    ]
+  },
+  "backend": {
+    "services": [
+      {
+        "id": "svc-user",
+        "name": "UserService",
+        "methods": [
+          "register",
+          "verifyOtp"
+        ],
+        "depends_on": [
+          "repo-user",
+          "svc-otp"
+        ]
+      },
+      {
+        "id": "svc-kyc",
+        "name": "KycService",
+        "methods": [
+          "submit"
+        ],
+        "depends_on": [
+          "repo-kyc",
+          "svc-storage"
+        ]
+      }
+    ],
+    "repositories": [
+      {
+        "id": "repo-user",
+        "entity_ref": "m-user",
+        "methods": [
+          "save",
+          "findByEmail"
+        ]
+      },
+      {
+        "id": "repo-kyc",
+        "entity_ref": "m-kyc",
+        "methods": [
+          "save",
+          "findByUserId"
+        ]
+      }
+    ],
+    "controllers": [
+      {
+        "id": "ctrl-auth",
+        "api_ref": "api-auth"
+      },
+      {
+        "id": "ctrl-kyc",
+        "api_ref": "api-kyc"
+      }
+    ]
+  },
+  "quality": {
+    "testing": {
+      "unit": [
+        "UserService.register creates user"
+      ],
+      "integration": [
+        "POST /api/auth/register returns 201"
+      ],
+      "e2e": [
+        "Signup -> OTP -> KYC happy path"
+      ]
+    },
+    "linting": {
+      "frontend": "eslint + prettier",
+      "backend": "spotless + checkstyle"
+    },
+    "security_checks": [
+      "OWASP dependency check",
+      "SAST"
+    ],
+    "observability": {
+      "metrics": [
+        "http_server_requests_seconds"
+      ],
+      "logs": [
+        "audit logs"
+      ],
+      "traces": [
+        "/api/*"
+      ]
+    }
+  },
+  "delivery": {
+    "repo_layout": {
+      "root": "/",
+      "frontend_path": "frontend/",
+      "backend_path": "backend/",
+      "package_group": "com.acme.onboarding",
+      "naming": {
+        "controller_suffix": "Controller",
+        "service_suffix": "Service",
+        "entity_suffix": "Entity"
+      }
+    },
+    "codegen_targets": [
+      {
+        "id": "tg-fe-pages",
+        "type": "frontend",
+        "language": "TypeScript",
+        "path": "frontend/src/app/pages",
+        "templates": [
+          "page.component.ts.hbs",
+          "page.component.html.hbs"
+        ]
+      },
+      {
+        "id": "tg-fe-services",
+        "type": "frontend",
+        "language": "TypeScript",
+        "path": "frontend/src/app/services",
+        "templates": [
+          "api.service.ts.hbs"
+        ]
+      },
+      {
+        "id": "tg-be-controllers",
+        "type": "backend",
+        "language": "Java",
+        "path": "backend/src/main/java/com/acme/onboarding/controllers",
+        "templates": [
+          "Controller.java.hbs"
+        ]
+      },
+      {
+        "id": "tg-be-services",
+        "type": "backend",
+        "language": "Java",
+        "path": "backend/src/main/java/com/acme/onboarding/services",
+        "templates": [
+          "Service.java.hbs"
+        ]
+      },
+      {
+        "id": "tg-be-repos",
+        "type": "backend",
+        "language": "Java",
+        "path": "backend/src/main/java/com/acme/onboarding/repositories",
+        "templates": [
+          "Repository.java.hbs"
+        ]
+      },
+      {
+        "id": "tg-sql",
+        "type": "backend",
+        "language": "SQL",
+        "path": "backend/src/main/resources/db/migration",
+        "templates": [
+          "V1__init.sql.hbs"
+        ]
+      }
+    ],
+    "prompts": {
+      "frontend_agent": "Generate Angular routes, pages, and components per `frontend` section. Use Angular 17 standalone components, Material UI, strict typing. Respect `delivery.repo_layout.frontend_path` and `codegen_targets`.",
+      "backend_agent": "Generate Spring Boot 3.3 code with Java 17. Map `apis` to `controllers`, `data.models` to JPA entities, and `repositories` as Spring Data JPA. Respect package group and write files under `delivery.repo_layout.backend_path`.",
+      "api_agent": "Ensure all `apis` are consistent with `data.models`, add DTOs as needed, and produce OpenAPI 3 YAML under `backend/src/main/resources`.",
+      "db_agent": "Generate schema DDL and migration scripts from `data.models`. Seed data as specified in `data.seed_data`.",
+      "qa_agent": "Generate JUnit + Testcontainers tests backend; Cypress tests frontend based on `quality.testing` scenarios.",
+      "orchestrator": "Resolve dependencies: models -> repos -> services -> controllers; pages -> components -> services. Parallelize by module; enforce acceptance criteria."
+    }
+  }
+}

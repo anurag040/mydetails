@@ -263,14 +263,15 @@ export class ProjectGeneratorComponent {
   private generateWithPRD(prdFile: File, config: Selection) {
     this.isUploading.set(true);
     
-    // Step 1: Upload PRD and start processing
+    // Upload PRD - backend will automatically start generation when processing completes
     this.projectService.uploadPRD(prdFile, config.projectName || 'Generated Project').subscribe({
       next: (session) => {
         this.isUploading.set(false);
-        this.snack.open('PRD uploaded successfully! Starting generation...', 'OK', { duration: 3000 });
+        this.isGenerating.set(true);
+        this.snack.open('PRD uploaded successfully! Processing and generating...', 'OK', { duration: 3000 });
         
-        // Step 2: Start project generation with configuration
-        this.startProjectGeneration(session.sessionId, config);
+        // Monitor the entire process (processing + generation)
+        this.monitorPRDProcessingAndGeneration(session.sessionId, config);
       },
       error: (error) => {
         this.isUploading.set(false);
@@ -312,6 +313,37 @@ export class ProjectGeneratorComponent {
         this.isGenerating.set(false);
         this.snack.open('Project generation failed. Please try again.', 'OK', { duration: 5000 });
         console.error('Generation error:', error);
+      }
+    });
+  }
+
+  private monitorPRDProcessingAndGeneration(sessionId: string, config: Selection) {
+    this.projectService.pollGenerationStatus(sessionId, 3000).subscribe({
+      next: (status) => {
+        if (status.status === 'PROCESSING') {
+          // PRD is still being processed, continue polling
+          console.log('PRD processing in progress...');
+        } else if (status.status === 'GENERATING') {
+          // PRD processing completed, generation started
+          console.log('PRD processing completed, project generation in progress...');
+        } else if (status.status === 'COMPLETED') {
+          this.isGenerating.set(false);
+          this.snack.open('Project generated successfully! Downloading...', 'OK', { duration: 3000 });
+          
+          // Automatically download the project ZIP
+          this.downloadProject(sessionId);
+        } else if (status.status === 'FAILED') {
+          this.isGenerating.set(false);
+          this.snack.open(`Generation failed: ${status.error || 'Unknown error'}`, 'OK', { duration: 5000 });
+        } else if (status.status === 'CANCELLED') {
+          this.isGenerating.set(false);
+          this.snack.open('Project generation was cancelled.', 'OK', { duration: 3000 });
+        }
+      },
+      error: (error) => {
+        this.isGenerating.set(false);
+        this.snack.open('Failed to monitor generation progress.', 'OK', { duration: 5000 });
+        console.error('Polling error:', error);
       }
     });
   }

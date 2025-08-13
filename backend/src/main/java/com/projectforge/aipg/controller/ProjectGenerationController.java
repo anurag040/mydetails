@@ -22,7 +22,6 @@ import java.util.concurrent.CompletableFuture;
  */
 @RestController
 @RequestMapping("/api/projects")
-@CrossOrigin(origins = "*") // Configure properly for production
 public class ProjectGenerationController {
     
     private static final Logger logger = LoggerFactory.getLogger(ProjectGenerationController.class);
@@ -60,14 +59,25 @@ public class ProjectGenerationController {
             // Generate session ID for tracking
             String sessionId = UUID.randomUUID().toString();
             
-            // Process PRD asynchronously
+            // Process PRD asynchronously and automatically start generation when done
             CompletableFuture<ProjectBlueprint> blueprintFuture = 
                 prdProcessingService.processPRDAsync(file, projectName, sessionId);
+            
+            // Chain the project generation after PRD processing completes
+            blueprintFuture.thenAccept(blueprint -> {
+                if (blueprint != null) {
+                    logger.info("PRD processing completed for session: {}, starting project generation", sessionId);
+                    // Automatically start project generation with the blueprint
+                    projectGenerationService.generateProjectFromBlueprint(sessionId, blueprint);
+                } else {
+                    logger.error("PRD processing failed for session: {}", sessionId);
+                }
+            });
             
             return ResponseEntity.accepted()
                 .body(Map.of(
                     "sessionId", sessionId,
-                    "message", "PRD upload successful. Processing started.",
+                    "message", "PRD upload successful. Processing and generation started.",
                     "status", "PROCESSING"
                 ));
                 

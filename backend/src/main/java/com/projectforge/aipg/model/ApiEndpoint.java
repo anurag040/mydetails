@@ -1,12 +1,14 @@
 package com.projectforge.aipg.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 
 /**
  * API endpoint definition
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiEndpoint {
     private String path;
     private String method;
@@ -39,6 +41,7 @@ public class ApiEndpoint {
     public List<String> getSecurity() { return security; }
     public void setSecurity(List<String> security) { this.security = security; }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Parameter {
         private String name;
         private String type;
@@ -64,6 +67,7 @@ public class ApiEndpoint {
         public void setDescription(String description) { this.description = description; }
     }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RequestBody {
         private String contentType;
         private Map<String, Object> schema;
@@ -77,6 +81,7 @@ public class ApiEndpoint {
         public void setSchema(Map<String, Object> schema) { this.schema = schema; }
     }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ResponseBody {
         private String contentType;
         private Map<String, Object> schema;

@@ -1,6 +1,8 @@
 package com.projectforge.aipg.agent;
 
 import com.projectforge.aipg.model.ProjectBlueprint;
+import com.projectforge.aipg.service.PRDProcessingService;
+import com.projectforge.aipg.util.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -20,34 +22,94 @@ public class PRDAnalystAgent implements ProjectAgent {
     private static final Logger logger = LoggerFactory.getLogger(PRDAnalystAgent.class);
     
     private final ChatClient chatClient;
+    private final JsonUtils jsonUtils;
     
     private static final String PRD_ANALYSIS_PROMPT = """
-        You are an expert software architect and business analyst. Analyze the following PRD (Product Requirements Document) 
-        and create a comprehensive JSON blueprint for a software project.
+        You are an expert software architect and business analyst. Analyze the PRD and create a comprehensive JSON blueprint.
         
         PRD Content: {prdContent}
-        Technology Stack: {technologyStack}
+        Current Blueprint: {blueprint}
         
-        Please analyze this PRD and create a detailed JSON blueprint with the following structure:
+        CRITICAL REQUIREMENTS:
+        1. Return ONLY a valid JSON object matching the ProjectBlueprint structure EXACTLY
+        2. Extract REAL, SPECIFIC requirements from the PRD - not generic examples
+        3. Create comprehensive project structure based on actual PRD content
         
-        1. PROJECT_INFO: Extract project name, description, version, and package naming
-        2. FEATURES: Identify all features, user stories, and acceptance criteria
-        3. DATABASE_SCHEMA: Design entities, relationships, and field specifications
-        4. API_ENDPOINTS: Define REST endpoints based on functionality requirements
-        5. FRONTEND_COMPONENTS: Identify UI components and their relationships
-        6. BUSINESS_LOGIC: Extract business rules and validation requirements
-        7. AUTHENTICATION: Determine auth requirements and user roles
-        8. DEPLOYMENT: Suggest deployment configuration
-        9. TESTING: Define testing strategy and test cases
+        Required JSON Structure:
+        {{
+          "project_info": {{
+            "name": "extracted from PRD",
+            "description": "based on PRD",
+            "version": "1.0.0",
+            "package_name": "com.extracted.projectname"
+          }},
+          "technology_stack": {{
+            "backend": {{
+              "framework": "Spring Boot",
+              "version": "3.2.0",
+              "language": "Java",
+              "runtime": "JDK 17"
+            }},
+            "frontend": {{
+              "framework": "Angular",
+              "version": "17.0.0",
+              "ui_libraries": ["Angular Material"]
+            }},
+            "database": {{
+              "type": "PostgreSQL",
+              "version": "15.0",
+              "additional": ["Connection Pooling"]
+            }},
+            "build_tool": "Maven"
+          }},
+          "features": [
+            {{
+              "id": "extracted-feature-1",
+              "name": "Feature Name from PRD",
+              "description": "Detailed description from PRD",
+              "priority": "HIGH/MEDIUM/LOW",
+              "user_stories": ["Story 1 from PRD", "Story 2 from PRD"]
+            }}
+          ],
+          "api_endpoints": [
+            {{
+              "path": "/api/feature-endpoint",
+              "method": "GET/POST/PUT/DELETE",
+              "description": "Purpose from PRD"
+            }}
+          ],
+          "database_schema": {{
+            "entities": [
+              {{
+                "name": "EntityName",
+                "table_name": "entity_table",
+                "fields": [
+                  {{
+                    "name": "field_name",
+                    "type": "VARCHAR(255)",
+                    "nullable": false,
+                    "primary_key": true
+                  }}
+                ]
+              }}
+            ]
+          }}
+        }}
         
-        Return ONLY valid JSON matching the ProjectBlueprint structure. Be comprehensive and detailed.
-        Ensure all field names match exactly with the Java model classes.
+        EXTRACT FROM PRD:
+        - Project name and purpose
+        - Core business entities and their attributes
+        - User workflows and features
+        - API requirements
+        - Data relationships
+        - Business rules
         
-        Focus on creating actionable, specific requirements that other AI agents can use to generate actual code.
+        RETURN ONLY THE COMPLETE JSON - NO EXPLANATIONS OR MARKDOWN
         """;
     
-    public PRDAnalystAgent(ChatClient chatClient) {
+    public PRDAnalystAgent(ChatClient chatClient, JsonUtils jsonUtils) {
         this.chatClient = chatClient;
+        this.jsonUtils = jsonUtils;
     }
     
     @Override
@@ -79,15 +141,15 @@ public class PRDAnalystAgent implements ProjectAgent {
             try {
                 logger.info("PRD Analyst Agent starting analysis...");
                 
-                // For now, this would take PRD content from somewhere
-                // In a real implementation, you'd extract this from the uploaded file
-                String prdContent = "Sample PRD content"; // This would come from file processing
-                String technologyStack = formatTechnologyStack(blueprint);
+                // For now, we'll work with the current blueprint structure
+                // The PRD content would be injected via a different mechanism
+                String prdContent = "Sample PRD content - to be extracted from actual uploaded file";
+                String blueprintJson = jsonUtils.convertBlueprintToJson(blueprint);
                 
                 PromptTemplate promptTemplate = new PromptTemplate(PRD_ANALYSIS_PROMPT);
                 Prompt prompt = promptTemplate.create(Map.of(
                     "prdContent", prdContent,
-                    "technologyStack", technologyStack
+                    "blueprint", blueprintJson
                 ));
                 
                 String analysis = chatClient.prompt(prompt).call().content();
@@ -110,28 +172,41 @@ public class PRDAnalystAgent implements ProjectAgent {
         });
     }
     
-    private String formatTechnologyStack(ProjectBlueprint blueprint) {
-        if (blueprint.getTechnologyStack() == null) {
-            return "Not specified";
-        }
-        
-        StringBuilder sb = new StringBuilder();
-        var techStack = blueprint.getTechnologyStack();
-        
-        if (techStack.getFrontend() != null) {
-            sb.append("Frontend: ").append(techStack.getFrontend().getFramework())
-              .append(" ").append(techStack.getFrontend().getVersion()).append("\n");
-        }
-        
-        if (techStack.getBackend() != null) {
-            sb.append("Backend: ").append(techStack.getBackend().getFramework())
-              .append(" ").append(techStack.getBackend().getVersion()).append("\n");
-        }
-        
-        if (techStack.getDatabase() != null) {
-            sb.append("Database: ").append(techStack.getDatabase().getType()).append("\n");
-        }
-        
-        return sb.toString();
+    /**
+     * Process PRD with actual content
+     */
+    public CompletableFuture<AgentResult> processPRDContent(String prdContent, ProjectBlueprint blueprint) {
+        return CompletableFuture.supplyAsync(() -> {
+            long startTime = System.currentTimeMillis();
+            
+            try {
+                logger.info("PRD Analyst Agent starting analysis with actual PRD content...");
+                
+                String blueprintJson = jsonUtils.convertBlueprintToJson(blueprint);
+                
+                PromptTemplate promptTemplate = new PromptTemplate(PRD_ANALYSIS_PROMPT);
+                Prompt prompt = promptTemplate.create(Map.of(
+                    "prdContent", prdContent,
+                    "blueprint", blueprintJson
+                ));
+                
+                String analysis = chatClient.prompt(prompt).call().content();
+                
+                logger.info("PRD analysis with actual content completed successfully");
+                
+                long processingTime = System.currentTimeMillis() - startTime;
+                return AgentResult.success(getAgentName(), 
+                    "PRD analysis completed successfully with actual content", 
+                    analysis, 
+                    processingTime);
+                
+            } catch (Exception e) {
+                logger.error("PRD analysis with actual content failed", e);
+                long processingTime = System.currentTimeMillis() - startTime;
+                return AgentResult.failure(getAgentName(), 
+                    "PRD analysis failed: " + e.getMessage(), 
+                    processingTime);
+            }
+        });
     }
 }

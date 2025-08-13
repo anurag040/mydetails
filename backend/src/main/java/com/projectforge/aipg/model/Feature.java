@@ -1,12 +1,14 @@
 package com.projectforge.aipg.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Represents a feature from the PRD
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Feature {
     private String id;
     private String name;

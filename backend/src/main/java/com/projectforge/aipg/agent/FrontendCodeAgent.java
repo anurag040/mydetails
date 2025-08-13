@@ -1,6 +1,7 @@
 package com.projectforge.aipg.agent;
 
 import com.projectforge.aipg.model.ProjectBlueprint;
+import com.projectforge.aipg.util.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -20,70 +21,61 @@ public class FrontendCodeAgent implements ProjectAgent {
     private static final Logger logger = LoggerFactory.getLogger(FrontendCodeAgent.class);
     
     private final ChatClient chatClient;
+    private final JsonUtils jsonUtils;
     
     private static final String FRONTEND_GENERATION_PROMPT = """
-        You are an expert Angular developer. Based on the project blueprint provided, 
-        generate complete, production-ready Angular frontend code.
+        You are an expert Angular developer. Generate a complete, production-ready Angular application based on the detailed blueprint.
         
         Project Blueprint: {blueprint}
         
-        Generate the following Angular components:
+        CRITICAL REQUIREMENTS:
+        1. Return ONLY a JSON object with this exact structure:
+        {{
+          "files": {{
+            "filepath1": "complete file content",
+            "filepath2": "complete file content"
+          }}
+        }}
         
-        1. COMPONENTS:
-           - Create Angular components for all UI features
-           - Include TypeScript, HTML, and CSS files
-           - Use Angular best practices (standalone components, signals, etc.)
-           - Implement proper component lifecycle
-           - Add input/output properties and event handling
+        2. Generate ALL these files with complete, working code:
+           - package.json (with all required dependencies)
+           - angular.json (Angular workspace configuration)
+           - tsconfig.json (TypeScript configuration)
+           - src/main.ts (Bootstrap file)
+           - src/index.html (Main HTML)
+           - src/styles.css (Global styles)
+           - src/app/app.component.* (Root component with template, styles, spec)
+           - src/app/app.config.ts (App configuration)
+           - src/app/app.routes.ts (Routing configuration)
+           - src/app/components/*/*.* (Components for ALL features from blueprint)
+           - src/app/services/*.service.ts (Services for ALL API endpoints)
+           - src/app/models/*.ts (TypeScript interfaces for ALL entities)
+           - src/app/guards/*.guard.ts (Route guards if authentication required)
         
-        2. SERVICES:
-           - Create Angular services for API communication
-           - Implement HTTP client calls to backend endpoints
-           - Add proper error handling and loading states
-           - Use dependency injection
+        3. Extract requirements from blueprint:
+           - Create components for blueprint.features
+           - Generate services for blueprint.apiEndpoints
+           - Create models from blueprint.databaseSchema.entities
+           - Use blueprint.technologyStack.frontend.uiLibraries for UI
+           - Implement routing between all components
         
-        3. MODELS/INTERFACES:
-           - Create TypeScript interfaces for data models
-           - Match backend DTOs and entities
-           - Include proper typing for all data structures
+        4. MAKE ALL CODE PRODUCTION-READY:
+           - Reactive forms with validation
+           - HTTP error handling
+           - Loading states and spinners
+           - Responsive design with Angular Material
+           - Proper TypeScript types
+           - Authentication handling
+           - CRUD operations for all entities
         
-        4. ROUTING:
-           - Set up Angular routing configuration
-           - Create route guards if authentication is required
-           - Implement lazy loading for feature modules
+        5. Generate working code that compiles and runs immediately
         
-        5. FORMS:
-           - Create reactive forms for data input
-           - Add form validation (both template and custom validators)
-           - Implement proper form submission and error handling
-        
-        6. UI INTEGRATION:
-           - Use specified UI library (Angular Material, PrimeNG, etc.)
-           - Create responsive layouts
-           - Implement proper styling and theming
-           - Add loading indicators and error messages
-        
-        7. STATE MANAGEMENT:
-           - Implement proper state management using signals or services
-           - Handle loading, error, and success states
-           - Manage user authentication state
-        
-        Requirements:
-        - Use Angular 16+ with standalone components
-        - Follow Angular style guide and best practices
-        - Use reactive programming with RxJS
-        - Implement proper error handling
-        - Add comprehensive TypeScript typing
-        - Make code production-ready and compilable
-        - Include proper component communication
-        - Use modern Angular features (signals, control flow, etc.)
-        
-        Return the complete code structure as a JSON object with file paths and content.
-        Structure: {"files": [{"path": "src/app/...", "content": "..."}]}
+        RETURN ONLY THE JSON OBJECT WITH COMPLETE FILES - NO EXPLANATIONS OR MARKDOWN
         """;
     
-    public FrontendCodeAgent(ChatClient chatClient) {
+    public FrontendCodeAgent(ChatClient chatClient, JsonUtils jsonUtils) {
         this.chatClient = chatClient;
+        this.jsonUtils = jsonUtils;
     }
     
     @Override
@@ -116,7 +108,7 @@ public class FrontendCodeAgent implements ProjectAgent {
             try {
                 logger.info("Frontend Code Agent starting code generation...");
                 
-                String blueprintJson = convertBlueprintToJson(blueprint);
+                String blueprintJson = jsonUtils.convertBlueprintToJson(blueprint);
                 
                 PromptTemplate promptTemplate = new PromptTemplate(FRONTEND_GENERATION_PROMPT);
                 Prompt prompt = promptTemplate.create(Map.of("blueprint", blueprintJson));
@@ -139,11 +131,5 @@ public class FrontendCodeAgent implements ProjectAgent {
                     processingTime);
             }
         });
-    }
-    
-    private String convertBlueprintToJson(ProjectBlueprint blueprint) {
-        // Convert blueprint to JSON string
-        // This would use Jackson ObjectMapper in a real implementation
-        return "{}"; // Placeholder
     }
 }

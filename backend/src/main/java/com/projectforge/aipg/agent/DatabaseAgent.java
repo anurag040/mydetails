@@ -27,7 +27,7 @@ public class DatabaseAgent implements ProjectAgent {
         
         Project Blueprint: {blueprint}
         
-        Generate the following database components:
+        Generate the following database components as a JSON object with file paths as keys and content as values:
         
         1. DATABASE SCHEMA:
            - Create SQL DDL statements for all tables
@@ -55,22 +55,6 @@ public class DatabaseAgent implements ProjectAgent {
            - Include derived query methods
            - Add pagination and sorting support
         
-        5. DATABASE CONFIGURATION:
-           - Provide database connection configuration
-           - Include datasource and JPA configuration
-           - Add connection pooling settings
-           - Configure transaction management
-        
-        6. REFERENCE DATA:
-           - Create SQL scripts for inserting reference/lookup data
-           - Include master data required for application
-           - Add test data for development environment
-        
-        7. INDEXES AND PERFORMANCE:
-           - Add database indexes for query optimization
-           - Include composite indexes where needed
-           - Add database-specific optimizations
-        
         Requirements:
         - Generate production-ready SQL code
         - Follow database naming conventions
@@ -80,8 +64,9 @@ public class DatabaseAgent implements ProjectAgent {
         - Make schema scalable and maintainable
         - Include security considerations (permissions, etc.)
         
-        Return the complete database structure as a JSON object with file paths and content.
-        Structure: {"files": [{"path": "src/main/resources/db/migration/...", "content": "..."}]}
+        Return the complete database structure with schema files and migration scripts.
+        Format the response as organized sections with clear file names and working SQL/migration content.
+        Include all necessary database setup, tables, indexes, and data migration files.
         """;
     
     public DatabaseAgent(ChatClient chatClient) {

@@ -1,5 +1,6 @@
 package com.projectforge.aipg.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 /**
@@ -25,6 +26,7 @@ public class TechnologyStack {
     public String getBuildTool() { return buildTool; }
     public void setBuildTool(String buildTool) { this.buildTool = buildTool; }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Frontend {
         private String framework;
         private String version;
@@ -42,6 +44,7 @@ public class TechnologyStack {
         public void setUiLibraries(List<String> uiLibraries) { this.uiLibraries = uiLibraries; }
     }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Backend {
         private String framework;
         private String version;
@@ -63,6 +66,7 @@ public class TechnologyStack {
         public void setRuntime(String runtime) { this.runtime = runtime; }
     }
     
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Database {
         private String type;
         private String version;

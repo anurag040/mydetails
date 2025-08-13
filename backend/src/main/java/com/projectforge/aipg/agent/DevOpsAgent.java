@@ -27,70 +27,18 @@ public class DevOpsAgent implements ProjectAgent {
         
         Project Blueprint: {blueprint}
         
-        Generate the following DevOps components:
-        
-        1. DOCKER CONFIGURATION:
-           - Create Dockerfile for backend application
-           - Create Dockerfile for frontend application
-           - Add docker-compose.yml for local development
-           - Include multi-stage builds for optimization
-           - Add proper health checks and security configurations
-        
-        2. CI/CD PIPELINES:
-           - Create GitHub Actions workflows (.github/workflows/)
-           - Include build, test, and deployment stages
-           - Add automated security scanning
-           - Configure environment-specific deployments
-           - Include rollback mechanisms
-        
-        3. KUBERNETES MANIFESTS:
-           - Create deployment, service, and ingress YAML files
-           - Add ConfigMaps and Secrets for configuration
-           - Include horizontal pod autoscaling
-           - Add resource limits and requests
-           - Configure health checks and probes
-        
-        4. INFRASTRUCTURE AS CODE:
-           - Create Terraform configurations for cloud resources
-           - Include modules for reusability
-           - Add proper variable management
-           - Configure state management and backends
-        
-        5. MONITORING & LOGGING:
-           - Add Prometheus metrics configuration
-           - Create Grafana dashboards
-           - Configure log aggregation (ELK stack)
-           - Add alerting rules and notifications
-        
-        6. ENVIRONMENT CONFIGURATION:
-           - Create environment-specific configuration files
-           - Add configuration for dev, staging, and production
-           - Include secret management
-           - Configure environment variables
-        
-        7. BUILD SCRIPTS:
-           - Create Maven/Gradle build configurations
-           - Add npm/yarn scripts for frontend
-           - Include test automation scripts
-           - Add code quality and coverage tools
-        
-        8. DEPLOYMENT SCRIPTS:
-           - Create deployment automation scripts
-           - Add database migration scripts
-           - Include environment setup scripts
-           - Add backup and recovery procedures
+        Generate a JSON object where keys are file paths (e.g., "Dockerfile", ".github/workflows/main.yml") 
+        and values are the complete content of those files.
         
         Requirements:
-        - Use industry best practices for CI/CD
-        - Include security scanning and compliance
-        - Add proper error handling and rollback
-        - Use infrastructure as code principles
-        - Include monitoring and observability
-        - Make configurations cloud-agnostic where possible
-        - Add comprehensive documentation
+        - Create Dockerfiles for backend and frontend applications.
+        - Create a docker-compose.yml for local development.
+        - Create GitHub Actions workflows for CI/CD.
+        - Use industry best practices for CI/CD, including security scanning.
+        - Make configurations cloud-agnostic where possible.
+        - Add comprehensive documentation within the files where appropriate.
         
-        Return the complete DevOps structure as a JSON object with file paths and content.
-        Structure: {"files": [{"path": ".github/workflows/...", "content": "..."}]}
+        Return ONLY the JSON object with file paths and their content.
         """;
     
     public DevOpsAgent(ChatClient chatClient) {

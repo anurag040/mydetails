@@ -1,7 +1,12 @@
 package com.projectforge.aipg.service;
 
+import com.projectforge.aipg.agent.PRDAnalystAgent;
+import com.projectforge.aipg.agent.AgentResult;
 import com.projectforge.aipg.model.ProjectBlueprint;
 import com.projectforge.aipg.model.ProjectInfo;
+import com.projectforge.aipg.model.TechnologyStack;
+import com.projectforge.aipg.model.Feature;
+import com.projectforge.aipg.util.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -14,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -25,71 +32,16 @@ public class PRDProcessingService {
     private static final Logger logger = LoggerFactory.getLogger(PRDProcessingService.class);
     
     private final ChatClient chatClient;
+    private final PRDAnalystAgent prdAnalystAgent;
+    private final JsonUtils jsonUtils;
     
-    private static final String PRD_ANALYSIS_PROMPT = """
-        You are a senior business analyst and software architect. Analyze the provided PRD (Product Requirements Document) 
-        and extract a comprehensive project blueprint that can be used to generate complete frontend and backend code.
-        
-        PRD Content: {prdContent}
-        Project Name: {projectName}
-        
-        Create a detailed project blueprint that includes:
-        
-        1. PROJECT OVERVIEW:
-           - Extract project name, description, and objectives
-           - Identify target users and use cases
-           - Determine project scope and constraints
-        
-        2. FUNCTIONAL REQUIREMENTS:
-           - List all features and capabilities
-           - Define user stories and acceptance criteria
-           - Identify business rules and validation logic
-           - Extract workflow and process definitions
-        
-        3. TECHNICAL ARCHITECTURE:
-           - Recommend technology stack (Spring Boot + Angular)
-           - Define system architecture and components
-           - Identify integration points and dependencies
-           - Specify performance and scalability requirements
-        
-        4. DATABASE DESIGN:
-           - Extract data entities and relationships
-           - Define database schema and constraints
-           - Identify data validation rules
-           - Specify data migration and seeding requirements
-        
-        5. API SPECIFICATION:
-           - Define REST API endpoints and operations
-           - Specify request/response models
-           - Identify authentication and authorization requirements
-           - Define error handling and status codes
-        
-        6. USER INTERFACE:
-           - Extract UI/UX requirements and layouts
-           - Define user interaction flows
-           - Identify form structures and validation
-           - Specify responsive design requirements
-        
-        7. SECURITY REQUIREMENTS:
-           - Identify authentication mechanisms
-           - Define authorization and access control
-           - Specify data protection requirements
-           - Extract compliance and audit needs
-        
-        8. DEPLOYMENT CONFIGURATION:
-           - Recommend deployment architecture
-           - Define environment configurations
-           - Specify monitoring and logging requirements
-           - Identify backup and disaster recovery needs
-        
-        Return the analysis as a structured JSON object that matches the ProjectBlueprint model structure.
-        Ensure all extracted information is comprehensive and actionable for code generation.
-        
-        If any information is missing or unclear, make reasonable assumptions based on industry best practices.
-        """;
+    // Temporary storage for PRD content - in production, use Redis or database
+    private final Map<String, String> prdContentCache = new java.util.concurrent.ConcurrentHashMap<>();
     
-    public PRDProcessingService(ChatClient chatClient) {
+    public PRDProcessingService(ChatClient chatClient, PRDAnalystAgent prdAnalystAgent, JsonUtils jsonUtils) {
         this.chatClient = chatClient;
+        this.prdAnalystAgent = prdAnalystAgent;
+        this.jsonUtils = jsonUtils;
     }
     
     /**
@@ -105,20 +57,210 @@ public class PRDProcessingService {
                 // Extract text content from file
                 String prdContent = extractTextContent(file);
                 
-                // Use AI to analyze PRD and create blueprint
-                ProjectBlueprint blueprint = analyzePRDWithAI(prdContent, projectName);
+                // Store PRD content for use by PRD Analyst Agent
+                prdContentCache.put(sessionId, prdContent);
                 
-                // Store blueprint for later use
-                // In a real implementation, this would be stored in a database or cache
+                // Create initial blueprint with basic info
+                ProjectBlueprint initialBlueprint = createInitialBlueprint(projectName, prdContent);
+                
+                // Use PRD Analyst Agent to analyze and enhance the blueprint
+                AgentResult analysisResult = prdAnalystAgent.processPRDContent(prdContent, initialBlueprint).join();
+                
+                ProjectBlueprint finalBlueprint;
+                if (analysisResult.isSuccess() && analysisResult.getOutput() != null) {
+                    // Try to parse the agent output as JSON blueprint
+                    try {
+                        String jsonOutput = analysisResult.getOutput().toString();
+                        logger.info("PRD Analysis output received, attempting to parse as blueprint");
+                        finalBlueprint = jsonUtils.convertJsonToBlueprint(jsonOutput);
+                        if (finalBlueprint == null || finalBlueprint.getProjectInfo() == null) {
+                            logger.warn("Parsed blueprint is incomplete, using initial blueprint with enhancements");
+                            finalBlueprint = enhanceInitialBlueprint(initialBlueprint, prdContent);
+                        } else {
+                            logger.info("Successfully parsed enhanced blueprint from PRD analysis");
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to parse agent analysis result, using enhanced initial blueprint", e);
+                        finalBlueprint = enhanceInitialBlueprint(initialBlueprint, prdContent);
+                    }
+                } else {
+                    logger.warn("PRD analysis agent failed, using enhanced initial blueprint");
+                    finalBlueprint = enhanceInitialBlueprint(initialBlueprint, prdContent);
+                }
                 
                 logger.info("PRD processing completed for session: {}", sessionId);
-                return blueprint;
+                return finalBlueprint;
                 
             } catch (Exception e) {
                 logger.error("PRD processing failed for session: {}", sessionId, e);
                 throw new RuntimeException("PRD processing failed", e);
             }
         });
+    }
+    
+    /**
+     * Get stored PRD content for a session
+     */
+    public String getPRDContent(String sessionId) {
+        return prdContentCache.get(sessionId);
+    }
+    
+    /**
+     * Create initial blueprint from project name and PRD content
+     */
+    private ProjectBlueprint createInitialBlueprint(String projectName, String prdContent) {
+        ProjectBlueprint blueprint = new ProjectBlueprint();
+        
+        // Set basic project info
+        ProjectInfo projectInfo = new ProjectInfo();
+        projectInfo.setName(projectName != null ? projectName : "Generated Project");
+        projectInfo.setDescription("Project generated from PRD");
+        projectInfo.setVersion("1.0.0");
+        
+        // Generate package name from project name
+        String packageName = "com.generated." + 
+            (projectName != null ? projectName.toLowerCase().replaceAll("[^a-zA-Z0-9]", "") : "project");
+        projectInfo.setPackageName(packageName);
+        
+        blueprint.setProjectInfo(projectInfo);
+        
+        // Set default technology stack
+        TechnologyStack techStack = new TechnologyStack();
+        
+        TechnologyStack.Backend backend = new TechnologyStack.Backend();
+        backend.setFramework("Spring Boot");
+        backend.setVersion("3.2.0");
+        backend.setLanguage("Java");
+        backend.setRuntime("JDK 17");
+        techStack.setBackend(backend);
+        
+        TechnologyStack.Frontend frontend = new TechnologyStack.Frontend();
+        frontend.setFramework("Angular");
+        frontend.setVersion("17.0");
+        frontend.setUiLibraries(java.util.Arrays.asList("Angular Material"));
+        techStack.setFrontend(frontend);
+        
+        TechnologyStack.Database database = new TechnologyStack.Database();
+        database.setType("PostgreSQL");
+        database.setVersion("15.0");
+        techStack.setDatabase(database);
+        
+        techStack.setBuildTool("Maven");
+        blueprint.setTechnologyStack(techStack);
+        
+        return blueprint;
+    }
+    
+    /**
+     * Enhance initial blueprint with basic PRD analysis when AI parsing fails
+     */
+    private ProjectBlueprint enhanceInitialBlueprint(ProjectBlueprint initialBlueprint, String prdContent) {
+        // Simple text analysis to extract project name and features
+        try {
+            // Extract project name from PRD content
+            String projectName = extractProjectNameFromPRD(prdContent);
+            if (projectName != null && !projectName.trim().isEmpty()) {
+                if (initialBlueprint.getProjectInfo() != null) {
+                    initialBlueprint.getProjectInfo().setName(projectName);
+                    initialBlueprint.getProjectInfo().setPackageName(
+                        "com.generated." + projectName.toLowerCase().replaceAll("[^a-zA-Z0-9]", "")
+                    );
+                }
+            }
+            
+            // Extract basic features from PRD
+            List<Feature> extractedFeatures = extractFeaturesFromPRD(prdContent);
+            if (extractedFeatures != null && !extractedFeatures.isEmpty()) {
+                initialBlueprint.setFeatures(extractedFeatures);
+            }
+            
+        } catch (Exception e) {
+            logger.warn("Failed to enhance initial blueprint, using as-is", e);
+        }
+        
+        return initialBlueprint;
+    }
+    
+    /**
+     * Extract project name from PRD content using simple text analysis
+     */
+    private String extractProjectNameFromPRD(String prdContent) {
+        if (prdContent == null || prdContent.trim().isEmpty()) {
+            return null;
+        }
+        
+        // Look for common patterns
+        String[] patterns = {
+            "Project Name:\\s*(.+)",
+            "Application:\\s*(.+)",
+            "System:\\s*(.+)",
+            "Product:\\s*(.+)"
+        };
+        
+        for (String pattern : patterns) {
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern, java.util.regex.Pattern.CASE_INSENSITIVE);
+            java.util.regex.Matcher m = p.matcher(prdContent);
+            if (m.find()) {
+                return m.group(1).trim();
+            }
+        }
+        
+        // Fallback: use first line if it looks like a title
+        String[] lines = prdContent.split("\n");
+        if (lines.length > 0) {
+            String firstLine = lines[0].trim();
+            if (firstLine.length() > 0 && firstLine.length() < 100 && !firstLine.toLowerCase().startsWith("prd")) {
+                return firstLine;
+            }
+        }
+        
+        return "Generated Project";
+    }
+    
+    /**
+     * Extract features from PRD content using simple text analysis
+     */
+    private List<Feature> extractFeaturesFromPRD(String prdContent) {
+        List<Feature> features = new ArrayList<>();
+        
+        try {
+            // Look for feature sections
+            String[] featureKeywords = {"feature", "functionality", "requirement", "capability", "module"};
+            
+            String[] lines = prdContent.split("\n");
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i].trim().toLowerCase();
+                
+                for (String keyword : featureKeywords) {
+                    if (line.contains(keyword) && line.length() < 150) {
+                        Feature feature = new Feature();
+                        feature.setId("feature-" + (features.size() + 1));
+                        feature.setName(lines[i].trim());
+                        feature.setDescription("Feature extracted from PRD");
+                        feature.setPriority("MEDIUM");
+                        feature.setUserStories(List.of("As a user, I want to use this feature"));
+                        features.add(feature);
+                        break;
+                    }
+                }
+            }
+            
+            // If no features found, add default ones
+            if (features.isEmpty()) {
+                Feature defaultFeature = new Feature();
+                defaultFeature.setId("core-functionality");
+                defaultFeature.setName("Core Functionality");
+                defaultFeature.setDescription("Core application functionality based on PRD");
+                defaultFeature.setPriority("HIGH");
+                defaultFeature.setUserStories(List.of("As a user, I want to access core functionality"));
+                features.add(defaultFeature);
+            }
+            
+        } catch (Exception e) {
+            logger.warn("Failed to extract features from PRD", e);
+        }
+        
+        return features;
     }
     
     /**
@@ -167,54 +309,5 @@ public class PRDProcessingService {
         // For now, return placeholder
         logger.info("Extracting text from Word document: {}", file.getOriginalFilename());
         return "Word document content extraction placeholder";
-    }
-    
-    /**
-     * Use AI to analyze PRD content and create project blueprint
-     */
-    private ProjectBlueprint analyzePRDWithAI(String prdContent, String projectName) {
-        try {
-            logger.info("Analyzing PRD content with AI...");
-            
-            PromptTemplate promptTemplate = new PromptTemplate(PRD_ANALYSIS_PROMPT);
-            Prompt prompt = promptTemplate.create(Map.of(
-                "prdContent", prdContent,
-                "projectName", projectName != null ? projectName : "Generated Project"
-            ));
-            
-            String analysisResult = chatClient.prompt(prompt).call().content();
-            
-            // Parse AI response into ProjectBlueprint object
-            ProjectBlueprint blueprint = parseAnalysisResult(analysisResult);
-            
-            logger.info("PRD analysis completed successfully");
-            return blueprint;
-            
-        } catch (Exception e) {
-            logger.error("AI analysis failed", e);
-            throw new RuntimeException("PRD analysis failed", e);
-        }
-    }
-    
-    /**
-     * Parse AI analysis result into ProjectBlueprint object
-     */
-    private ProjectBlueprint parseAnalysisResult(String analysisResult) {
-        // In a real implementation, this would parse the JSON response
-        // and create a proper ProjectBlueprint object
-        
-        ProjectBlueprint blueprint = new ProjectBlueprint();
-        
-        // Create and set project info
-        ProjectInfo projectInfo = new ProjectInfo();
-        projectInfo.setName("Sample Project");
-        projectInfo.setDescription("Generated from PRD analysis");
-        projectInfo.setVersion("1.0.0");
-        blueprint.setProjectInfo(projectInfo);
-        
-        // Set other properties based on analysis result
-        // This would involve JSON parsing and object mapping
-        
-        return blueprint;
     }
 }

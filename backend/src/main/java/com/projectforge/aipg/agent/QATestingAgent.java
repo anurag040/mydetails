@@ -27,84 +27,17 @@ public class QATestingAgent implements ProjectAgent {
         
         Project Blueprint: {blueprint}
         
-        Generate the following QA and testing components:
-        
-        1. UNIT TESTS:
-           - Create JUnit 5 tests for all backend services and components
-           - Add MockMvc tests for REST controllers
-           - Include repository layer tests with @DataJpaTest
-           - Create Angular unit tests with Jasmine/Karma
-           - Add component and service tests for frontend
-           - Include proper mocking and test data setup
-        
-        2. INTEGRATION TESTS:
-           - Create @SpringBootTest integration tests
-           - Add database integration tests with Testcontainers
-           - Include API integration tests
-           - Create end-to-end workflow tests
-           - Add cross-service integration validation
-        
-        3. API TESTING:
-           - Create Postman collections for API testing
-           - Add REST Assured tests for API validation
-           - Include contract testing with Pact
-           - Add API performance tests
-           - Create OpenAPI/Swagger test specifications
-        
-        4. END-TO-END TESTING:
-           - Create Cypress or Playwright tests for frontend
-           - Add user journey and workflow tests
-           - Include cross-browser testing scenarios
-           - Add mobile responsive testing
-           - Create accessibility testing scripts
-        
-        5. PERFORMANCE TESTING:
-           - Create JMeter test plans for load testing
-           - Add stress testing scenarios
-           - Include database performance tests
-           - Add API response time validation
-           - Create scalability testing scripts
-        
-        6. SECURITY TESTING:
-           - Add OWASP security test cases
-           - Include authentication and authorization tests
-           - Create SQL injection and XSS prevention tests
-           - Add dependency vulnerability scanning
-           - Include security compliance validation
-        
-        7. TEST DATA MANAGEMENT:
-           - Create test data factories and builders
-           - Add database seeding for tests
-           - Include test data cleanup utilities
-           - Create mock data generators
-           - Add test environment data management
-        
-        8. TEST AUTOMATION FRAMEWORK:
-           - Set up test execution frameworks
-           - Add test reporting and metrics
-           - Include continuous testing in CI/CD
-           - Create test environment management
-           - Add test result analysis tools
-        
-        9. QUALITY GATES:
-           - Define code coverage requirements
-           - Add static code analysis (SonarQube)
-           - Include performance benchmarks
-           - Create quality metrics dashboards
-           - Add automated quality checks
+        Generate a JSON object where keys are file paths for test files (e.g., "src/test/java/com/example/MyServiceTest.java")
+        and values are the complete content of those test files.
         
         Requirements:
-        - Generate production-ready test code
-        - Follow testing best practices and patterns
-        - Include proper test isolation and cleanup
-        - Add comprehensive test coverage
-        - Use modern testing frameworks and tools
-        - Include both positive and negative test cases
-        - Add proper error handling and validation
-        - Make tests maintainable and reliable
+        - Create JUnit 5 tests for all backend services and components.
+        - Create Angular unit tests with Jasmine/Karma for frontend components and services.
+        - Include both positive and negative test cases.
+        - Use modern testing frameworks and tools.
+        - Generate production-ready test code.
         
-        Return the complete test structure as a JSON object with file paths and content.
-        Structure: {"files": [{"path": "src/test/java/...", "content": "..."}]}
+        Return ONLY the JSON object with test file paths and their content.
         """;
     
     public QATestingAgent(ChatClient chatClient) {

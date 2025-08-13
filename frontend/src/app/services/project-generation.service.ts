@@ -28,7 +28,7 @@ export interface ProjectBlueprint {
 export class ProjectGenerationService {
   private http = inject(HttpClient);
   
-  private readonly baseUrl = '/api/projects';
+  private readonly baseUrl = 'http://localhost:8080/api/projects';
   
   // Current session tracking
   private currentSessionSubject = new BehaviorSubject<string | null>(null);

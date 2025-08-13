@@ -39,6 +39,49 @@ public class ProjectGenerationService {
     }
     
     /**
+     * Generate project from an existing blueprint (used after PRD processing)
+     */
+    public CompletableFuture<Void> generateProjectFromBlueprint(String sessionId, ProjectBlueprint blueprint) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                logger.info("Starting project generation from blueprint for session: {}", sessionId);
+                
+                // Store the blueprint
+                blueprintCache.put(sessionId, blueprint);
+                
+                // Initialize generation session
+                GenerationSession session = new GenerationSession(sessionId);
+                session.setStatus(GenerationStatus.GENERATING);
+                session.setStartTime(System.currentTimeMillis());
+                sessionCache.put(sessionId, session);
+                
+                // Generate the project using the orchestrator
+                List<AgentResult> results = agentOrchestrator.orchestrateProject(blueprint);
+                
+                // Process results and create ZIP files
+                createProjectZips(sessionId, results);
+                
+                // Update session status to COMPLETED
+                session.setStatus(GenerationStatus.COMPLETED);
+                session.setEndTime(System.currentTimeMillis());
+                session.setResults(results);
+                
+                logger.info("Project generation completed for session: {}", sessionId);
+                
+            } catch (Exception e) {
+                logger.error("Project generation failed for session: {}", sessionId, e);
+                
+                GenerationSession session = sessionCache.get(sessionId);
+                if (session != null) {
+                    session.setStatus(GenerationStatus.FAILED);
+                    session.setError(e.getMessage());
+                    session.setEndTime(System.currentTimeMillis());
+                }
+            }
+        });
+    }
+
+    /**
      * Start direct project generation process asynchronously without PRD
      */
     public CompletableFuture<Map<String, String>> generateDirectProjectAsync(String sessionId, Map<String, Object> config) {
@@ -402,24 +445,53 @@ public class ProjectGenerationService {
      */
     private void createProjectZips(String sessionId, List<AgentResult> results) throws IOException {
         logger.info("Creating project ZIP files for session: {}", sessionId);
+        logger.debug("Processing {} agent results for session: {}", results.size(), sessionId);
         
         Map<String, String> backendFiles = new HashMap<>();
         Map<String, String> frontendFiles = new HashMap<>();
         
         // Process agent results and categorize files
         for (AgentResult result : results) {
-            if (result.isSuccess()) {
+            logger.debug("Processing agent result: {} - Success: {} - Output length: {}", 
+                result.getAgentName(), result.isSuccess(), 
+                result.getOutput() != null ? result.getOutput().toString().length() : 0);
+            
+            if (result.isSuccess() && result.getOutput() != null) {
                 categorizeGeneratedFiles(result, backendFiles, frontendFiles);
+            } else {
+                logger.warn("Agent {} failed or returned empty output - skipping file generation. Error: {}", result.getAgentName(), result.getMessage());
             }
         }
         
+        logger.info("File categorization completed - Backend files: {}, Frontend files: {}", 
+            backendFiles.size(), frontendFiles.size());
+        
+        // Log file names for debugging
+        if (logger.isDebugEnabled()) {
+            backendFiles.keySet().forEach(file -> logger.debug("Backend file added: {}", file));
+            frontendFiles.keySet().forEach(file -> logger.debug("Frontend file added: {}", file));
+        }
+        
         // Create backend ZIP
-        byte[] backendZip = createZipFromFiles(backendFiles);
-        backendZipCache.put(sessionId, backendZip);
+        if (!backendFiles.isEmpty()) {
+            byte[] backendZip = createZipFromFiles(backendFiles);
+            backendZipCache.put(sessionId, backendZip);
+            logger.info("Backend ZIP created: {} bytes, {} files", backendZip.length, backendFiles.size());
+        } else {
+            logger.warn("No backend files were generated for session: {}", sessionId);
+        }
         
         // Create frontend ZIP
-        byte[] frontendZip = createZipFromFiles(frontendFiles);
-        frontendZipCache.put(sessionId, frontendZip);
+        if (!frontendFiles.isEmpty()) {
+            byte[] frontendZip = createZipFromFiles(frontendFiles);
+            frontendZipCache.put(sessionId, frontendZip);
+            logger.info("Frontend ZIP created: {} bytes, {} files", frontendZip.length, frontendFiles.size());
+        } else {
+            logger.warn("No frontend files were generated for session: {}", sessionId);
+        }
+        
+        // Create dependency and setup files
+        createDependencyFiles(sessionId, backendFiles, frontendFiles);
         
         logger.info("ZIP files created successfully for session: {}", sessionId);
     }
@@ -435,38 +507,515 @@ public class ProjectGenerationService {
         Object outputObj = result.getOutput();
         String output = outputObj != null ? outputObj.toString() : "";
         
-        // Parse agent output and extract files
-        // This would involve parsing JSON or structured output from agents
+        logger.debug("Categorizing files from agent: {} - Output length: {}", agentName, output.length());
         
-        if (agentName.contains("Backend") || agentName.contains("Database") || agentName.contains("DevOps")) {
-            // Add to backend files
-            backendFiles.put("generated/" + agentName + ".txt", output);
-        } else if (agentName.contains("Frontend")) {
-            // Add to frontend files
-            frontendFiles.put("generated/" + agentName + ".txt", output);
-        } else {
-            // Add to both (shared configurations, documentation, etc.)
-            backendFiles.put("shared/" + agentName + ".txt", output);
-            frontendFiles.put("shared/" + agentName + ".txt", output);
+        if (output.isEmpty()) {
+            logger.warn("Agent {} returned empty output", agentName);
+            return;
         }
+        
+        // Log first 200 characters of output for debugging
+        if (logger.isDebugEnabled()) {
+            String preview = output.length() > 200 ? output.substring(0, 200) + "..." : output;
+            logger.debug("Agent {} output preview: {}", agentName, preview);
+        }
+        
+        // Try to parse agent output as JSON first
+        try {
+            // Check if output is JSON format with "files" structure
+            if (output.trim().startsWith("{") && output.contains("\"files\"")) {
+                logger.debug("Agent {} output appears to be structured JSON, attempting to parse", agentName);
+                parseStructuredAgentOutput(output, agentName, backendFiles, frontendFiles);
+                return;
+            } else {
+                logger.debug("Agent {} output is not structured JSON, using fallback parsing", agentName);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse structured output from agent {}, falling back to text parsing: {}", 
+                agentName, e.getMessage());
+        }
+        
+        // Fallback to text-based parsing for agents that don't return structured JSON
+        if (agentName.contains("Backend-Code-Generator")) {
+            logger.debug("Using backend code parser for agent: {}", agentName);
+            parseBackendCodeOutput(output, backendFiles);
+        } else if (agentName.contains("Frontend-Code-Generator")) {
+            logger.debug("Using frontend code parser for agent: {}", agentName);
+            parseFrontendCodeOutput(output, frontendFiles);
+        } else if (agentName.contains("Database-Agent")) {
+            logger.debug("Using database parser for agent: {}", agentName);
+            parseDatabaseOutput(output, backendFiles);
+        } else if (agentName.contains("DevOps-Configuration")) {
+            logger.debug("Using DevOps parser for agent: {}", agentName);
+            parseDevOpsOutput(output, backendFiles, frontendFiles);
+        } else if (agentName.contains("QA-Testing-Generator")) {
+            logger.debug("Using testing parser for agent: {}", agentName);
+            parseTestingOutput(output, backendFiles, frontendFiles);
+        } else if (agentName.contains("Integration-Assembly")) {
+            logger.debug("Using integration parser for agent: {}", agentName);
+            parseIntegrationOutput(output, backendFiles, frontendFiles);
+        } else {
+            // Fallback: add as documentation
+            logger.debug("Using fallback documentation parser for agent: {}", agentName);
+            backendFiles.put("docs/" + agentName.replaceAll("[^a-zA-Z0-9]", "-") + ".md", output);
+        }
+        
+        logger.debug("Agent {} processing completed", agentName);
+    }
+    
+    /**
+     * Parse structured JSON output from agents
+     */
+    private void parseStructuredAgentOutput(String jsonOutput, String agentName, 
+                                          Map<String, String> backendFiles, 
+                                          Map<String, String> frontendFiles) {
+        
+        logger.debug("Parsing structured JSON output from agent: {} (length: {})", agentName, jsonOutput.length());
+        
+        try {
+            // Log first 200 characters of JSON for debugging
+            if (logger.isDebugEnabled()) {
+                String preview = jsonOutput.length() > 200 ? jsonOutput.substring(0, 200) + "..." : jsonOutput;
+                logger.debug("Agent {} JSON preview: {}", agentName, preview);
+            }
+            
+            // Clean JSON and try to parse
+            String cleanJson = cleanJsonOutput(jsonOutput);
+            logger.debug("Cleaned JSON for agent: {} (original: {}, cleaned: {})", 
+                agentName, jsonOutput.length(), cleanJson.length());
+            
+            // Extract files section
+            if (cleanJson.contains("\"files\"")) {
+                logger.debug("Found 'files' section in agent {} output", agentName);
+                String filesSection = extractJsonSection(cleanJson, "files");
+                if (filesSection != null) {
+                    logger.debug("Extracted files section for agent: {} (length: {})", agentName, filesSection.length());
+                    
+                    // Determine target based on agent type and file paths
+                    if (agentName.contains("Backend") || agentName.contains("Database")) {
+                        logger.debug("Parsing files as backend for agent: {}", agentName);
+                        parseJsonFiles(filesSection, backendFiles);
+                    } else if (agentName.contains("Frontend")) {
+                        logger.debug("Parsing files as frontend for agent: {}", agentName);
+                        parseJsonFiles(filesSection, frontendFiles);
+                    } else {
+                        // Parse into both for agents like DevOps
+                        logger.debug("Parsing files as both backend and frontend for agent: {}", agentName);
+                        parseJsonFiles(filesSection, backendFiles);
+                        parseJsonFiles(filesSection, frontendFiles);
+                    }
+                } else {
+                    logger.warn("Failed to extract files section from agent {} output", agentName);
+                }
+            } else {
+                logger.warn("No 'files' section found in agent {} output", agentName);
+            }
+            
+            // Handle dependencies if present
+            if (cleanJson.contains("\"dependencies\"")) {
+                logger.debug("Found 'dependencies' section in agent {} output", agentName);
+                String dependencies = extractJsonSection(cleanJson, "dependencies");
+                if (dependencies != null) {
+                    logger.debug("Extracted dependencies for agent: {} (length: {})", agentName, dependencies.length());
+                    if (agentName.contains("Backend")) {
+                        backendFiles.put("DEPENDENCIES.txt", "Backend Dependencies:\n" + dependencies);
+                        logger.debug("Added backend dependencies file for agent: {}", agentName);
+                    } else if (agentName.contains("Frontend")) {
+                        frontendFiles.put("DEPENDENCIES.txt", "Frontend Dependencies:\n" + dependencies);
+                        logger.debug("Added frontend dependencies file for agent: {}", agentName);
+                    }
+                } else {
+                    logger.warn("Failed to extract dependencies section from agent {} output", agentName);
+                }
+            }
+            
+            logger.debug("Successfully completed parsing structured output from agent: {}", agentName);
+            
+        } catch (Exception e) {
+            logger.error("Failed to parse structured JSON output from agent {}: {}", agentName, e.getMessage(), e);
+            // Fallback to text parsing
+            logger.info("Falling back to text parsing for agent {}", agentName);
+            if (agentName.contains("Backend")) {
+                parseBackendCodeOutput(jsonOutput, backendFiles);
+            } else if (agentName.contains("Frontend")) {
+                parseFrontendCodeOutput(jsonOutput, frontendFiles);
+            }
+        }
+    }
+    
+    /**
+     * Clean JSON output from AI agents
+     */
+    private String cleanJsonOutput(String jsonOutput) {
+        // Remove markdown code blocks
+        jsonOutput = jsonOutput.replaceAll("```json\\s*", "").replaceAll("```\\s*", "");
+        
+        // Remove leading/trailing backticks  
+        jsonOutput = jsonOutput.replaceAll("^`+", "").replaceAll("`+$", "");
+        
+        // Find the first { and last } to extract JSON content
+        int firstBrace = jsonOutput.indexOf('{');
+        int lastBrace = jsonOutput.lastIndexOf('}');
+        
+        if (firstBrace != -1 && lastBrace != -1 && firstBrace < lastBrace) {
+            jsonOutput = jsonOutput.substring(firstBrace, lastBrace + 1);
+        }
+        
+        return jsonOutput.trim();
+    }
+    
+    /**
+     * Extract a JSON section (simple implementation)
+     */
+    private String extractJsonSection(String json, String sectionName) {
+        try {
+            String pattern = "\"" + sectionName + "\"\\s*:\\s*\\{";
+            int start = json.indexOf("\"" + sectionName + "\"");
+            if (start == -1) return null;
+            
+            int braceStart = json.indexOf("{", start);
+            if (braceStart == -1) return null;
+            
+            int braceCount = 1;
+            int pos = braceStart + 1;
+            
+            while (pos < json.length() && braceCount > 0) {
+                char c = json.charAt(pos);
+                if (c == '{') braceCount++;
+                else if (c == '}') braceCount--;
+                pos++;
+            }
+            
+            if (braceCount == 0) {
+                return json.substring(braceStart, pos);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to extract JSON section {}", sectionName, e);
+        }
+        return null;
+    }
+    
+    /**
+     * Parse JSON files section into file map
+     */
+    private void parseJsonFiles(String filesJson, Map<String, String> targetFiles) {
+        logger.debug("Parsing JSON files section (length: {}, current files: {})", 
+            filesJson.length(), targetFiles.size());
+        
+        try {
+            // Simple JSON parsing for file paths and content
+            String[] lines = filesJson.split("\n");
+            String currentPath = null;
+            StringBuilder currentContent = new StringBuilder();
+            int filesProcessed = 0;
+            
+            logger.debug("Processing {} lines of JSON files section", lines.length);
+            
+            for (String line : lines) {
+                line = line.trim();
+                if (line.contains("\":") && line.startsWith("\"")) {
+                    // Save previous file if exists
+                    if (currentPath != null && currentContent.length() > 0) {
+                        String content = cleanFileContent(currentContent.toString());
+                        targetFiles.put(currentPath, content);
+                        logger.debug("Added file: {} (content length: {})", currentPath, content.length());
+                        filesProcessed++;
+                    }
+                    
+                    // Extract new file path
+                    int colonIndex = line.indexOf("\":");
+                    if (colonIndex > 0) {
+                        currentPath = line.substring(1, colonIndex);
+                        logger.debug("Starting new file: {}", currentPath);
+                        // Extract content start
+                        String contentStart = line.substring(colonIndex + 2).trim();
+                        if (contentStart.startsWith("\"")) {
+                            contentStart = contentStart.substring(1);
+                        }
+                        currentContent = new StringBuilder(contentStart);
+                    }
+                } else if (currentPath != null) {
+                    // Append to current content
+                    currentContent.append("\n").append(line);
+                }
+            }
+            
+            // Save last file
+            if (currentPath != null && currentContent.length() > 0) {
+                String content = cleanFileContent(currentContent.toString());
+                targetFiles.put(currentPath, content);
+                logger.debug("Added final file: {} (content length: {})", currentPath, content.length());
+                filesProcessed++;
+            }
+            
+            logger.debug("Successfully processed {} files from JSON section", filesProcessed);
+            
+        } catch (Exception e) {
+            logger.error("Failed to parse JSON files section: {}", e.getMessage(), e);
+        }
+    }
+    
+    private String cleanFileContent(String content) {
+        // Clean up JSON escape characters
+        content = content.replaceAll("\\\\n", "\n")
+                       .replaceAll("\\\\\"", "\"")
+                       .replaceAll("\\\\\\\\", "\\\\");
+        // Remove trailing quotes and commas
+        content = content.replaceAll("[\"\\,}]*$", "");
+        return content;
+    }
+    
+    private void parseBackendCodeOutput(String output, Map<String, String> backendFiles) {
+        // If agents return non-JSON output, provide basic structure
+        if (!output.trim().startsWith("{")) {
+            backendFiles.put("generated-backend-output.txt", output);
+            
+            // Create basic Spring Boot structure based on project name
+            String packageName = "com.generated.app";
+            String basePath = "src/main/java/" + packageName.replace(".", "/");
+            
+            backendFiles.put(basePath + "/Application.java", createBasicSpringBootApp(packageName));
+            backendFiles.put("src/main/resources/application.properties", createBasicApplicationProperties());
+            backendFiles.put("pom.xml", createBasicPomXml());
+        }
+    }
+    
+    private void parseFrontendCodeOutput(String output, Map<String, String> frontendFiles) {
+        // If agents return non-JSON output, provide basic structure
+        if (!output.trim().startsWith("{")) {
+            frontendFiles.put("generated-frontend-output.txt", output);
+            
+            // Create basic Angular structure
+            frontendFiles.put("src/app/app.component.ts", createBasicAngularComponent());
+            frontendFiles.put("src/app/app.component.html", createBasicAngularTemplate());
+            frontendFiles.put("src/main.ts", createBasicAngularMain());
+            frontendFiles.put("package.json", createBasicPackageJson());
+        }
+    }
+    
+    private void parseDatabaseOutput(String output, Map<String, String> backendFiles) {
+        backendFiles.put("docs/database-design.md", output);
+    }
+    
+    private void parseDevOpsOutput(String output, Map<String, String> backendFiles, Map<String, String> frontendFiles) {
+        backendFiles.put("Dockerfile", createBasicDockerfile());
+        frontendFiles.put("Dockerfile", createBasicAngularDockerfile());
+        backendFiles.put("docker-compose.yml", createBasicDockerCompose());
+    }
+    
+    private void parseTestingOutput(String output, Map<String, String> backendFiles, Map<String, String> frontendFiles) {
+        backendFiles.put("docs/testing-strategy.md", output);
+        frontendFiles.put("docs/testing-strategy.md", output);
+    }
+    
+    private void parseIntegrationOutput(String output, Map<String, String> backendFiles, Map<String, String> frontendFiles) {
+        backendFiles.put("README.md", createBasicReadme());
+        frontendFiles.put("README.md", createBasicReadme());
+    }
+    
+    // Helper methods for basic file creation
+    private String createBasicSpringBootApp(String packageName) {
+        return """
+            package %s;
+            
+            import org.springframework.boot.SpringApplication;
+            import org.springframework.boot.autoconfigure.SpringBootApplication;
+            
+            @SpringBootApplication
+            public class Application {
+                public static void main(String[] args) {
+                    SpringApplication.run(Application.class, args);
+                }
+            }
+            """.formatted(packageName);
+    }
+    
+    private String createBasicApplicationProperties() {
+        return """
+            server.port=8080
+            spring.datasource.url=jdbc:h2:mem:testdb
+            spring.datasource.driver-class-name=org.h2.Driver
+            spring.jpa.hibernate.ddl-auto=create-drop
+            spring.h2.console.enabled=true
+            """;
+    }
+    
+    private String createBasicPomXml() {
+        return """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project xmlns="http://maven.apache.org/POM/4.0.0">
+                <modelVersion>4.0.0</modelVersion>
+                <parent>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-parent</artifactId>
+                    <version>3.2.0</version>
+                </parent>
+                <groupId>com.generated</groupId>
+                <artifactId>app</artifactId>
+                <version>1.0.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-web</artifactId>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-data-jpa</artifactId>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.h2database</groupId>
+                        <artifactId>h2</artifactId>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+            </project>
+            """;
+    }
+    
+    private String createBasicAngularComponent() {
+        return """
+            import { Component } from '@angular/core';
+            
+            @Component({
+              selector: 'app-root',
+              templateUrl: './app.component.html',
+              styleUrls: ['./app.component.css']
+            })
+            export class AppComponent {
+              title = 'Generated App';
+            }
+            """;
+    }
+    
+    private String createBasicAngularTemplate() {
+        return """
+            <div>
+              <h1>{{ title }}</h1>
+              <p>Welcome to your generated application!</p>
+            </div>
+            """;
+    }
+    
+    private String createBasicAngularMain() {
+        return """
+            import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+            import { AppModule } from './app/app.module';
+            
+            platformBrowserDynamic().bootstrapModule(AppModule)
+              .catch(err => console.error(err));
+            """;
+    }
+    
+    private String createBasicPackageJson() {
+        return """
+            {
+              "name": "generated-app",
+              "version": "1.0.0",
+              "dependencies": {
+                "@angular/core": "^17.0.0",
+                "@angular/common": "^17.0.0",
+                "@angular/platform-browser": "^17.0.0"
+              },
+              "scripts": {
+                "start": "ng serve",
+                "build": "ng build"
+              }
+            }
+            """;
+    }
+    
+    private String createBasicDockerfile() {
+        return """
+            FROM openjdk:17-jdk-slim
+            COPY target/*.jar app.jar
+            EXPOSE 8080
+            ENTRYPOINT ["java", "-jar", "/app.jar"]
+            """;
+    }
+    
+    private String createBasicAngularDockerfile() {
+        return """
+            FROM node:18-alpine AS build
+            WORKDIR /app
+            COPY package*.json ./
+            RUN npm install
+            COPY . .
+            RUN npm run build
+            
+            FROM nginx:alpine
+            COPY --from=build /app/dist/* /usr/share/nginx/html/
+            """;
+    }
+    
+    private String createBasicDockerCompose() {
+        return """
+            version: '3.8'
+            services:
+              backend:
+                build: .
+                ports:
+                  - "8080:8080"
+              frontend:
+                build: ./frontend
+                ports:
+                  - "80:80"
+            """;
+    }
+    
+    private String createBasicReadme() {
+        return """
+            # Generated Project
+            
+            This project was generated by the AI Project Generator.
+            
+            ## Getting Started
+            
+            ### Backend
+            ```bash
+            mvn spring-boot:run
+            ```
+            
+            ### Frontend
+            ```bash
+            npm install
+            ng serve
+            ```
+            """;
     }
     
     /**
      * Create ZIP file from file map
      */
     private byte[] createZipFromFiles(Map<String, String> files) throws IOException {
+        logger.debug("Creating ZIP from {} files", files.size());
+        
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int filesAdded = 0;
+        long totalSize = 0;
         
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
             for (Map.Entry<String, String> entry : files.entrySet()) {
-                ZipEntry zipEntry = new ZipEntry(entry.getKey());
+                String fileName = entry.getKey();
+                String content = entry.getValue();
+                
+                logger.debug("Adding file to ZIP: {} (content length: {})", fileName, content.length());
+                
+                ZipEntry zipEntry = new ZipEntry(fileName);
                 zos.putNextEntry(zipEntry);
-                zos.write(entry.getValue().getBytes());
+                byte[] contentBytes = content.getBytes();
+                zos.write(contentBytes);
                 zos.closeEntry();
+                
+                filesAdded++;
+                totalSize += contentBytes.length;
             }
         }
         
-        return baos.toByteArray();
+        byte[] zipBytes = baos.toByteArray();
+        logger.debug("ZIP creation completed: {} files added, {} bytes total content, {} bytes ZIP size", 
+            filesAdded, totalSize, zipBytes.length);
+        
+        return zipBytes;
     }
     
     /**
@@ -485,6 +1034,76 @@ public class ProjectGenerationService {
         }
         
         return baos.toByteArray();
+    }
+    
+    /**
+     * Create dependency and setup instruction files
+     */
+    private void createDependencyFiles(String sessionId, Map<String, String> backendFiles, Map<String, String> frontendFiles) {
+        // Backend setup instructions
+        backendFiles.put("BACKEND_SETUP.md", """
+            # Backend Setup Instructions
+            
+            ## Prerequisites
+            - Java 17 or higher
+            - Maven 3.6+
+            - PostgreSQL 15+ (or H2 for development)
+            
+            ## Installation
+            ```bash
+            # Build the project
+            mvn clean compile
+            
+            # Run tests
+            mvn test
+            
+            # Start the application
+            mvn spring-boot:run
+            ```
+            
+            ## Dependencies
+            This project uses the following key dependencies:
+            - Spring Boot 3.2.0
+            - Spring Data JPA
+            - Spring Web
+            - PostgreSQL Driver
+            - H2 Database (for development)
+            - Spring Boot Validation
+            
+            ## Configuration
+            Update application.properties with your database settings.
+            
+            ## API Documentation
+            Once running, access the application at: http://localhost:8080
+            """);
+            
+        // Frontend setup instructions
+        frontendFiles.put("FRONTEND_SETUP.md", """
+            # Frontend Setup Instructions
+            
+            ## Prerequisites
+            - Node.js 18+ 
+            - npm 9+
+            - Angular CLI
+            
+            ## Installation
+            ```bash
+            # Install Angular CLI globally
+            npm install -g @angular/cli
+            
+            # Install project dependencies
+            npm install
+            
+            # Start development server
+            ng serve
+            ```
+            
+            ## Dependencies
+            This project uses Angular 17 with Material UI.
+            
+            ## Access
+            Development server: http://localhost:4200
+            """);
     }
     
     /**

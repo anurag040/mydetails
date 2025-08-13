@@ -1,5 +1,7 @@
 package com.projectforge.aipg.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectforge.aipg.agent.AgentOrchestrator;
 import com.projectforge.aipg.agent.AgentResult;
 import com.projectforge.aipg.model.ProjectBlueprint;
@@ -703,6 +705,49 @@ public class ProjectGenerationService {
             filesJson.length(), targetFiles.size());
         
         try {
+            // Use Jackson to properly parse the JSON
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode filesNode = mapper.readTree(filesJson);
+            
+            if (filesNode.isObject()) {
+                logger.debug("Processing JSON object with {} fields", filesNode.size());
+                
+                // Iterate through all file entries
+                filesNode.fields().forEachRemaining(entry -> {
+                    String filePath = entry.getKey();
+                    JsonNode contentNode = entry.getValue();
+                    
+                    String content;
+                    if (contentNode.isTextual()) {
+                        content = contentNode.asText();
+                    } else {
+                        content = contentNode.toString();
+                    }
+                    
+                    // Clean up escape sequences
+                    content = cleanFileContent(content);
+                    
+                    targetFiles.put(filePath, content);
+                    logger.debug("Added file: {} (content length: {})", filePath, content.length());
+                });
+                
+                logger.debug("Successfully processed {} files from JSON object", filesNode.size());
+            } else {
+                logger.warn("Files section is not a JSON object, attempting line-by-line parsing");
+                parseJsonFilesLineByLine(filesJson, targetFiles);
+            }
+            
+        } catch (Exception e) {
+            logger.warn("Failed to parse JSON files with Jackson, falling back to line-by-line parsing: {}", e.getMessage());
+            parseJsonFilesLineByLine(filesJson, targetFiles);
+        }
+    }
+    
+    /**
+     * Fallback line-by-line parsing for malformed JSON
+     */
+    private void parseJsonFilesLineByLine(String filesJson, Map<String, String> targetFiles) {
+        try {
             // Simple JSON parsing for file paths and content
             String[] lines = filesJson.split("\n");
             String currentPath = null;
@@ -748,7 +793,7 @@ public class ProjectGenerationService {
                 filesProcessed++;
             }
             
-            logger.debug("Successfully processed {} files from JSON section", filesProcessed);
+            logger.debug("Successfully processed {} files from line-by-line parsing", filesProcessed);
             
         } catch (Exception e) {
             logger.error("Failed to parse JSON files section: {}", e.getMessage(), e);

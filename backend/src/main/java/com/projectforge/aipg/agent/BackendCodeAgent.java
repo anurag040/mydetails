@@ -24,49 +24,42 @@ public class BackendCodeAgent implements ProjectAgent {
     private final JsonUtils jsonUtils;
     
     private static final String BACKEND_GENERATION_PROMPT = """
-        You are an expert Spring Boot developer. Generate a complete, production-ready Spring Boot application based on the detailed blueprint.
+        Generate a complete Spring Boot application. You MUST return ONLY a JSON object with "files" containing ALL files below.
         
         Project Blueprint: {blueprint}
         
-        CRITICAL REQUIREMENTS:
-        1. Return ONLY a JSON object with this exact structure:
-        {{
-          "files": {{
-            "filepath1": "complete file content",
-            "filepath2": "complete file content"
-          }}
-        }}
+        EXACT JSON FORMAT REQUIRED:
+        {
+          "files": {
+            "pom.xml": "complete pom.xml content",
+            "src/main/java/com/generated/app/Application.java": "complete file content",
+            "src/main/java/com/generated/app/entity/User.java": "complete file content",
+            "src/main/java/com/generated/app/entity/DataRecord.java": "complete file content",
+            "src/main/java/com/generated/app/repository/UserRepository.java": "complete file content",
+            "src/main/java/com/generated/app/repository/DataRecordRepository.java": "complete file content",
+            "src/main/java/com/generated/app/service/UserService.java": "complete file content",
+            "src/main/java/com/generated/app/service/DataRecordService.java": "complete file content",
+            "src/main/java/com/generated/app/controller/AuthController.java": "complete file content",
+            "src/main/java/com/generated/app/controller/UserController.java": "complete file content",
+            "src/main/java/com/generated/app/controller/DataController.java": "complete file content",
+            "src/main/java/com/generated/app/dto/UserDto.java": "complete file content",
+            "src/main/java/com/generated/app/dto/DataRecordDto.java": "complete file content",
+            "src/main/java/com/generated/app/dto/LoginRequest.java": "complete file content",
+            "src/main/java/com/generated/app/config/CorsConfig.java": "complete file content",
+            "src/main/resources/application.properties": "complete file content"
+          }
+        }
         
-        2. Generate ALL these files with complete, working code:
-           - pom.xml (with all required dependencies)
-           - src/main/java/APPLICATION_PACKAGE/Application.java (main class)
-           - src/main/java/APPLICATION_PACKAGE/controller/*.java (REST controllers for ALL API endpoints)
-           - src/main/java/APPLICATION_PACKAGE/service/*.java (service classes for ALL features)
-           - src/main/java/APPLICATION_PACKAGE/repository/*.java (JPA repositories for ALL entities)
-           - src/main/java/APPLICATION_PACKAGE/entity/*.java (JPA entities for ALL database entities)
-           - src/main/java/APPLICATION_PACKAGE/dto/*.java (DTOs for ALL API requests/responses)
-           - src/main/java/APPLICATION_PACKAGE/config/*.java (security, CORS, database config)
-           - src/main/resources/application.properties (database, server config)
-           - src/main/resources/data.sql (sample data)
+        MANDATORY: Each file must be complete with all imports, annotations, and working code.
+        Use Spring Boot 3.x, JPA, validation, proper REST controllers with CRUD operations.
         
-        3. Extract requirements from blueprint:
-           - Use blueprint.projectInfo.packageName as base package
-           - Create entities from blueprint.databaseSchema.entities
-           - Generate controllers for blueprint.apiEndpoints
-           - Implement services for blueprint.features
-           - Use blueprint.technologyStack.database for config
+        User entity: id, username, email, password, createdAt, updatedAt
+        DataRecord entity: id, name, description, userId, createdAt, updatedAt
         
-        4. MAKE ALL CODE PRODUCTION-READY:
-           - Proper error handling and validation
-           - Comprehensive CRUD operations
-           - Security configurations
-           - Database relationships
-           - Proper HTTP status codes
-           - Complete request/response DTOs
+        Controllers must have endpoints: GET, POST, PUT, DELETE for both entities.
+        Include authentication endpoint: POST /api/auth/login
         
-        5. Generate working code that compiles and runs immediately
-        
-        RETURN ONLY THE JSON OBJECT WITH COMPLETE FILES - NO EXPLANATIONS OR MARKDOWN
+        Return ONLY the JSON object - no explanations, no markdown blocks.
         """;
     
     public BackendCodeAgent(ChatClient chatClient, JsonUtils jsonUtils) {

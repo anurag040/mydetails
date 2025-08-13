@@ -24,53 +24,62 @@ public class FrontendCodeAgent implements ProjectAgent {
     private final JsonUtils jsonUtils;
     
     private static final String FRONTEND_GENERATION_PROMPT = """
-        You are an expert Angular developer. Generate a complete, production-ready Angular application based on the detailed blueprint.
+        Generate a complete Angular 17 application. You MUST return ONLY a JSON object with "files" containing ALL files below.
         
         Project Blueprint: {blueprint}
         
-        CRITICAL REQUIREMENTS:
-        1. Return ONLY a JSON object with this exact structure:
-        {{
-          "files": {{
-            "filepath1": "complete file content",
-            "filepath2": "complete file content"
-          }}
-        }}
+        EXACT JSON FORMAT REQUIRED:
+        {
+          "files": {
+            "package.json": "complete package.json with all dependencies",
+            "angular.json": "complete Angular workspace configuration",
+            "tsconfig.json": "complete TypeScript configuration",
+            "src/index.html": "complete HTML file",
+            "src/main.ts": "complete bootstrap file",
+            "src/styles.css": "complete global styles",
+            "src/app/app.component.ts": "complete root component",
+            "src/app/app.component.html": "complete root template",
+            "src/app/app.component.css": "complete root styles",
+            "src/app/app.config.ts": "complete app configuration",
+            "src/app/app.routes.ts": "complete routing configuration",
+            "src/app/models/user.model.ts": "complete User interface",
+            "src/app/models/data-record.model.ts": "complete DataRecord interface",
+            "src/app/services/auth.service.ts": "complete authentication service",
+            "src/app/services/user.service.ts": "complete user service",
+            "src/app/services/data.service.ts": "complete data service",
+            "src/app/components/login/login.component.ts": "complete login component",
+            "src/app/components/login/login.component.html": "complete login template",
+            "src/app/components/login/login.component.css": "complete login styles",
+            "src/app/components/dashboard/dashboard.component.ts": "complete dashboard component",
+            "src/app/components/dashboard/dashboard.component.html": "complete dashboard template",
+            "src/app/components/dashboard/dashboard.component.css": "complete dashboard styles",
+            "src/app/components/user-list/user-list.component.ts": "complete user list component",
+            "src/app/components/user-list/user-list.component.html": "complete user list template",
+            "src/app/components/user-list/user-list.component.css": "complete user list styles",
+            "src/app/components/data-list/data-list.component.ts": "complete data list component",
+            "src/app/components/data-list/data-list.component.html": "complete data list template",
+            "src/app/components/data-list/data-list.component.css": "complete data list styles"
+          }
+        }
         
-        2. Generate ALL these files with complete, working code:
-           - package.json (with all required dependencies)
-           - angular.json (Angular workspace configuration)
-           - tsconfig.json (TypeScript configuration)
-           - src/main.ts (Bootstrap file)
-           - src/index.html (Main HTML)
-           - src/styles.css (Global styles)
-           - src/app/app.component.* (Root component with template, styles, spec)
-           - src/app/app.config.ts (App configuration)
-           - src/app/app.routes.ts (Routing configuration)
-           - src/app/components/*/*.* (Components for ALL features from blueprint)
-           - src/app/services/*.service.ts (Services for ALL API endpoints)
-           - src/app/models/*.ts (TypeScript interfaces for ALL entities)
-           - src/app/guards/*.guard.ts (Route guards if authentication required)
+        MANDATORY REQUIREMENTS:
+        - Use Angular 17 standalone components
+        - Include Angular Material for UI
+        - Implement reactive forms with validation
+        - Add HTTP interceptors for authentication
+        - Create complete CRUD operations for User and DataRecord
+        - Add routing with guards
+        - Include proper error handling and loading states
+        - Make all code production-ready and compilable
         
-        3. Extract requirements from blueprint:
-           - Create components for blueprint.features
-           - Generate services for blueprint.apiEndpoints
-           - Create models from blueprint.databaseSchema.entities
-           - Use blueprint.technologyStack.frontend.uiLibraries for UI
-           - Implement routing between all components
+        SPECIFIC FEATURES:
+        - Login page with email/password
+        - Dashboard with overview
+        - User management (list, create, edit, delete)
+        - Data record management (list, create, edit, delete)
+        - Responsive design with Material UI
         
-        4. MAKE ALL CODE PRODUCTION-READY:
-           - Reactive forms with validation
-           - HTTP error handling
-           - Loading states and spinners
-           - Responsive design with Angular Material
-           - Proper TypeScript types
-           - Authentication handling
-           - CRUD operations for all entities
-        
-        5. Generate working code that compiles and runs immediately
-        
-        RETURN ONLY THE JSON OBJECT WITH COMPLETE FILES - NO EXPLANATIONS OR MARKDOWN
+        Return ONLY the JSON object - no explanations, no markdown blocks.
         """;
     
     public FrontendCodeAgent(ChatClient chatClient, JsonUtils jsonUtils) {

@@ -1,0 +1,13 @@
+<div class="summary-bar">
+  <span *ngIf="projectType" class="summary-chip">{{ projectType }}</span>
+  <span *ngIf="angularVersion" class="summary-chip">Angular {{ angularVersion }}</span>
+  <span *ngFor="let u of uiLibs" class="summary-chip">{{ u }}</span>
+  <span *ngIf="backendChoice && backendVersionOrType" class="summary-chip">{{ backendChoice }} {{ backendVersionOrType }}</span>
+  <span *ngIf="backendChoice && !backendVersionOrType" class="summary-chip">{{ backendChoice }}</span>
+  <span *ngIf="backendTechVersion" class="summary-chip">{{ getBackendTechDisplay() }}</span>
+  <span *ngIf="buildTool" class="summary-chip">{{ buildTool }}</span>
+  <span *ngFor="let d of databases" class="summary-chip">{{ d }}</span>
+  <span *ngFor="let a of auth" class="summary-chip">Auth: {{ a }}</span>
+  <span *ngFor="let e of extras" class="summary-chip">{{ e }}</span>
+  <span *ngIf="prdFileName" class="summary-chip">PRD: {{ prdFileName }}</span>
+</div>

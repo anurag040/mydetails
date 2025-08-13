@@ -1,0 +1,327 @@
+<!-- Add the host class so overlays are confined here -->
+<div class="surface stepper-vertical-wrap stepper-overlay-host">
+  <app-summary-chips
+    [projectType]="selection().projectType"
+    [angularVersion]="selection().angularVersion"
+    [uiLibs]="selection().uiLibs || []"
+    [backendChoice]="selection().backendChoice"
+    [backendVersionOrType]="selection().backendVersionOrType"
+    [backendTechVersion]="selection().backendTechVersion"
+    [buildTool]="selection().buildTool"
+    [databases]="selection().databases || []"
+    [auth]="selection().auth || []"
+    [extras]="selection().extras || []"
+    [prdFileName]="selection().prdFileName"
+  ></app-summary-chips>
+
+  <mat-vertical-stepper [linear]="true" #stepper class="vstepper">
+    <!-- Step 1 -->
+    <mat-step [stepControl]="projectTypeForm">
+      <ng-template matStepLabel>Project Type</ng-template>
+      <form [formGroup]="projectTypeForm" class="step-body">
+        <h3 class="section-title">Choose a project type</h3>
+        <div class="hint">Pick a base template for your stack.</div>
+
+        <mat-radio-group formControlName="projectType" class="radio-col">
+          <mat-radio-button 
+            *ngFor="let p of projectTypes" 
+            [value]="p.label" 
+            class="radio-option">
+            {{ p.label }}
+          </mat-radio-button>
+        </mat-radio-group>
+
+        <div class="actions">
+          <button mat-stroked-button color="primary" (click)="stepper.next()" [disabled]="!projectTypeForm.valid">
+            Next
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2 -->
+    <mat-step [stepControl]="frontendForm">
+      <ng-template matStepLabel>Frontend</ng-template>
+      <form [formGroup]="frontendForm" class="step-body">
+        <h3 class="section-title">Frontend options</h3>
+        <div class="hint">Select Angular version and UI libraries.</div>
+
+        <div class="two-col">
+          <mat-form-field appearance="outline">
+            <mat-label>Angular Version</mat-label>
+            <mat-select formControlName="angularVersion">
+              <mat-option *ngFor="let v of angularVersions; trackBy: trackByVal" [value]="v">v{{ v }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>UI Libraries</mat-label>
+            <mat-select 
+              formControlName="uiLibs" 
+              multiple 
+              #uiLibsSelect>
+              <mat-option value="Angular Material">Angular Material</mat-option>
+              <mat-option value="TailwindCSS">TailwindCSS</mat-option>
+              <mat-option value="NgRx">NgRx</mat-option>
+              <mat-option value="" class="close-option" (click)="closeMultiSelect(uiLibsSelect)">
+                <span class="close-btn-text">✓ Done</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="actions">
+          <button mat-stroked-button (click)="stepper.previous()">Back</button>
+          <button mat-stroked-button color="primary" (click)="stepper.next()" [disabled]="!frontendForm.valid">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3 -->
+    <mat-step [stepControl]="backendForm">
+      <ng-template matStepLabel>Backend</ng-template>
+      <form [formGroup]="backendForm" class="step-body">
+        <h3 class="section-title">Backend options</h3>
+        <div class="hint">Choices adapt to your project type.</div>
+
+        <div *ngIf="projectType().includes('Spring Boot'); else nonJava">
+          <div class="two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Spring Boot Version</mat-label>
+              <mat-select formControlName="backendVersionOrType">
+                <mat-option *ngFor="let v of springVersions; trackBy: trackByVal" [value]="v">Spring Boot {{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Java Version</mat-label>
+              <mat-select formControlName="backendTechVersion">
+                <mat-option *ngFor="let v of javaVersions; trackBy: trackByVal" [value]="v">Java {{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+          
+          <div class="one-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Build Tool</mat-label>
+              <mat-select formControlName="buildTool">
+                <mat-option *ngFor="let tool of buildTools; trackBy: trackByVal" [value]="tool">{{ tool }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <ng-template #nonJava>
+          <!-- Python Backend -->
+          <div *ngIf="projectType().includes('Python')" class="two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Python Framework</mat-label>
+              <mat-select formControlName="backendVersionOrType">
+                <mat-option *ngFor="let v of pyBackends; trackBy: trackByVal" [value]="v">{{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Python Version</mat-label>
+              <mat-select formControlName="backendTechVersion">
+                <mat-option *ngFor="let v of pythonVersions; trackBy: trackByVal" [value]="v">Python {{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Node.js Backend -->
+          <div *ngIf="projectType().includes('Node')" class="two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Node.js Framework</mat-label>
+              <mat-select formControlName="backendVersionOrType">
+                <mat-option *ngFor="let v of nodeBackends; trackBy: trackByVal" [value]="v">{{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Node.js Version</mat-label>
+              <mat-select formControlName="backendTechVersion">
+                <mat-option *ngFor="let v of nodeVersions; trackBy: trackByVal" [value]="v">Node.js {{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <!-- Go Backend -->
+          <div *ngIf="projectType().includes('Go')" class="two-col">
+            <mat-form-field appearance="outline">
+              <mat-label>Go Framework</mat-label>
+              <mat-select formControlName="backendVersionOrType">
+                <mat-option *ngFor="let v of goBackends; trackBy: trackByVal" [value]="v">{{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline">
+              <mat-label>Go Version</mat-label>
+              <mat-select formControlName="backendTechVersion">
+                <mat-option *ngFor="let v of goVersions; trackBy: trackByVal" [value]="v">Go {{ v }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </ng-template>
+
+        <div class="actions">
+          <button mat-stroked-button (click)="stepper.previous()">Back</button>
+          <button mat-stroked-button color="primary" (click)="stepper.next()" [disabled]="!backendForm.valid">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 4 -->
+    <mat-step [stepControl]="dbForm">
+      <ng-template matStepLabel>Databases</ng-template>
+      <form [formGroup]="dbForm" class="step-body">
+        <h3 class="section-title">Databases</h3>
+        <div class="hint">Select one or more databases.</div>
+        <mat-form-field appearance="outline" class="wide">
+          <mat-label>Databases</mat-label>
+          <mat-select formControlName="databases" multiple #databasesSelect>
+            <mat-option *ngFor="let d of databases; trackBy: trackByVal" [value]="d">{{ d }}</mat-option>
+            <mat-option value="" class="close-option" (click)="closeMultiSelect(databasesSelect)">
+              <span class="close-btn-text">✓ Done</span>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="actions">
+          <button mat-stroked-button (click)="stepper.previous()">Back</button>
+          <button mat-stroked-button color="primary" (click)="stepper.next()">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 5 -->
+    <mat-step [stepControl]="authForm">
+      <ng-template matStepLabel>Authentication</ng-template>
+      <form [formGroup]="authForm" class="step-body">
+        <h3 class="section-title">Authentication</h3>
+        <div class="hint">Choose one or more providers.</div>
+        <mat-form-field appearance="outline" class="wide">
+          <mat-label>Auth Providers</mat-label>
+          <mat-select formControlName="auth" multiple #authSelect>
+            <mat-option *ngFor="let a of authProviders; trackBy: trackByVal" [value]="a">{{ a }}</mat-option>
+            <mat-option value="" class="close-option" (click)="closeMultiSelect(authSelect)">
+              <span class="close-btn-text">✓ Done</span>
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="actions">
+          <button mat-stroked-button (click)="stepper.previous()">Back</button>
+          <button mat-stroked-button color="primary" (click)="stepper.next()">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 6 -->
+    <mat-step [stepControl]="extrasForm">
+      <ng-template matStepLabel>Extras</ng-template>
+      <form [formGroup]="extrasForm" class="step-body">
+        <h3 class="section-title">Extras & Tooling</h3>
+        <div class="hint">Common DevOps and quality add-ons.</div>
+        <div class="tri-grid">
+          <mat-checkbox *ngFor="let e of extras; trackBy: trackByVal"
+            (change)="toggleExtra(e, $event.checked)"
+            [checked]="isExtraSelected(e)">
+            {{ e }}
+          </mat-checkbox>
+        </div>
+        <div class="actions">
+          <button mat-stroked-button (click)="stepper.previous()">Back</button>
+          <button mat-stroked-button color="primary" (click)="stepper.next()">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 7 -->
+    <mat-step [stepControl]="prdForm">
+      <ng-template matStepLabel>PRD</ng-template>
+      <form [formGroup]="prdForm" class="step-body">
+        <h3 class="section-title">Product Requirements (Optional)</h3>
+        <div class="hint">Upload a PRD document (PDF/Doc/Markdown).</div>
+        <div class="file-row" style="margin-top:12px;">
+          <input type="file" (change)="onFile($event)" accept=".pdf,.doc,.docx,.md,.txt" />
+          <span class="hint" *ngIf="prdFileName()">Selected: {{ prdFileName() }}</span>
+        </div>
+        <div class="actions">
+          <button mat-stroked-button (click)="stepper.previous()">Back</button>
+          <button mat-stroked-button color="primary" (click)="stepper.next()">Next</button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 8 -->
+    <mat-step>
+      <ng-template matStepLabel>Review</ng-template>
+      <div class="step-body">
+        <h3 class="section-title">Review & Confirm</h3>
+        <div class="hint">Make sure everything looks right before generating.</div>
+        <div class="hr"></div>
+
+        <div class="two-col">
+          <mat-card class="surface review-card">
+            <mat-card-title>Project Summary</mat-card-title>
+            <mat-card-content>
+              <div class="review-item">
+                <strong>Project Type:</strong> 
+                <span>{{ selection().projectType || '-' }}</span>
+              </div>
+              <div class="review-item">
+                <strong>Frontend:</strong> 
+                <span>Angular {{ selection().angularVersion || '-' }}</span>
+              </div>
+              <div class="review-item" *ngIf="(selection().uiLibs || []).length > 0">
+                <strong>UI Libraries:</strong> 
+                <span>{{ (selection().uiLibs || []).join(', ') }}</span>
+              </div>
+              <div class="review-item" *ngIf="selection().backendChoice">
+                <strong>Backend:</strong> 
+                <span>{{ selection().backendChoice }} {{ selection().backendVersionOrType }}</span>
+              </div>
+              <div class="review-item" *ngIf="selection().backendTechVersion">
+                <strong>Runtime:</strong> 
+                <span>{{ getBackendTechDisplay() }}</span>
+              </div>
+              <div class="review-item" *ngIf="selection().buildTool">
+                <strong>Build Tool:</strong> 
+                <span>{{ selection().buildTool }}</span>
+              </div>
+              <div class="review-item" *ngIf="(selection().databases || []).length > 0">
+                <strong>Databases:</strong> 
+                <span>{{ (selection().databases || []).join(', ') }}</span>
+              </div>
+              <div class="review-item" *ngIf="(selection().auth || []).length > 0">
+                <strong>Authentication:</strong> 
+                <span>{{ (selection().auth || []).join(', ') }}</span>
+              </div>
+              <div class="review-item" *ngIf="(selection().extras || []).length > 0">
+                <strong>Extras & Tooling:</strong> 
+                <span>{{ (selection().extras || []).join(', ') }}</span>
+              </div>
+              <div class="review-item" *ngIf="selection().prdFileName">
+                <strong>PRD File:</strong> 
+                <span>{{ selection().prdFileName }}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="surface review-card">
+            <mat-card-title>Modify</mat-card-title>
+            <mat-card-content>
+              <p class="hint">Use the stepper header on the left to jump to any step and adjust settings.</p>
+              <p>When ready, click <strong>Generate</strong>. We’ll call your API and download the ZIP.</p>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="actions">
+          <button mat-stroked-button (click)="goStart()">Start Over</button>
+          <button mat-stroked-button color="primary" (click)="generate()">Generate Project</button>
+        </div>
+      </div>
+    </mat-step>
+
+  </mat-vertical-stepper>
+</div>

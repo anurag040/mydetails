@@ -1,0 +1,127 @@
+:host { 
+  display: block; 
+  position: relative;
+  overflow: visible;
+}
+
+/* Body inside each step */
+.step-body { padding: 6px 4px 2px; }
+
+/* Radio button styling */
+.radio-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.radio-option {
+  margin: 8px 0 !important;
+}
+
+/* Layout helpers */
+.two-col { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 20px; /* Increased gap to prevent overlap */
+  position: relative;
+  overflow: visible;
+}
+.tri-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, minmax(160px, 1fr)); 
+  gap: 8px; 
+  position: relative;
+  overflow: visible;
+}
+
+/* Checkbox styling */
+.tri-grid mat-checkbox {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.tri-grid mat-checkbox .mat-mdc-checkbox {
+  margin-right: 8px;
+}
+.one-col, .wide { 
+  width: 100%; 
+  position: relative;
+  overflow: visible;
+}
+
+mat-form-field { 
+  min-width: 260px; 
+  width: 100%; 
+  position: relative;
+  overflow: visible;
+  margin-bottom: 8px; /* Add some bottom margin to prevent overlap */
+}
+
+/* Ensure stepper doesn't clip dropdowns */
+mat-horizontal-stepper {
+  position: relative;
+  overflow: visible;
+}
+
+.mat-horizontal-content-container {
+  position: relative;
+  overflow: visible;
+}
+
+/* Version info styling */
+.version-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(47, 111, 237, 0.05);
+  border-radius: 8px;
+  border: 1px dashed var(--primary);
+}
+
+.version-info .hint {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* Review cards */
+.review-card { transition: box-shadow .2s ease, border-color .2s ease; }
+.review-card:hover { box-shadow: var(--shadow-md); border-color: var(--field-stroke-active); }
+
+/* Step headers styling */
+.mat-vertical-content { padding: 16px 0 8px 0 !important; }
+.mat-step-header { border-radius: 10px; border: 1px solid var(--stroke); }
+.mat-step-header .mat-step-icon {
+  background: transparent; border: 1.5px solid var(--field-stroke);
+}
+.mat-step-header .mat-step-icon-selected,
+.mat-step-header .mat-step-icon-state-done {
+  border-color: var(--step-header-active); color: var(--step-header-active);
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
+}
+.mat-step-header .mat-step-label { font-weight: 600; }
+
+/* Review section styling */
+.review-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--field-stroke);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-item strong {
+  color: var(--text-primary);
+  min-width: 120px;
+}
+
+.review-item span {
+  color: var(--text-secondary);
+  text-align: right;
+  flex: 1;
+}

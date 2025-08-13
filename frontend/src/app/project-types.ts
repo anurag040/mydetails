@@ -67,6 +67,8 @@ export const EXTRAS = [
 
 export type Selection = {
   projectType?: string;
+  projectName?: string;
+  description?: string;
   angularVersion?: string;
   uiLibs?: string[];
   backendChoice?: string;

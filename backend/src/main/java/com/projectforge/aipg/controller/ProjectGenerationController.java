@@ -94,6 +94,44 @@ public class ProjectGenerationController {
     }
     
     /**
+     * Direct project generation endpoint without PRD upload
+     */
+    @PostMapping("/generate")
+    public ResponseEntity<Map<String, Object>> generateDirectProject(
+            @RequestBody Map<String, Object> request) {
+        
+        try {
+            logger.info("Starting direct project generation");
+            
+            // Generate session ID for tracking
+            String sessionId = UUID.randomUUID().toString();
+            
+            // Extract project configuration from request
+            String projectName = (String) request.getOrDefault("projectName", "Generated Project");
+            String projectType = (String) request.getOrDefault("projectType", "web-application");
+            String description = (String) request.getOrDefault("description", "");
+            
+            // Start project generation asynchronously
+            CompletableFuture<Map<String, String>> generationFuture = 
+                projectGenerationService.generateDirectProjectAsync(sessionId, request);
+            
+            return ResponseEntity.accepted()
+                .body(Map.of(
+                    "sessionId", sessionId,
+                    "message", "Project generation started",
+                    "status", "GENERATING",
+                    "projectName", projectName,
+                    "projectType", projectType
+                ));
+                
+        } catch (Exception e) {
+            logger.error("Direct project generation failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Project generation failed: " + e.getMessage()));
+        }
+    }
+    
+    /**
      * Start project generation from processed PRD
      */
     @PostMapping("/generate/{sessionId}")
@@ -119,6 +157,31 @@ public class ProjectGenerationController {
             logger.error("Project generation failed for session: {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Project generation failed: " + e.getMessage()));
+        }
+    }
+    
+    /**
+     * Download combined project ZIP (both backend and frontend)
+     */
+    @GetMapping("/download/{sessionId}")
+    public ResponseEntity<byte[]> downloadProjectZip(@PathVariable String sessionId) {
+        try {
+            byte[] zipData = projectGenerationService.getCombinedProjectZip(sessionId);
+            
+            if (zipData == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", sessionId + "-project.zip");
+            headers.setContentLength(zipData.length);
+            
+            return new ResponseEntity<>(zipData, headers, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            logger.error("Project download failed for session: {}", sessionId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     

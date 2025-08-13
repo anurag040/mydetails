@@ -242,22 +242,35 @@ export class ProjectGeneratorComponent {
 
   generate() {
     const prdFile = this.prdForm.value.prd;
+    const config = this.selection();
     
-    if (!prdFile) {
-      this.snack.open('Please upload a PRD file first.', 'OK', { duration: 3000 });
-      return;
+    // Add project name and description to config
+    const projectConfig = {
+      ...config,
+      projectName: config.projectType + ' Project',
+      description: `AI Generated ${config.projectType} project with selected features`,
+    };
+    
+    if (prdFile) {
+      // Use PRD-based generation
+      this.generateWithPRD(prdFile, projectConfig);
+    } else {
+      // Use direct generation without PRD
+      this.generateDirectProject(projectConfig);
     }
+  }
 
+  private generateWithPRD(prdFile: File, config: Selection) {
     this.isUploading.set(true);
     
     // Step 1: Upload PRD and start processing
-    this.projectService.uploadPRD(prdFile, 'Generated Project').subscribe({
+    this.projectService.uploadPRD(prdFile, config.projectName || 'Generated Project').subscribe({
       next: (session) => {
         this.isUploading.set(false);
         this.snack.open('PRD uploaded successfully! Starting generation...', 'OK', { duration: 3000 });
         
         // Step 2: Start project generation with configuration
-        this.startProjectGeneration(session.sessionId);
+        this.startProjectGeneration(session.sessionId, config);
       },
       error: (error) => {
         this.isUploading.set(false);
@@ -267,22 +280,80 @@ export class ProjectGeneratorComponent {
     });
   }
 
-  private startProjectGeneration(sessionId: string) {
+  private generateDirectProject(config: Selection) {
     this.isGenerating.set(true);
     
-    const config = this.selection();
-    
-    this.projectService.generateProject(sessionId, config).subscribe({
+    this.projectService.generateDirectProject(config).subscribe({
       next: (session) => {
-        this.snack.open('Project generation started! Redirecting to status page...', 'OK', { duration: 3000 });
+        this.snack.open('Project generation started! Monitoring progress...', 'OK', { duration: 3000 });
         
-        // Redirect to status page
-        this.router.navigate(['/status', sessionId]);
+        // Start polling for status and handle download when complete
+        this.monitorGenerationProgress(session.sessionId);
       },
       error: (error) => {
         this.isGenerating.set(false);
         this.snack.open('Project generation failed. Please try again.', 'OK', { duration: 5000 });
         console.error('Generation error:', error);
+      }
+    });
+  }
+
+  private startProjectGeneration(sessionId: string, config: Selection) {
+    this.isGenerating.set(true);
+    
+    this.projectService.generateProject(sessionId, config).subscribe({
+      next: (session) => {
+        this.snack.open('Project generation started! Monitoring progress...', 'OK', { duration: 3000 });
+        
+        // Start polling for status and handle download when complete
+        this.monitorGenerationProgress(sessionId);
+      },
+      error: (error) => {
+        this.isGenerating.set(false);
+        this.snack.open('Project generation failed. Please try again.', 'OK', { duration: 5000 });
+        console.error('Generation error:', error);
+      }
+    });
+  }
+
+  private monitorGenerationProgress(sessionId: string) {
+    this.projectService.pollGenerationStatus(sessionId, 3000).subscribe({
+      next: (status) => {
+        if (status.status === 'COMPLETED') {
+          this.isGenerating.set(false);
+          this.snack.open('Project generated successfully! Downloading...', 'OK', { duration: 3000 });
+          
+          // Automatically download the project ZIP
+          this.downloadProject(sessionId);
+        } else if (status.status === 'FAILED') {
+          this.isGenerating.set(false);
+          this.snack.open(`Generation failed: ${status.error || 'Unknown error'}`, 'OK', { duration: 5000 });
+        } else if (status.status === 'CANCELLED') {
+          this.isGenerating.set(false);
+          this.snack.open('Project generation was cancelled.', 'OK', { duration: 3000 });
+        } else {
+          // Still generating - update UI with progress if needed
+          console.log('Generation status:', status);
+        }
+      },
+      error: (error) => {
+        this.isGenerating.set(false);
+        this.snack.open('Failed to monitor generation progress.', 'OK', { duration: 5000 });
+        console.error('Polling error:', error);
+      }
+    });
+  }
+
+  private downloadProject(sessionId: string) {
+    this.projectService.downloadProjectZip(sessionId).subscribe({
+      next: (blob) => {
+        const filename = `project-${sessionId}.zip`;
+        this.projectService.downloadFile(blob, filename);
+        this.snack.open('Project downloaded successfully!', 'OK', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snack.open('Download failed. Please try again.', 'OK', { duration: 5000 });
+        console.error('Download error:', error);
       }
     });
   }

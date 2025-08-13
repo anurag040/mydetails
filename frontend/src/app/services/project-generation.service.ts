@@ -61,6 +61,23 @@ export class ProjectGenerationService {
   }
 
   /**
+   * Generate project directly without PRD upload
+   */
+  generateDirectProject(config: Selection): Observable<GenerationSession> {
+    return this.http.post<GenerationSession>(`${this.baseUrl}/generate`, config).pipe(
+      map(response => {
+        this.currentSessionSubject.next(response.sessionId);
+        this.generationStatusSubject.next(response);
+        return response;
+      }),
+      catchError(error => {
+        console.error('Direct project generation failed:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Start project generation with configuration
    */
   generateProject(sessionId: string, config: Selection): Observable<GenerationSession> {
@@ -120,6 +137,20 @@ export class ProjectGenerationService {
         clearInterval(interval);
       };
     });
+  }
+
+  /**
+   * Download combined project ZIP file
+   */
+  downloadProjectZip(sessionId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/download/${sessionId}`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(error => {
+        console.error('Project download failed:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

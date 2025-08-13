@@ -237,13 +237,16 @@
 
     <!-- Step 7 -->
     <mat-step [stepControl]="prdForm">
-      <ng-template matStepLabel>PRD</ng-template>
+      <ng-template matStepLabel>PRD (Optional)</ng-template>
       <form [formGroup]="prdForm" class="step-body">
-        <h3 class="section-title">Product Requirements (Optional)</h3>
-        <div class="hint">Upload a PRD document (PDF/Doc/Markdown).</div>
+        <h3 class="section-title">Product Requirements Document (Optional)</h3>
+        <div class="hint">
+          Upload a PRD document (PDF/Doc/Markdown) for AI-enhanced generation, or skip to use template-based generation.
+        </div>
         <div class="file-row" style="margin-top:12px;">
           <input type="file" (change)="onFile($event)" accept=".pdf,.doc,.docx,.md,.txt" />
           <span class="hint" *ngIf="prdFileName()">Selected: {{ prdFileName() }}</span>
+          <span class="hint" *ngIf="!prdFileName()" style="color: #666;">No file selected - will use template-based generation</span>
         </div>
         <div class="actions">
           <button mat-stroked-button (click)="stepper.previous()">Back</button>
@@ -318,7 +321,19 @@
 
         <div class="actions">
           <button mat-stroked-button (click)="goStart()">Start Over</button>
-          <button mat-stroked-button color="primary" (click)="generate()">Generate Project</button>
+          <button 
+            mat-stroked-button 
+            color="primary" 
+            (click)="generate()"
+            [disabled]="isUploading() || isGenerating()">
+            
+            <!-- Show different states -->
+            <mat-spinner *ngIf="isUploading() || isGenerating()" diameter="20" style="margin-right: 8px;"></mat-spinner>
+            
+            <span *ngIf="!isUploading() && !isGenerating()">Generate Project</span>
+            <span *ngIf="isUploading()">Uploading PRD...</span>
+            <span *ngIf="isGenerating()">Generating & Downloading...</span>
+          </button>
         </div>
       </div>
     </mat-step>

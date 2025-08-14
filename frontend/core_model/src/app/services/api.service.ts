@@ -134,4 +134,24 @@ export class ApiService {
   getChatCapabilities(): Observable<any> {
     return this.http.get(`${this.baseUrl}/chat/capabilities`);
   }
+
+  // Clustering Analysis endpoints
+  performClusteringAnalysis(datasetId: string, method: string = 'kmeans', nClusters?: number, columns?: string[]): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/clustering/analyze`, {
+      file_id: datasetId,
+      method: method,
+      n_clusters: nClusters,
+      columns: columns
+    });
+  }
+
+  // Anomaly Detection endpoints
+  performAnomalyDetection(datasetId: string, method: string = 'isolation_forest', contamination: number = 0.1, columns?: string[]): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/anomaly-detection/analyze`, {
+      file_id: datasetId,
+      method: method,
+      contamination: contamination,
+      columns: columns
+    });
+  }
 }

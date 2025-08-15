@@ -34,64 +34,71 @@ class StatisticsCalculator:
     
     async def calculate_basic_stats(self, dataset_id: str, options: List[str]) -> BasicStatsResponse:
         """Calculate basic statistics based on selected options"""
+        import logging
+        logger = logging.getLogger("statistics.calculator")
+        logger.info(f"Loading dataset {dataset_id} for basic stats with options: {options}")
         df = await self.file_handler.load_dataset(dataset_id)
         if df is None:
+            logger.error(f"Dataset not found or failed to load: {dataset_id}")
             raise FileNotFoundError("Dataset not found")
-        
+        logger.info(f"Dataset {dataset_id} loaded successfully. Shape: {df.shape}")
         result = BasicStatsResponse(dataset_id=dataset_id)
-        
-        if "descriptive" in options:
-            result.descriptive_stats = self._calculate_descriptive_stats(df)
-        
-        if "correlation" in options:
-            result.correlation_matrix = self._calculate_correlation_analysis(df)
-        
-        if "distribution" in options:
-            result.distribution_analysis = self._calculate_distribution_analysis(df)
-        
-        if "missing_data" in options:
-            result.missing_data_summary = self._calculate_missing_data_analysis(df)
-        
-        if "missing_value_analysis" in options:
-            result.missing_value_analysis = self._calculate_missing_value_analysis(df)
-        
-        if "duplicates_analysis" in options:
-            result.duplicates_analysis = self._calculate_duplicates_analysis(df)
-        
-        if "type_integrity_validation" in options:
-            result.type_integrity_validation = self._calculate_type_integrity_validation(df)
-        
-        if "univariate_summaries" in options:
-            result.univariate_summaries = self._calculate_univariate_summaries(df)
-        
-        if "outlier_detection" in options:
-            result.outlier_detection = self._calculate_outlier_detection(df)
-        
-        # Advanced analysis components
-        if "feature_engineering_ideas" in options:
-            result.feature_engineering_ideas = self._calculate_feature_engineering_ideas(df)
-        
-        if "multicollinearity_assessment" in options:
-            result.multicollinearity_assessment = self._calculate_multicollinearity_assessment(df)
-        
-        if "dimensionality_insights" in options:
-            result.dimensionality_insights = self._calculate_dimensionality_insights(df)
-        
-        if "baseline_model_sanity" in options:
-            result.baseline_model_sanity = self._calculate_baseline_model_sanity(df)
-        
-        if "drift_stability_analysis" in options:
-            result.drift_stability_analysis = self._calculate_drift_stability_analysis(df)
-        
-        if "bias_fairness_flags" in options:
-            result.bias_fairness_flags = self._calculate_bias_fairness_flags(df)
-        
-        if "documentation_summary" in options:
-            result.documentation_summary = self._calculate_documentation_summary(df)
-        
-        if "reproducibility_info" in options:
-            result.reproducibility_info = self._calculate_reproducibility_info(df)
-        
+        try:
+            if "descriptive" in options:
+                logger.info("Calculating descriptive statistics...")
+                result.descriptive_stats = self._calculate_descriptive_stats(df)
+            if "correlation" in options:
+                logger.info("Calculating correlation matrix...")
+                result.correlation_matrix = self._calculate_correlation_analysis(df)
+            if "distribution" in options:
+                logger.info("Calculating distribution analysis...")
+                result.distribution_analysis = self._calculate_distribution_analysis(df)
+            if "missing_data" in options:
+                logger.info("Calculating missing data summary...")
+                result.missing_data_summary = self._calculate_missing_data_analysis(df)
+            if "missing_value_analysis" in options:
+                logger.info("Calculating missing value analysis...")
+                result.missing_value_analysis = self._calculate_missing_value_analysis(df)
+            if "duplicates_analysis" in options:
+                logger.info("Calculating duplicates analysis...")
+                result.duplicates_analysis = self._calculate_duplicates_analysis(df)
+            if "type_integrity_validation" in options:
+                logger.info("Calculating type integrity validation...")
+                result.type_integrity_validation = self._calculate_type_integrity_validation(df)
+            if "univariate_summaries" in options:
+                logger.info("Calculating univariate summaries...")
+                result.univariate_summaries = self._calculate_univariate_summaries(df)
+            if "outlier_detection" in options:
+                logger.info("Calculating outlier detection...")
+                result.outlier_detection = self._calculate_outlier_detection(df)
+            if "feature_engineering_ideas" in options:
+                logger.info("Calculating feature engineering ideas...")
+                result.feature_engineering_ideas = self._calculate_feature_engineering_ideas(df)
+            if "multicollinearity_assessment" in options:
+                logger.info("Calculating multicollinearity assessment...")
+                result.multicollinearity_assessment = self._calculate_multicollinearity_assessment(df)
+            if "dimensionality_insights" in options:
+                logger.info("Calculating dimensionality insights...")
+                result.dimensionality_insights = self._calculate_dimensionality_insights(df)
+            if "baseline_model_sanity" in options:
+                logger.info("Calculating baseline model sanity...")
+                result.baseline_model_sanity = self._calculate_baseline_model_sanity(df)
+            if "drift_stability_analysis" in options:
+                logger.info("Calculating drift stability analysis...")
+                result.drift_stability_analysis = self._calculate_drift_stability_analysis(df)
+            if "bias_fairness_flags" in options:
+                logger.info("Calculating bias fairness flags...")
+                result.bias_fairness_flags = self._calculate_bias_fairness_flags(df)
+            if "documentation_summary" in options:
+                logger.info("Calculating documentation summary...")
+                result.documentation_summary = self._calculate_documentation_summary(df)
+            if "reproducibility_info" in options:
+                logger.info("Calculating reproducibility info...")
+                result.reproducibility_info = self._calculate_reproducibility_info(df)
+        except Exception as e:
+            logger.exception(f"Error during basic stats calculation for dataset {dataset_id}: {str(e)}")
+            raise
+        logger.info(f"Basic statistics calculation complete for dataset {dataset_id}")
         return result
     
     async def calculate_advanced_stats(self, dataset_id: str, options: List[str]) -> AdvancedStatsResponse:
@@ -333,9 +340,8 @@ class StatisticsCalculator:
     
     def _analyze_missing_patterns(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Analyze patterns in missing data"""
-        missing_combinations = df.isnull().groupby(list(df.columns)).size().reset_index(name='count')
-        missing_combinations = missing_combinations.sort_values('count', ascending=False)
-        
+        missing_combinations = df.isnull().groupby(list(df.columns)).size().reset_index(name='missing_count')
+        missing_combinations = missing_combinations.sort_values('missing_count', ascending=False)
         return {
             "most_common_patterns": convert_numpy_types(missing_combinations.head(5).to_dict('records')),
             "total_patterns": len(missing_combinations)

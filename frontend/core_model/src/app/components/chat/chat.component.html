@@ -1,1 +1,199 @@
-<p>chat works!</p>
+<div class="chat-container">
+  <!-- Chat Header - Simplified -->
+  <div class="chat-header">
+    <div class="chat-title">
+      <mat-icon class="ai-icon">smart_toy</mat-icon>
+      <h2>Talk to Your Data</h2>
+    </div>
+    <p class="chat-subtitle">
+      Ask questions about your dataset and get instant AI-powered insights
+    </p>
+  </div>
+  
+  <!-- Chat Content -->
+  <div class="chat-content">
+    <!-- Chat Messages Area -->
+    <div class="messages-container" #messagesContainer>
+        <!-- No Dataset Warning -->
+        <div class="message ai-message" *ngIf="!currentDataset">
+          <div class="message-avatar ai-avatar">
+            <mat-icon>info</mat-icon>
+          </div>
+          <div class="message-bubble ai-bubble">
+            <div class="message-text">
+              📊 Please upload a dataset first in the "Upload Data" tab to start chatting with your data!
+            </div>
+            <div class="message-time">Now</div>
+          </div>
+        </div>
+
+        <!-- Chat Messages - Simplified Structure -->
+        <div *ngFor="let message of messages; trackBy: trackByIndex"
+             class="message"
+             [class.user-message]="message.type === 'user'"
+             [class.ai-message]="message.type === 'ai'"
+             [class.chart-message]="message.plotData && message.type === 'ai'">
+          
+          <!-- Avatar -->
+          <div class="message-avatar"
+               [class.user-avatar]="message.type === 'user'"
+               [class.ai-avatar]="message.type === 'ai'">
+            <mat-icon>{{ message.type === 'user' ? 'person' : 'smart_toy' }}</mat-icon>
+          </div>
+          
+          <!-- Message Content -->
+          <div class="message-bubble"
+               [class.user-bubble]="message.type === 'user'"
+               [class.ai-bubble]="message.type === 'ai'"
+               [class.chart-bubble]="message.plotData && message.type === 'ai'"
+               [style.max-width]="message.plotData && message.type === 'ai' ? '90%' : null"
+               [style.min-width]="message.plotData && message.type === 'ai' ? '600px' : null">
+            <div class="message-text">{{ message.content }}</div>
+            
+            <!-- Chart (AI only) -->
+            <div class="chart-container" *ngIf="message.plotData && message.type === 'ai'" 
+                 style="width: 100%; min-width: 500px; max-width: 800px; margin: 16px 0; overflow: visible;">
+              <div class="chart-header">
+                <mat-icon>show_chart</mat-icon>
+                <span>{{ message.plotData.datasets ? 'Numeric Trends' : 'Bollinger Area' }}</span>
+              </div>
+              <div style="position: relative; width: 100%; height: 400px; margin-top: 8px;">
+                <canvas baseChart
+                  [data]="getChartData(message.plotData, !!message.plotData.datasets)"
+                  [options]="getChartOptions(message.plotData)"
+                  [type]="'line'"
+                  style="width: 100% !important; height: 100% !important; max-width: none !important;">
+                </canvas>
+              </div>
+            </div>
+            
+            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+          </div>
+        </div>
+
+        <!-- Loading Indicator - Simplified -->
+        <div class="message ai-message" *ngIf="isLoading">
+          <div class="message-avatar ai-avatar">
+            <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
+          </div>
+          <div class="message-bubble ai-bubble loading-bubble">
+            <span class="typing-indicator">
+              <span></span><span></span><span></span>
+            </span>
+            Analyzing your data...
+          </div>
+        </div>
+      </div>
+      
+      <!-- Input Area - Simplified -->
+      <div class="input-container">
+        <!-- Main Input Row -->
+        <div class="input-row">
+          <mat-form-field appearance="outline" class="message-input-field">
+            <mat-label>Ask about your data...</mat-label>
+            <textarea matInput 
+                     [(ngModel)]="currentQuery" 
+                     placeholder="e.g., 'show trends', 'summarize data'"
+                     [disabled]="!currentDataset || isLoading"
+                     (keydown)="onKeyPress($event)"
+                     rows="1"
+                     cdkTextareaAutosize
+                     cdkAutosizeMinRows="1"
+                     cdkAutosizeMaxRows="3">
+            </textarea>
+          </mat-form-field>
+          
+          <button mat-mini-fab color="accent" class="send-button"
+                  [disabled]="!currentQuery.trim() || !currentDataset || isLoading"
+                  (click)="sendMessage()">
+            <mat-icon>send</mat-icon>
+          </button>
+          
+          <button mat-icon-button 
+                  class="chart-button"
+                  [class.active]="selectedPlotType"
+                  (click)="toggleChartOptions()"
+                  matTooltip="Chart Options"
+                  matTooltipPosition="above">
+            <mat-icon>{{ selectedPlotType ? 'show_chart' : 'insert_chart' }}</mat-icon>
+          </button>
+        </div>
+
+        <!-- Chart Options - Flattened Structure -->
+        <div class="chart-options" *ngIf="showChartOptions">
+          <!-- Chart Type Selection -->
+          <button mat-stroked-button 
+                  [class.selected]="selectedPlotType === 'line_trend'"
+                  (click)="selectChart('line_trend')"
+                  class="chart-type-btn">
+            📊 Line Chart
+          </button>
+          <button mat-stroked-button 
+                  [class.selected]="selectedPlotType === 'bollinger_band'"
+                  (click)="selectChart('bollinger_band')"
+                  class="chart-type-btn">
+            📈 Bollinger Area
+          </button>
+          <button mat-stroked-button 
+                  [class.selected]="!selectedPlotType"
+                  (click)="selectChart('')"
+                  class="chart-type-btn">
+            💬 Text Only
+          </button>
+          
+          <!-- Column Selection - Simplified -->
+          <mat-form-field appearance="outline" 
+                          class="column-select" 
+                          *ngIf="selectedPlotType === 'bollinger_band' && currentDataset">
+            <mat-label>Column for Analysis</mat-label>
+            <mat-select [(value)]="selectedColumn" panelClass="custom-select-panel">
+              <mat-option value="">Auto-select (Close/Open)</mat-option>
+              <mat-option *ngFor="let col of getNumericColumns()" [value]="col">
+                {{ col }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" 
+                          class="column-select" 
+                          *ngIf="selectedPlotType === 'line_trend' && currentDataset">
+            <mat-label>Column for Trend</mat-label>
+            <mat-select [(value)]="selectedColumn" panelClass="custom-select-panel">
+              <mat-option value="">All numeric columns</mat-option>
+              <mat-option *ngFor="let col of getNumericColumns()" [value]="col">
+                {{ col }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" 
+                          class="window-input" 
+                          *ngIf="selectedPlotType === 'bollinger_band' && currentDataset">
+            <mat-label>Window Size</mat-label>
+            <input matInput type="number" [(ngModel)]="bollingerWindow" min="5" max="50">
+          </mat-form-field>
+        </div>
+
+        <!-- Quick Suggestions - Simplified -->
+        <div class="suggestions" *ngIf="!isLoading && currentDataset && messages.length <= 1">
+          <span class="suggestions-title">💡 Try:</span>
+          <button mat-stroked-button class="suggestion-chip"
+                  (click)="currentQuery = 'Summarize my data'; sendMessage()">
+            Summarize
+          </button>
+          <button mat-stroked-button class="suggestion-chip"
+                  (click)="currentQuery = 'Show averages'; sendMessage()">
+            Averages
+          </button>
+          <button mat-stroked-button class="suggestion-chip"
+                  (click)="currentQuery = 'Missing values?'; sendMessage()">
+            Missing?
+          </button>
+          <button mat-stroked-button class="suggestion-chip"
+                  (click)="selectChart('line_trend'); currentQuery = 'Show trends'; sendMessage()">
+            📈 Trends
+          </button>
+        </div>
+      </div>
+    </div>
+</div>

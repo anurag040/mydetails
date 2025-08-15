@@ -1,3 +1,362 @@
+/* Simplified Header Section - No Card Wrapper */
+.header-section {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 255, 136, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: #00ff88;
+  }
+}
+
+.header-text {
+  flex: 1;
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #00ff88;
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+  }
+}
+
+/* Simplified Summary Section - No Card Wrapper */
+.summary-section {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #00ff88;
+  }
+
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    color: #00ff88;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    color: #999;
+    margin: 4px 0 0 0;
+    flex: 1;
+  }
+}
+
+/* Simplified Data Source Section - No Card Wrapper */
+.data-source-section {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.section-content {
+  color: #e0e0e0;
+}
+
+/* Responsive Design for Simplified Sections */
+@media (max-width: 768px) {
+  .header-section,
+  .summary-section,
+  .data-source-section {
+    margin-bottom: 16px;
+    padding: 16px 20px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .header-icon {
+    width: 40px;
+    height: 40px;
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+  
+  .header-text .header-title {
+    font-size: 20px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    
+    h3 {
+      font-size: 18px;
+    }
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+/* ChatGPT-like Chat Interface */
+.chat-interface-card {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #212121;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-height: 60vh;
+}
+
+.message-bubble {
+  display: flex;
+  margin-bottom: 1.5rem;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.user-message {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.ai-message {
+  flex-direction: row;
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-message .message-avatar {
+  background: linear-gradient(135deg, #00ff7f, #2196f3);
+  color: #1a1a1a;
+}
+
+.ai-message .message-avatar {
+  background: linear-gradient(135deg, #333, #555);
+  color: #00ff7f;
+}
+
+.message-content {
+  max-width: 70%;
+  background: #2a2a2a;
+  border-radius: 18px;
+  padding: 12px 16px;
+  position: relative;
+}
+
+.user-message .message-content {
+  background: linear-gradient(135deg, #00ff7f, #2196f3);
+  color: #1a1a1a;
+}
+
+.ai-message .message-content {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.message-text {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.message-time {
+  font-size: 11px;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.chart-message .message-content {
+  max-width: 90%;
+  background: #1e1e1e;
+  border: 1px solid #333;
+}
+
+.chart-container {
+  background: #1a1a1a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.chat-input-container {
+  border-top: 1px solid #333;
+  padding: 1rem;
+  background: #1a1a1a;
+}
+
+.chat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-input-field {
+  width: 100%;
+}
+
+.chat-options {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.option-field {
+  flex: 1;
+  min-width: 150px;
+}
+
+.send-button {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #00ff7f, #2196f3) !important;
+  color: #1a1a1a !important;
+}
+
+/* Futuristic Chat Section Styles */
+.talk-to-data-card {
+  background: linear-gradient(90deg, #232526 0%, #414345 100%) !important;
+  color: #00ff7f !important;
+  margin-bottom: 2em;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  border: 2px solid #00ff7f;
+  z-index: 1000;
+  position: relative;
+}
+
+.futuristic-chat-header {
+  background: linear-gradient(90deg, #232526 0%, #414345 100%) !important;
+  color: #00ff7f !important;
+}
+
+.futuristic-chat-content {
+  background: #181a1b !important;
+  color: #e0e0e0 !important;
+}
+
+.futuristic-chat-window {
+  padding: 1em;
+}
+
+.futuristic-chat-bubble {
+  border-radius: 16px;
+  margin-bottom: 8px;
+  padding: 10px;
+  font-size: 1.1em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.user-bubble {
+  background: #232526;
+  color: #00ff7f;
+}
+
+.ai-bubble {
+  background: #414345;
+  color: #fff;
+}
+
+.futuristic-chat-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  align-items: center;
+  margin-top: 1em;
+}
+
+.futuristic-chat-input {
+  min-width: 120px;
+}
+
+.futuristic-chat-button {
+  background: linear-gradient(90deg, #00ff7f 0%, #2196f3 100%) !important;
+  color: #232526 !important;
+  font-weight: bold !important;
+  border: none !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+}
+
+.futuristic-plot-section {
+  margin-top: 2em;
+}
 .statistics-dashboard {
   padding: 20px;
   max-width: 1400px;

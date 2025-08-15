@@ -1,54 +1,52 @@
-<div class="statistics-dashboard" *ngIf="currentDataset">
-  <!-- Header Section -->
-  <mat-card class="header-card">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>analytics</mat-icon>
-      <mat-card-title>Statistical Analysis</mat-card-title>
-      <mat-card-subtitle>{{ currentDataset.filename }} • {{ currentDataset.rows }} rows × {{ currentDataset.columns }}
-        columns</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <div class="analysis-type-indicator" *ngIf="selectedAnalysisType">
-        <mat-chip [color]="selectedAnalysisType === 'basic' ? 'primary' : 'accent'" selected>
-          <mat-icon>{{ selectedAnalysisType === 'basic' ? 'analytics' : 'science' }}</mat-icon>
-          {{ selectedAnalysisType === 'basic' ? 'Basic Analysis' : 'Advanced Analysis' }}
-        </mat-chip>
+<div class="statistics-dashboard chart-container-protection" *ngIf="currentDataset" style="position: relative; z-index: 1;">
+  <!-- Header Section - Simplified -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-icon">
+        <mat-icon>analytics</mat-icon>
       </div>
-    </mat-card-content>
-  </mat-card>
+      <div class="header-text">
+        <h2 class="header-title">Statistical Analysis</h2>
+        <p class="header-subtitle">{{ currentDataset.filename }} • {{ currentDataset.rows }} rows × {{ currentDataset.columns }} columns</p>
+      </div>
+    </div>
 
-  <!-- AI-Powered Quick Summary -->
-  <mat-card class="summary-card" *ngIf="quickSummary">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>psychology</mat-icon>
-        AI-Powered Dataset Insights
-      </mat-card-title>
-      <mat-card-subtitle>Intelligent analysis of your data characteristics</mat-card-subtitle>
-    </mat-card-header>
+    <div class="analysis-type-indicator" *ngIf="selectedAnalysisType">
+      <mat-chip [color]="selectedAnalysisType === 'basic' ? 'primary' : 'accent'" selected>
+        <mat-icon>{{ selectedAnalysisType === 'basic' ? 'analytics' : 'science' }}</mat-icon>
+        {{ selectedAnalysisType === 'basic' ? 'Basic Analysis' : 'Advanced Analysis' }}
+      </mat-chip>
+    </div>
+  </div>
 
-    <mat-card-content>
-      <div class="ai-insights-container">
-        <div class="insight-card" *ngFor="let insight of getAIInsights()">
-          <div class="insight-header">
-            <mat-icon [ngClass]="'insight-icon-' + insight.color">{{ insight.icon }}</mat-icon>
-            <h4 class="insight-title">{{ insight.title }}</h4>
-          </div>
-          <p class="insight-description">{{ insight.description }}</p>
+  <!-- AI-Powered Quick Summary - Simplified -->
+  <div class="summary-section" *ngIf="quickSummary">
+    <div class="section-header">
+      <mat-icon>psychology</mat-icon>
+      <h3>AI-Powered Dataset Insights</h3>
+      <p class="section-subtitle">Intelligent analysis of your data characteristics</p>
+    </div>
+
+    <div class="ai-insights-container">
+      <div class="insight-card" *ngFor="let insight of getAIInsights()">
+        <div class="insight-header">
+          <mat-icon [ngClass]="'insight-icon-' + insight.color">{{ insight.icon }}</mat-icon>
+          <h4 class="insight-title">{{ insight.title }}</h4>
         </div>
+        <p class="insight-description">{{ insight.description }}</p>
+      </div>
 
-        <!-- Raw Data Toggle (for advanced users) -->
-        <mat-expansion-panel class="raw-data-panel">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon>code</mat-icon>
-              Technical Details
-            </mat-panel-title>
-            <mat-panel-description>
-              View raw data metrics for advanced analysis
-            </mat-panel-description>
-          </mat-expansion-panel-header>
+      <!-- Raw Data Toggle (for advanced users) -->
+      <mat-expansion-panel class="raw-data-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>code</mat-icon>
+            Technical Details
+          </mat-panel-title>
+          <mat-panel-description>
+            View raw data metrics for advanced analysis
+          </mat-panel-description>
+        </mat-expansion-panel-header>
 
           <div class="summary-grid">
             <div class="summary-item" *ngFor="let item of getSummaryEntries()">
@@ -58,25 +56,23 @@
           </div>
         </mat-expansion-panel>
       </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
   <!-- Analysis Tabs -->
   <mat-tab-group>
     <!-- Basic Statistics Tab -->
     <mat-tab label="Basic Statistics">
       <div class="tab-content">
-        <!-- Data Source & Schema Overview -->
-        <mat-card class="data-source-card" *ngIf="quickSummary">
-          <mat-card-header>
-            <mat-card-title>
-              <mat-icon>source</mat-icon>
-              Data Source & Schema Overview
-            </mat-card-title>
-            <mat-card-subtitle>Comprehensive data structure and quality assessment</mat-card-subtitle>
-          </mat-card-header>
+        <!-- Data Source & Schema Overview - Simplified -->
+        <div class="data-source-section" *ngIf="quickSummary">
+          <div class="section-header">
+            <mat-icon>source</mat-icon>
+            <h3>Data Source & Schema Overview</h3>
+            <p class="section-subtitle">Comprehensive data structure and quality assessment</p>
+          </div>
 
-          <mat-card-content>
+          <div class="section-content">
             <!-- File Information Summary -->
             <div class="file-info-section">
               <h3>
@@ -248,8 +244,8 @@
                 </mat-tab-group>
               </div>
             </mat-expansion-panel>
-          </mat-card-content>
-        </mat-card>
+          </div>
+        </div>
 
         <!-- Options Selection -->
         <mat-card class="options-card">
@@ -455,7 +451,7 @@
               </mat-card-subtitle>
             </mat-card-header>
 
-            <mat-card-content>
+            <mat-card-content class="chart-content-protection" style="width: 100%; min-width: 600px;">
               <!-- AI-Driven Correlation Insights -->
               <div class="correlation-insights" *ngIf="getCorrelationInsights().length > 0">
                 <h3 class="insights-title">
@@ -487,10 +483,10 @@
                 </p>
 
                 <!-- Chart.js Heatmap -->
-                <div class="heatmap-chart-container">
+                <div class="heatmap-chart-container" style="width: 100%; min-height: 450px; position: relative;">
                   <canvas #correlationHeatmap baseChart *ngIf="getCorrelationHeatmapData()"
                     [data]="getCorrelationHeatmapData()!" [options]="heatmapChartOptions" [type]="'scatter'"
-                    [width]="600" [height]="400">
+                    style="width: 100% !important; height: 400px !important; max-width: none !important;">
                   </canvas>
 
                   <!-- Fallback: Custom Grid Heatmap -->
@@ -668,7 +664,7 @@
             </mat-card-header>
 
             <mat-card-content>
-              <div class="distribution-content">
+              <div class="distribution-content chart-content-protection" style="width: 100%; min-width: 600px;">
                 <!-- AI-Driven Distribution Insights -->
                 <div class="insights-section" *ngIf="getDistributionInsights().length > 0">
                   <h3 class="insights-title">
@@ -696,10 +692,10 @@
                     </h4>
 
                     <!-- Real Chart.js Histogram -->
-                    <div class="chart-container">
+                    <div class="chart-container" style="width: 100%; min-height: 250px; position: relative;">
                       <canvas #distributionChart baseChart *ngIf="getHistogramData(column)"
-                        [data]="getHistogramData(column)!" [options]="chartOptions" [type]="'bar'" [width]="400"
-                        [height]="200">
+                        [data]="getHistogramData(column)!" [options]="chartOptions" [type]="'bar'"
+                        style="width: 100% !important; height: 200px !important; max-width: none !important;">
                       </canvas>
 
                       <!-- Fallback message if no data -->
@@ -741,31 +737,49 @@
                   <div class="distribution-summary-grid">
                     <div *ngFor="let column of getNumericColumns()" class="distribution-summary-card">
                       <h4>{{ column }}</h4>
-                      <div class="summary-stats">
+                      <div class="summary-stats" *ngIf="basicResults?.distribution_analysis?.histograms?.[column]; else noDistributionData">
                         <div class="stat-row">
                           <span class="stat-label">Skewness:</span>
                           <span class="stat-value">{{
-                            formatNumber(basicResults.distribution_analysis?.histograms?.[column]?.skewness) }}</span>
+                            formatNumber(basicResults.distribution_analysis.histograms[column].skewness) }}</span>
                         </div>
                         <div class="stat-row">
                           <span class="stat-label">Kurtosis:</span>
                           <span class="stat-value">{{
-                            formatNumber(basicResults.distribution_analysis?.histograms?.[column]?.kurtosis) }}</span>
+                            formatNumber(basicResults.distribution_analysis.histograms[column].kurtosis) }}</span>
                         </div>
                         <div class="stat-row">
                           <span class="stat-label">Distribution Type:</span>
                           <span class="stat-value">{{
-                            basicResults.distribution_analysis?.histograms?.[column]?.distribution_type ?
-                            basicResults.distribution_analysis.histograms[column].distribution_type : 'Unknown'
+                            basicResults.distribution_analysis.histograms[column].distribution_type || 'Unknown'
                             }}</span>
                         </div>
                         <div class="stat-row">
                           <span class="stat-label">Bins Count:</span>
                           <span class="stat-value">{{
-                            basicResults.distribution_analysis?.histograms?.[column]?.bins?.length ?
-                            basicResults.distribution_analysis.histograms[column].bins.length : 0 }}</span>
+                            basicResults.distribution_analysis.histograms[column].bins?.length || 0 }}</span>
                         </div>
                       </div>
+                      <ng-template #noDistributionData>
+                        <div class="summary-stats">
+                          <div class="stat-row">
+                            <span class="stat-label">Skewness:</span>
+                            <span class="stat-value">Not available</span>
+                          </div>
+                          <div class="stat-row">
+                            <span class="stat-label">Kurtosis:</span>
+                            <span class="stat-value">Not available</span>
+                          </div>
+                          <div class="stat-row">
+                            <span class="stat-label">Distribution Type:</span>
+                            <span class="stat-value">Not available</span>
+                          </div>
+                          <div class="stat-row">
+                            <span class="stat-label">Bins Count:</span>
+                            <span class="stat-value">Not available</span>
+                          </div>
+                        </div>
+                      </ng-template>
                     </div>
                   </div>
                 </div>
@@ -2515,10 +2529,9 @@
       </div>
     </mat-tab>
 </mat-tab-group>
-</div>
 
-<!-- No Dataset Message -->        <!-- Regression Analysis Controls -->
-        <mat-card class="options-card">
+<!-- Regression Analysis Controls (only show when dataset is loaded) -->
+<mat-card class="options-card" *ngIf="currentDataset">
           <mat-card-header>
             <mat-card-title>
               <mat-icon>trending_up</mat-icon>
@@ -2526,13 +2539,6 @@
             </mat-card-title>
             <mat-card-subtitle>
               Perform linear regression between two numeric variables
-              <!-- Debug info -->
-              <div style="font-size: 0.8em; color: #666; margin-top: 8px;">
-                Debug: Found {{ getRegressionColumns().length }} numeric columns
-                <button mat-icon-button (click)="debugRegressionData()" title="Debug in Console">
-                  <mat-icon style="font-size: 16px;">bug_report</mat-icon>
-                </button>
-              </div>
             </mat-card-subtitle>
           </mat-card-header>
 
@@ -2597,33 +2603,40 @@
         </mat-card-header>
 
         <mat-card-content>
-          <div class="regression-content">
+          <div class="regression-content chart-content-protection" style="width: 100%; min-width: 600px;">
             <!-- Model Performance Metrics -->
             <div class="metrics-section" *ngIf="advancedResults?.regression_analysis?.metrics">
               <h4>Model Performance</h4>
               <div class="metrics-grid">
                 <div class="metric-item">
-                  <span class="metric-label">R² Score (Test)</span>
-                  <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.r2_score)
-                    }}</span>
+                  <div class="metric-header">
+                    <span class="metric-label">R² Score (Test)</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.r2_score) }}</span>
+                  </div>
                   <span class="metric-description">Coefficient of determination</span>
                 </div>
+                
                 <div class="metric-item">
-                  <span class="metric-label">R² Score (Train)</span>
-                  <span class="metric-value">{{
-                    formatNumber(advancedResults?.regression_analysis?.metrics?.train_r2_score) }}</span>
+                  <div class="metric-header">
+                    <span class="metric-label">R² Score (Train)</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.train_r2_score) }}</span>
+                  </div>
                   <span class="metric-description">Training performance</span>
                 </div>
+                
                 <div class="metric-item">
-                  <span class="metric-label">Mean Squared Error</span>
-                  <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mse)
-                    }}</span>
+                  <div class="metric-header">
+                    <span class="metric-label">Mean Squared Error</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mse) }}</span>
+                  </div>
                   <span class="metric-description">Lower is better</span>
                 </div>
+                
                 <div class="metric-item">
-                  <span class="metric-label">Mean Absolute Error</span>
-                  <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mae)
-                    }}</span>
+                  <div class="metric-header">
+                    <span class="metric-label">Mean Absolute Error</span>
+                    <span class="metric-value">{{ formatNumber(advancedResults?.regression_analysis?.metrics?.mae) }}</span>
+                  </div>
                   <span class="metric-description">Average prediction error</span>
                 </div>
               </div>
@@ -2634,14 +2647,16 @@
               <h4>Model Parameters</h4>
               <div class="parameters-grid">
                 <div class="parameter-item">
-                  <span class="parameter-label">Coefficient</span>
-                  <span class="parameter-value">{{
-                    formatNumber(advancedResults?.regression_analysis?.model_parameters?.coefficient) }}</span>
+                  <div class="parameter-header">
+                    <span class="parameter-label">Coefficient</span>
+                    <span class="parameter-value">{{ formatNumber(advancedResults?.regression_analysis?.model_parameters?.coefficient) }}</span>
+                  </div>
                 </div>
                 <div class="parameter-item">
-                  <span class="parameter-label">Intercept</span>
-                  <span class="parameter-value">{{
-                    formatNumber(advancedResults?.regression_analysis?.model_parameters?.intercept) }}</span>
+                  <div class="parameter-header">
+                    <span class="parameter-label">Intercept</span>
+                    <span class="parameter-value">{{ formatNumber(advancedResults?.regression_analysis?.model_parameters?.intercept) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2651,16 +2666,22 @@
               <h4>Data Information</h4>
               <div class="data-info-grid">
                 <div class="info-item">
-                  <span class="info-label">Total Samples</span>
-                  <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_samples }}</span>
+                  <div class="info-header">
+                    <span class="info-label">Total Samples</span>
+                    <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_samples }}</span>
+                  </div>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Training Samples</span>
-                  <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_train }}</span>
+                  <div class="info-header">
+                    <span class="info-label">Training Samples</span>
+                    <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_train }}</span>
+                  </div>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Test Samples</span>
-                  <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_test }}</span>
+                  <div class="info-header">
+                    <span class="info-label">Test Samples</span>
+                    <span class="info-value">{{ advancedResults?.regression_analysis?.data_info?.n_test }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2668,18 +2689,15 @@
             <!-- Regression Plot -->
             <div class="regression-plot" *ngIf="regressionChartData">
               <h4>Regression Plot</h4>
-              <div style="position: relative; height: 400px; margin-top: 16px;">
-                <canvas baseChart [data]="regressionChartData" [options]="regressionChartOptions" [type]="'scatter'">
+              <div style="position: relative; height: 450px; margin-top: 16px; width: 100%;">
+                <canvas baseChart [data]="regressionChartData" [options]="regressionChartOptions" [type]="'scatter'"
+                  style="width: 100% !important; height: 400px !important; max-width: none !important;">
                 </canvas>
               </div>
             </div>
           </div>
         </mat-card-content>
       </mat-card>
-
-
-
-
 
       <!-- Time Series Analysis -->
       <mat-card *ngIf="advancedResults?.time_series_analysis" class="result-card">

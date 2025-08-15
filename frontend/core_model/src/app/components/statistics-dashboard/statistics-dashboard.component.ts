@@ -13,6 +13,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
@@ -45,6 +46,7 @@ interface StatOption {
     MatCheckboxModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatInputModule,
     FormsModule,
     NgChartsModule
   ],
@@ -52,6 +54,71 @@ interface StatOption {
   styleUrls: ['./statistics-dashboard.component.scss']
 })
 export class StatisticsDashboardComponent implements OnInit, OnDestroy {
+  // Talk to My Data state
+  talkQuery: string = '';
+  talkPlotType: string = '';
+  talkColumn: string = '';
+  talkWindow: number = 20;
+  talkToDataAnswer: string = '';
+  bollingerBandData: any = null;
+  bollingerBandChartData: any = null;
+  bollingerBandChartOptions: any = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, position: 'top' },
+      title: { display: true, text: 'Bollinger Band' }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Date' } },
+      y: { title: { display: true, text: 'Value' } }
+    }
+  };
+  onTalkToData() {
+    if (!this.currentDataset) return;
+    const query = this.talkQuery || 'Summarize my data in 2 lines';
+    if (this.talkPlotType === 'bollinger_band') {
+      this.apiService.talkToDataPlot(
+        this.currentDataset.dataset_id,
+        'bollinger_band',
+        this.talkColumn || 'count',
+        this.talkWindow || 20
+      ).subscribe({
+        next: (res) => {
+          this.talkToDataAnswer = res.answer;
+          this.bollingerBandData = res.plot_data;
+          if (res.plot_data) {
+            this.bollingerBandChartData = {
+              labels: res.plot_data.dates,
+              datasets: [
+                { label: 'Value', data: res.plot_data.values, borderColor: '#00ff7f', fill: false },
+                { label: 'MA', data: res.plot_data.ma, borderColor: '#2196f3', fill: false },
+                { label: 'Upper', data: res.plot_data.upper, borderColor: '#ff9800', borderDash: [5,5], fill: false },
+                { label: 'Lower', data: res.plot_data.lower, borderColor: '#e91e63', borderDash: [5,5], fill: false }
+              ]
+            };
+          }
+        },
+        error: (err) => {
+          this.talkToDataAnswer = 'Error: ' + (err.error?.detail || 'Failed to get plot');
+          this.bollingerBandData = null;
+          this.bollingerBandChartData = null;
+        }
+      });
+    } else {
+      this.apiService.talkToData(
+        this.currentDataset.dataset_id,
+        this.talkQuery,
+        this.talkColumn || 'count'
+      ).subscribe({
+        next: (resp) => {
+          this.talkToDataAnswer = resp.answer;
+        },
+        error: (err) => {
+          this.talkToDataAnswer = 'Error: ' + (err.error?.detail || 'Failed to get answer');
+        }
+      });
+    }
+  }
   currentDataset: DatasetInfo | null = null;
   selectedAnalysisType: 'basic' | 'advanced' | null = null;
   isLoading = false;
@@ -385,6 +452,9 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    // Initialize Talk to Data with default question
+    this.talkQuery = 'Summarize my data in 2 lines';
+    
     // Subscribe to current dataset
     this.subscriptions.push(
       this.datasetService.currentDataset$.subscribe(dataset => {

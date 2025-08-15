@@ -17,6 +17,24 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class ApiService {
+  // Talk to My Data endpoints
+  talkToData(datasetId: string, query: string, column?: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/talk-to-data`, {
+      dataset_id: datasetId,
+      query,
+      column
+    });
+  }
+
+  talkToDataPlot(datasetId: string, plotType: string, column?: string, window?: number): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/talk-to-data/plot`, {
+      dataset_id: datasetId,
+      query: `Create ${plotType} visualization`,  // Required field
+      plot_type: plotType,
+      column,
+      window
+    });
+  }
   private baseUrl = environment.apiUrl || 'http://localhost:8000/api/v1';
 
   constructor(private http: HttpClient) { }

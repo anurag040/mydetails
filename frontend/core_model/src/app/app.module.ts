@@ -29,8 +29,7 @@ import { ChatComponent } from './components/chat/chat.component';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    ChatComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
@@ -59,7 +58,8 @@ import { ChatComponent } from './components/chat/chat.component';
     
     // Standalone Components
     FileUploadComponent,
-    StatisticsDashboardComponent
+    StatisticsDashboardComponent,
+    ChatComponent
   ],
   providers: [],
   bootstrap: [AppComponent]

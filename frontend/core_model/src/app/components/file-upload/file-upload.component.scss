@@ -81,7 +81,135 @@
   }
 }
 
-// Upload Card - Modern Dark Style
+// Upload Section - Simplified without card wrapper
+.upload-section {
+  margin-bottom: 32px;
+  
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #00ff88;
+    
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+  
+  .section-subtitle {
+    color: #999;
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
+
+// Dataset Section - Simplified without heavy card wrapper
+.dataset-section {
+  margin-top: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  .dataset-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+
+    .dataset-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: rgba(0, 255, 136, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        color: #00ff88;
+      }
+    }
+
+    .dataset-details {
+      flex: 1;
+
+      .dataset-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: #00ff88;
+      }
+
+      .dataset-subtitle {
+        font-size: 14px;
+        color: #999;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Dataset Actions - Simplified action buttons
+.dataset-actions {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 255, 136, 0.2);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  
+  button {
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 8px 16px;
+    
+    &[color="warn"] {
+      background: rgba(255, 102, 0, 0.1);
+      color: #ff6600;
+      border: 1px solid rgba(255, 102, 0, 0.3);
+      
+      &:hover {
+        background: rgba(255, 102, 0, 0.15);
+        border-color: rgba(255, 102, 0, 0.5);
+      }
+    }
+    
+    &:not([color="warn"]) {
+      background: rgba(20, 20, 20, 0.8);
+      color: #e0e0e0;
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      
+      &:hover {
+        background: rgba(0, 255, 136, 0.1);
+        border-color: rgba(0, 255, 136, 0.4);
+        color: #00ff88;
+      }
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// Upload Card - Modern Dark Style (keep for compatibility)
 .upload-card {
   margin-bottom: 24px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);

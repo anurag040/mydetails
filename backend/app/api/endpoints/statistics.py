@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException
+import logging
 from app.schemas.responses import StatisticsRequest, BasicStatsResponse, AdvancedStatsRequest, AdvancedStatsResponse
 from app.services.statistics_calculator import StatisticsCalculator
 from typing import List
 
 router = APIRouter()
+logger = logging.getLogger("statistics")
+logging.basicConfig(level=logging.INFO)
 stats_calculator = StatisticsCalculator()
 
 @router.post("/statistics/basic", response_model=BasicStatsResponse)
@@ -30,14 +33,18 @@ async def calculate_basic_statistics(request: StatisticsRequest):
     - reproducibility_info: Generate reproducibility information and environment details
     """
     try:
+        logger.info(f"Calculating basic statistics for dataset_id={request.dataset_id}, options={request.options}")
         result = await stats_calculator.calculate_basic_stats(
             request.dataset_id, 
             request.options
         )
+        logger.info(f"Successfully calculated basic statistics for dataset_id={request.dataset_id}")
         return result
     except FileNotFoundError:
+        logger.error(f"Dataset not found: {request.dataset_id}")
         raise HTTPException(status_code=404, detail="Dataset not found")
     except Exception as e:
+        logger.exception(f"Statistics calculation failed for dataset_id={request.dataset_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Statistics calculation failed: {str(e)}")
 
 @router.post("/statistics/advanced", response_model=AdvancedStatsResponse)

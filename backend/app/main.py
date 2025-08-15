@@ -1,3 +1,4 @@
+from app.api.endpoints import upload, statistics, analysis, chat, clustering, talk_to_data
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -28,11 +29,13 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Include API routers
 app.include_router(upload.router, prefix="/api/v1", tags=["Upload"])
+app.include_router(upload.router, prefix="/api/v1", tags=["Upload"])
 app.include_router(statistics.router, prefix="/api/v1", tags=["Statistics"])
 app.include_router(analysis.router, prefix="/api/v1", tags=["Analysis"])
 app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 app.include_router(regression.router, prefix="/api/v1", tags=["Regression"])
 app.include_router(clustering.router, prefix="/api/v1", tags=["Clustering"])
+app.include_router(talk_to_data.router, prefix="/api/v1", tags=["TalkToData"])
 
 @app.get("/")
 async def root():

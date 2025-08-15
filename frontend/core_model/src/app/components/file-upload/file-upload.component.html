@@ -4,67 +4,69 @@
     <div class="status-dot"></div>
   </div>
 
-  <!-- Upload Area (show always for debugging) -->
-  <mat-card class="upload-card">
-    <mat-card-header>
-      <mat-card-title>Upload Your Dataset</mat-card-title>
-      <mat-card-subtitle>Drag and drop a file or click to browse</mat-card-subtitle>
-    </mat-card-header>
+  <!-- Upload Area (simplified without extra card wrapper) -->
+  <div class="upload-section">
+    <h2 class="section-title">
+      <mat-icon>cloud_upload</mat-icon>
+      Upload Your Dataset
+    </h2>
+    <p class="section-subtitle">Drag and drop a file or click to browse</p>
     
-    <mat-card-content>
-      <div class="upload-area" 
-           (drop)="onDrop($event)" 
-           (dragover)="onDragOver($event)" 
-           (dragleave)="onDragLeave($event)">
-        <mat-icon class="upload-icon">cloud_upload</mat-icon>
-        <p>Drop your CSV, Excel, or JSON file here</p>
-        <p class="upload-hint">Or click the button below to browse</p>
-        
-        <input type="file" 
-               #fileInput 
-               (change)="onFileSelected($event)" 
-               accept=".csv,.xlsx,.xls,.json"
-               style="display: none;">
-        
-        <button mat-raised-button 
-                color="primary" 
-                (click)="fileInput.click()"
-                [disabled]="isUploading">
-          <mat-icon>folder_open</mat-icon>
-          Browse Files
-        </button>
-        
-        <mat-progress-bar *ngIf="isUploading" mode="indeterminate" class="upload-progress"></mat-progress-bar>
-      </div>
-    </mat-card-content>
-  </mat-card>
+    <div class="upload-area" 
+         (drop)="onDrop($event)" 
+         (dragover)="onDragOver($event)" 
+         (dragleave)="onDragLeave($event)">
+      <mat-icon class="upload-icon">cloud_upload</mat-icon>
+      <p>Drop your CSV, Excel, or JSON file here</p>
+      <p class="upload-hint">Or click the button below to browse</p>
+      
+      <input type="file" 
+             #fileInput 
+             (change)="onFileSelected($event)" 
+             accept=".csv,.xlsx,.xls,.json"
+             style="display: none;">
+      
+      <button mat-raised-button 
+              color="primary" 
+              (click)="fileInput.click()"
+              [disabled]="isUploading">
+        <mat-icon>folder_open</mat-icon>
+        Browse Files
+      </button>
+      
+      <mat-progress-bar *ngIf="isUploading" mode="indeterminate" class="upload-progress"></mat-progress-bar>
+    </div>
+  </div>
 
-  <!-- Current Dataset Card -->
-  <mat-card class="dataset-card" *ngIf="currentDataset">
-    <mat-card-header>
-      <mat-icon mat-card-avatar [ngClass]="'file-icon'">{{ getFileIcon(currentDataset.filename) }}</mat-icon>
-      <mat-card-title>{{ currentDataset.filename }}</mat-card-title>
-      <mat-card-subtitle>{{ formatFileSize(currentDataset.size) }} • {{ formatDate(currentDataset.upload_timestamp) }}</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <!-- Dataset Info -->
-      <div class="dataset-info">
-        <mat-chip-set aria-label="Dataset properties">
-          <mat-chip *ngIf="currentDataset.rows">
-            <mat-icon matChipAvatar>table_rows</mat-icon>
-            {{ currentDataset.rows }} rows
-          </mat-chip>
-          <mat-chip *ngIf="currentDataset.columns">
-            <mat-icon matChipAvatar>view_column</mat-icon>
-            {{ currentDataset.columns }} columns
-          </mat-chip>
-          <mat-chip>
-            <mat-icon matChipAvatar>schedule</mat-icon>
-            Just uploaded
-          </mat-chip>
-        </mat-chip-set>
+  <!-- Current Dataset Info (simplified without heavy card wrapper) -->
+  <div class="dataset-section" *ngIf="currentDataset">
+    <div class="dataset-header">
+      <div class="dataset-icon">
+        <mat-icon [ngClass]="'file-icon'">{{ getFileIcon(currentDataset.filename) }}</mat-icon>
       </div>
+      <div class="dataset-details">
+        <h3 class="dataset-title">{{ currentDataset.filename }}</h3>
+        <p class="dataset-subtitle">{{ formatFileSize(currentDataset.size) }} • {{ formatDate(currentDataset.upload_timestamp) }}</p>
+      </div>
+    </div>
+
+    <!-- Dataset Info -->
+    <div class="dataset-info">
+      <mat-chip-set aria-label="Dataset properties">
+        <mat-chip *ngIf="currentDataset.rows">
+          <mat-icon matChipAvatar>table_rows</mat-icon>
+          {{ currentDataset.rows }} rows
+        </mat-chip>
+        <mat-chip *ngIf="currentDataset.columns">
+          <mat-icon matChipAvatar>view_column</mat-icon>
+          {{ currentDataset.columns }} columns
+        </mat-chip>
+        <mat-chip>
+          <mat-icon matChipAvatar>schedule</mat-icon>
+          Just uploaded
+        </mat-chip>
+      </mat-chip-set>
+    </div>
 
       <!-- Dataset Preview -->
       <mat-expansion-panel *ngIf="datasetPreview" class="preview-panel">
@@ -142,19 +144,19 @@
           </button>
         </div>
       </div>
-    </mat-card-content>
 
-    <mat-card-actions align="end">
-      <button mat-button (click)="removeDataset()" color="warn">
-        <mat-icon>delete</mat-icon>
-        Remove Dataset
-      </button>
-      <button mat-button (click)="fileInput.click()">
-        <mat-icon>upload</mat-icon>
-        Upload New File
-      </button>
-    </mat-card-actions>
-  </mat-card>
+      <!-- Dataset Actions -->
+      <div class="dataset-actions">
+        <button mat-button (click)="removeDataset()" color="warn">
+          <mat-icon>delete</mat-icon>
+          Remove Dataset
+        </button>
+        <button mat-button (click)="fileInput.click()">
+          <mat-icon>upload</mat-icon>
+          Upload New File
+        </button>
+      </div>
+    </div>
 
   <!-- Hidden file input for new uploads -->
   <input type="file" 

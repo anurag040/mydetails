@@ -1,28 +1,43 @@
-<div class="main-container">
-  <mat-toolbar color="primary">
-    <mat-icon>analytics</mat-icon>
-    <span style="margin-left: 8px;">Data Analysis Platform</span>
-    <span class="spacer"></span>
-    <mat-icon>insights</mat-icon>
-  </mat-toolbar>
+<div class="app-container">
+  <!-- Simplified Header -->
+  <header class="app-header">
+    <mat-icon class="app-icon">analytics</mat-icon>
+    <h1 class="app-title">Data Analysis Platform</h1>
+    <mat-icon class="insights-icon">insights</mat-icon>
+  </header>
 
-  <mat-tab-group mat-align-tabs="center" class="fade-in">
-    <mat-tab label="📊 Upload Data">
-      <div class="tab-content slide-up">
+  <!-- Simplified Tab Navigation -->
+  <nav class="tab-navigation">
+    <mat-tab-group class="main-tabs" animationDuration="200ms">
+      <mat-tab class="nav-tab">
+        <ng-template mat-tab-label>
+          <div class="tab-label">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">Upload Data</span>
+          </div>
+        </ng-template>
         <app-file-upload></app-file-upload>
-      </div>
-    </mat-tab>
-    
-    <mat-tab label="📈 Statistics">
-      <div class="tab-content slide-up">
+      </mat-tab>
+      
+      <mat-tab class="nav-tab">
+        <ng-template mat-tab-label>
+          <div class="tab-label">
+            <span class="tab-icon">📈</span>
+            <span class="tab-text">Statistics</span>
+          </div>
+        </ng-template>
         <app-statistics-dashboard></app-statistics-dashboard>
-      </div>
-    </mat-tab>
-    
-    <mat-tab label="💬 Talk to Data">
-      <div class="tab-content slide-up">
+      </mat-tab>
+      
+      <mat-tab class="nav-tab">
+        <ng-template mat-tab-label>
+          <div class="tab-label">
+            <span class="tab-icon">💬</span>
+            <span class="tab-text">Talk to Data</span>
+          </div>
+        </ng-template>
         <app-chat></app-chat>
-      </div>
-    </mat-tab>
-  </mat-tab-group>
+      </mat-tab>
+    </mat-tab-group>
+  </nav>
 </div>

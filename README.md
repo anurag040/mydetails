@@ -7,9 +7,198 @@ A full-stack web application for advanced data analysis with AI-powered insights
 - **File Upload**: Support for CSV, Excel, and JSON files
 - **Basic Statistics**: Descriptive stats, correlations, distributions, missing data analysis
 - **Advanced Statistics**: Regression, clustering, PCA, time series, anomaly detection
-- **Talk to Data**: AI-powered natural language queries using OpenAI GPT
+- **Talk to My Data**: AI-powered natural language data analysis with ChatGPT-like interface
+- **Interactive Visualizations**: Dynamic charts including Bollinger Bands and trend analysis
 - **Validation System**: Academic-grade validation of AI analysis results
 - **Interactive Dashboard**: Modern Angular UI with Material Design
+
+## 💬 Talk to My Data Feature
+
+### Overview
+
+The "Talk to My Data" feature transforms your dataset into an interactive AI-powered assistant that understands natural language queries and provides comprehensive statistical analysis, insights, and visualizations. Built with a ChatGPT-like interface, this feature makes data analysis accessible to both technical and non-technical users.
+
+### 🎯 Core Capabilities
+
+#### **Statistical Analysis Engine**
+- **Interquartile Range (IQR) Analysis**: Complete quartile analysis with beautiful visual summaries
+- **Descriptive Statistics**: Mean, median, standard deviation, variance calculations
+- **Correlation Analysis**: Identify relationships between variables with strength indicators
+- **Missing Data Analysis**: Comprehensive missing value detection and impact assessment
+- **Outlier Detection**: IQR-based outlier identification with statistical boundaries
+- **Data Quality Assessment**: Complete dataset health check and recommendations
+
+#### **Natural Language Processing**
+- **Intelligent Query Understanding**: Recognizes statistical terms, column names, and analysis requests
+- **Context-Aware Responses**: Maintains conversation context for follow-up questions
+- **Smart Pattern Recognition**: Automatically detects query intent (statistics, visualization, exploration)
+- **Flexible Query Formats**: Accepts formal statistical language or casual conversational queries
+
+#### **Advanced Visualizations**
+- **Financial Data Visualizations**:
+  - **Bollinger Bands**: Technical analysis with moving averages and confidence intervals
+  - **Open/Close Trend Analysis**: Multi-series line charts for price movement analysis
+  - **Volume Analysis**: Trading volume patterns and correlations
+- **Dynamic Chart Generation**: Real-time chart creation based on data characteristics
+- **Interactive Chart Controls**: User-selectable chart types and parameters
+
+### 🛠️ Technical Implementation
+
+#### **Backend Architecture**
+- **FastAPI Endpoints**: RESTful APIs for chat and visualization requests
+- **Pandas Integration**: Advanced data manipulation and statistical calculations
+- **NumPy Processing**: High-performance numerical computations
+- **Claude 3.7 AI Integration**: Natural language understanding and response generation
+- **Modular Analysis Functions**: Specialized functions for different statistical operations
+
+#### **Frontend Features**
+- **ChatGPT-like Interface**: Modern chat UI with user and AI message bubbles
+- **Real-time Responses**: Instant feedback with loading indicators
+- **Chart Integration**: Embedded Chart.js visualizations within chat responses
+- **Responsive Design**: Mobile-friendly interface with Material Design components
+- **Theme Consistency**: Dark theme with neon accent colors for modern appeal
+
+### 📊 Usage Examples
+
+#### **Basic Queries**
+```
+✅ "Find IQR for each column"
+✅ "Show me basic statistics"
+✅ "What's the correlation between Open and Close?"
+✅ "Describe my dataset"
+✅ "Show me missing data"
+```
+
+#### **Advanced Analysis**
+```
+✅ "Detect outliers in my data"
+✅ "Calculate coefficient of variation for all columns"
+✅ "What's the typical daily price spread?"
+✅ "Show volume trading patterns"
+✅ "Analyze price volatility"
+```
+
+#### **Visualization Requests**
+```
+✅ "Create Bollinger Bands for Close price"
+✅ "Show Open vs Close trend analysis"
+✅ "Generate line chart for price movements"
+✅ "Display volume analysis chart"
+```
+
+### 🎨 User Interface Features
+
+#### **Chat Interface Components**
+- **Message History**: Persistent conversation history with timestamps
+- **User Input Field**: Multi-line text input with Enter-to-send functionality
+- **Visualization Options**: Quick-select buttons for common chart types
+- **Response Formatting**: Rich text responses with markdown support
+- **Chart Embedding**: Inline charts within chat responses
+
+#### **Visual Design Elements**
+- **Modern Chat Bubbles**: Distinct styling for user vs AI messages
+- **Loading Animations**: Elegant loading indicators during processing
+- **Chart Containers**: Styled containers with headers and context information
+- **Responsive Layout**: Adaptive design for different screen sizes
+- **Accessibility Features**: High contrast colors and keyboard navigation
+
+### 🔧 Configuration and Customization
+
+#### **Backend Configuration**
+```python
+# Statistical Analysis Settings
+DEFAULT_IQR_PRECISION = 2  # Decimal places for IQR calculations
+CORRELATION_THRESHOLD = 0.7  # Strong correlation threshold
+OUTLIER_METHOD = "IQR"  # Outlier detection method
+BOLLINGER_DEFAULT_WINDOW = 20  # Default Bollinger Band period
+```
+
+#### **Frontend Configuration**
+```typescript
+// Chat Interface Settings
+AUTO_SCROLL = true  // Auto-scroll to latest messages
+MESSAGE_TIMESTAMP = true  // Show message timestamps
+CHART_ANIMATION = true  // Enable chart animations
+MAX_CHART_POINTS = 100  // Limit chart data points for performance
+```
+
+### 📈 Advanced Statistical Features
+
+#### **Financial Data Analysis**
+- **Price Analysis**: Open, High, Low, Close (OHLC) statistical summaries
+- **Volume Analysis**: Trading volume patterns and distribution analysis
+- **Volatility Metrics**: Standard deviation, coefficient of variation calculations
+- **Trend Analysis**: Moving averages and trend direction identification
+- **Technical Indicators**: Bollinger Bands with customizable periods
+
+#### **Data Quality Assessment**
+- **Completeness Analysis**: Missing data percentage and patterns
+- **Consistency Checks**: Data type validation and format verification
+- **Outlier Impact**: Assessment of outlier effects on statistical measures
+- **Distribution Analysis**: Normality tests and distribution characteristics
+
+#### **Comparative Analysis**
+- **Column Comparisons**: Side-by-side statistical comparisons
+- **Stability Rankings**: Identification of most/least volatile variables
+- **Correlation Matrices**: Complete correlation analysis with visualization
+- **Performance Metrics**: Coefficient of variation and relative stability measures
+
+### 🚀 Performance Optimizations
+
+#### **Data Processing**
+- **Efficient Pandas Operations**: Optimized statistical calculations
+- **Chunked Processing**: Large dataset handling with memory management
+- **Caching Mechanisms**: Statistical result caching for repeated queries
+- **Asynchronous Processing**: Non-blocking API responses
+
+#### **Frontend Performance**
+- **Chart Data Limiting**: Maximum data points for smooth rendering
+- **Lazy Loading**: Progressive loading of chat history
+- **Debounced Input**: Optimized user input handling
+- **Memory Management**: Efficient chart cleanup and garbage collection
+
+### 🔐 Security and Validation
+
+#### **Data Security**
+- **File Upload Validation**: Secure file type and size validation
+- **Input Sanitization**: Protection against malicious query inputs
+- **API Rate Limiting**: Prevents abuse of statistical analysis endpoints
+- **Error Handling**: Comprehensive error management and user feedback
+
+#### **Result Validation**
+- **Statistical Accuracy**: Verification of mathematical calculations
+- **Range Validation**: Ensuring results are within expected bounds
+- **Consistency Checks**: Cross-validation of related statistical measures
+- **Academic Standards**: Compliance with statistical best practices
+
+### 💡 Future Enhancements
+
+#### **Planned Features**
+- **Machine Learning Integration**: Automated model suggestions and training
+- **Export Capabilities**: PDF and Excel report generation
+- **Collaborative Features**: Shared analysis sessions and comments
+- **Custom Visualizations**: User-defined chart types and layouts
+- **API Integration**: Connect to external data sources and APIs
+
+#### **AI Improvements**
+- **Advanced NLP**: Better understanding of complex statistical queries
+- **Predictive Analytics**: Forecasting and trend prediction capabilities
+- **Automated Insights**: Proactive identification of data patterns
+- **Multi-language Support**: Support for non-English queries
+
+### 🏆 Best Practices
+
+#### **For Users**
+- Start with simple queries like "describe my dataset" to understand your data structure
+- Use specific column names in queries for targeted analysis
+- Combine statistical queries with visualizations for comprehensive insights
+- Review IQR analysis to understand data distribution and outliers
+
+#### **For Developers**
+- Extend statistical functions in the backend for domain-specific analysis
+- Customize chart types and styling for different data types
+- Implement caching for frequently requested statistical calculations
+- Add validation for new statistical methods and calculations
 
 ## 🏗️ Architecture
 

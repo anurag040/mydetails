@@ -1,16 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
-import { NgChartsModule } from 'ng2-charts';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TextFieldModule } from '@angular/cdk/text-field';
+import { NgChartsModule } from 'ng2-charts';
 import { ApiService } from '../../services/api.service';
 import { DatasetService } from '../../services/dataset.service';
 import { DatasetInfo } from '../../models/api.models';
@@ -27,17 +27,17 @@ interface ChatMessage {
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
     FormsModule,
-    NgChartsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatSelectModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
     MatTooltipModule,
-    TextFieldModule
+    TextFieldModule,
+    NgChartsModule
   ],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
@@ -46,13 +46,14 @@ export class ChatComponent implements OnInit {
   currentDataset: DatasetInfo | null = null;
   messages: ChatMessage[] = [];
   currentQuery: string = '';
-  selectedPlotType: string = '';
-  selectedColumn: string = '';
-  bollingerWindow: number = 20;
+  showChartOptions = false;
+  selectedPlotType = '';
+  selectedColumn = '';
+  bollingerWindow = 20;
+  showAnalysisMatrix = false;
   isLoading: boolean = false;
   isTyping: boolean = false;
   currentTime: Date = new Date();
-  showChartOptions: boolean = false;
   errorMessage: string = '';
   retryCount: number = 0;
   maxRetries: number = 3;
@@ -364,6 +365,15 @@ export class ChatComponent implements OnInit {
 
   toggleChartOptions() {
     this.showChartOptions = !this.showChartOptions;
+  }
+
+  toggleAnalysisMatrix() {
+    this.showAnalysisMatrix = !this.showAnalysisMatrix;
+    // Reset chart selection when showing matrix
+    if (this.showAnalysisMatrix) {
+      this.selectedPlotType = '';
+      this.showChartOptions = false;
+    }
   }
 
   selectChart(type: string) {
@@ -707,6 +717,18 @@ export class ChatComponent implements OnInit {
            errorMessage.includes('timeout') || 
            errorMessage.includes('network') ||
            errorMessage.includes('connection');
+  }
+
+  getInputPlaceholder(): string {
+    if (!this.currentDataset) {
+      return 'Upload a dataset to start chatting...';
+    }
+    
+    if (this.messages.length === 0) {
+      return 'Ask me anything about your data...';
+    }
+    
+    return 'Continue the conversation...';
   }
 
 }

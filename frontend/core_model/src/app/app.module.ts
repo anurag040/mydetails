@@ -30,8 +30,7 @@ import { AnalysisMetricsComponent } from './components/analysis-metrics/analysis
 
 @NgModule({
   declarations: [
-    AppComponent,
-    AnalysisMetricsComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
@@ -61,7 +60,8 @@ import { AnalysisMetricsComponent } from './components/analysis-metrics/analysis
     // Standalone Components
     FileUploadComponent,
     StatisticsDashboardComponent,
-    ChatComponent
+    ChatComponent,
+    AnalysisMetricsComponent
   ],
   providers: [],
   bootstrap: [AppComponent]

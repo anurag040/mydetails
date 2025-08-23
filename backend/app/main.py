@@ -1,4 +1,4 @@
-from app.api.endpoints import upload, statistics, analysis, chat, clustering, talk_to_data
+from app.api.endpoints import upload, statistics, analysis, chat, clustering, talk_to_data, analysis_matrix
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -36,6 +36,7 @@ app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 app.include_router(regression.router, prefix="/api/v1", tags=["Regression"])
 app.include_router(clustering.router, prefix="/api/v1", tags=["Clustering"])
 app.include_router(talk_to_data.router, prefix="/api/v1", tags=["TalkToData"])
+app.include_router(analysis_matrix.router, prefix="/api/v1", tags=["AnalysisMatrix"])
 
 @app.get("/")
 async def root():

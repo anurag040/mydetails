@@ -1,0 +1,192 @@
+<div class="analysis-matrix-container">
+  <!-- Header -->
+  <div class="matrix-header">
+    <div class="header-content">
+      <h2>📊 Analysis Matrix</h2>
+      <p>Quality tracking and validation for all statistical analyses</p>
+    </div>
+    <button class="refresh-btn" (click)="refreshMatrix()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading analysis matrix...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <mat-icon>error</mat-icon>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="refreshMatrix()">Try Again</button>
+  </div>
+
+  <!-- Matrix Content -->
+  <div class="matrix-content" *ngIf="matrix && !loading && !error">
+    
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon">📈</div>
+        <div class="card-content">
+          <h3>{{ matrix?.overall_quality_score?.toFixed(1) }}%</h3>
+          <p>Overall Quality</p>
+          <div class="quality-bar">
+            <div class="quality-fill" [style.width.%]="matrix?.overall_quality_score" 
+                 [style.background-color]="getScoreColor(matrix?.overall_quality_score || 0)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">🔍</div>
+        <div class="card-content">
+          <h3>{{ matrix?.total_analyses }}</h3>
+          <p>Total Analyses</p>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">📋</div>
+        <div class="card-content">
+          <h3>{{ getCoveragePercentage() }}%</h3>
+          <p>Coverage</p>
+          <div class="coverage-bar">
+            <div class="coverage-fill" [style.width.%]="getCoveragePercentage()"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-card" *ngIf="report">
+        <div class="card-icon">⭐</div>
+        <div class="card-content">
+          <h3>{{ report?.summary?.average_methodology_score?.toFixed(1) }}%</h3>
+          <p>Avg Methodology</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coverage Matrix -->
+    <div class="coverage-section">
+      <h3>📊 Analysis Coverage Matrix</h3>
+      <div class="coverage-grid">
+        <div class="coverage-item" 
+             *ngFor="let item of matrix.coverage_matrix | keyvalue"
+             [class.completed]="item.value"
+             [class.missing]="!item.value">
+          <div class="coverage-status">
+            <mat-icon>{{ item.value ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
+          </div>
+          <div class="coverage-info">
+            <h4>{{ getAnalysisTypeName(item.key) }}</h4>
+            <p>{{ item.value ? 'Completed' : 'Not performed' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Analyses -->
+    <div class="recent-analyses">
+      <h3>🕒 Recent Analyses</h3>
+      <div class="analyses-list">
+        <div class="analysis-item" *ngFor="let record of matrix.analysis_records.slice(-5).reverse()">
+          <div class="analysis-header">
+            <div class="analysis-type">
+              <span class="type-badge">{{ getAnalysisTypeName(record.analysis_type) }}</span>
+              <span class="timestamp">{{ formatTimestamp(record.timestamp) }}</span>
+            </div>
+            <div class="analysis-score" [style.color]="getScoreColor(record.score.overall_score)">
+              {{ record.score.overall_score?.toFixed(1) }}%
+              <span class="score-label">{{ getScoreLabel(record.score.overall_score) }}</span>
+            </div>
+          </div>
+          
+          <div class="analysis-details">
+            <p class="query">{{ record.user_query }}</p>
+            <p class="method">Method: {{ record.method_used }}</p>
+          </div>
+
+          <!-- Score Breakdown -->
+          <div class="score-breakdown">
+            <div class="score-item">
+              <span>Methodology</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="record.score.methodology_score"
+                     [style.background-color]="getScoreColor(record.score.methodology_score)"></div>
+              </div>
+              <span>{{ record.score.methodology_score?.toFixed(0) }}%</span>
+            </div>
+            <div class="score-item">
+              <span>Completeness</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="record.score.completeness_score"
+                     [style.background-color]="getScoreColor(record.score.completeness_score)"></div>
+              </div>
+              <span>{{ record.score.completeness_score?.toFixed(0) }}%</span>
+            </div>
+            <div class="score-item">
+              <span>Accuracy</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="record.score.accuracy_score"
+                     [style.background-color]="getScoreColor(record.score.accuracy_score)"></div>
+              </div>
+              <span>{{ record.score.accuracy_score?.toFixed(0) }}%</span>
+            </div>
+            <div class="score-item">
+              <span>Interpretation</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="record.score.interpretation_score"
+                     [style.background-color]="getScoreColor(record.score.interpretation_score)"></div>
+              </div>
+              <span>{{ record.score.interpretation_score?.toFixed(0) }}%</span>
+            </div>
+          </div>
+
+          <!-- Warnings -->
+          <div class="warnings" *ngIf="record.warnings.length > 0">
+            <h5>⚠️ Warnings:</h5>
+            <ul>
+              <li *ngFor="let warning of record.warnings">{{ warning }}</li>
+            </ul>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="recommendations" *ngIf="record.recommendations.length > 0">
+            <h5>💡 Recommendations:</h5>
+            <ul>
+              <li *ngFor="let rec of record.recommendations">{{ rec }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overall Recommendations -->
+    <div class="overall-recommendations" *ngIf="matrix.recommendations.length > 0">
+      <h3>🎯 Overall Recommendations</h3>
+      <div class="recommendations-list">
+        <div class="recommendation-item" *ngFor="let rec of matrix.recommendations">
+          <mat-icon>lightbulb</mat-icon>
+          <p>{{ rec }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality Trends (if report data available) -->
+    <div class="quality-trends" *ngIf="report && report.quality_trends.length > 0">
+      <h3>📈 Quality Trends</h3>
+      <div class="trends-chart">
+        <div class="trend-item" *ngFor="let trend of report.quality_trends.slice(-10)">
+          <div class="trend-date">{{ trend.date }}</div>
+          <div class="trend-type">{{ getAnalysisTypeName(trend.type) }}</div>
+          <div class="trend-score" [style.color]="getScoreColor(trend.score)">
+            {{ trend.score?.toFixed(1) }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

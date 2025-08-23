@@ -2,19 +2,17 @@
   <!-- Minimal Header -->
   <div class="modern-header">
     <div class="header-content">
-      <div class="ai-avatar">
-        <mat-icon>psychology</mat-icon>
-      </div>
-      <div class="header-text">
-        <h1>Data Assistant</h1>
-        <p>Ask me anything about your data</p>
-      </div>
-    </div>
-    
-    <!-- Chart Options in Header -->
-    <div class="header-chart-options" *ngIf="currentDataset">
-      <div class="chart-controls">
-        <div class="chart-toggle-group">
+      <div class="header-chat-options" *ngIf="!currentDataset">
+        <div class="chat-header-compact">
+          <h1>Data Assistant</h1>
+          <p>Ask me anything about your data</p>
+        <div class="all-options-row">
+          <button class="chart-option-btn" 
+                  [class.active]="selectedPlotType === ''"
+                  (click)="selectChart('')">
+            <mat-icon>text_fields</mat-icon>
+            <span>Text Only</span>
+          </button>
           <button class="chart-option-btn" 
                   [class.active]="selectedPlotType === 'line_trend'"
                   (click)="selectChart('line_trend')">
@@ -27,12 +25,13 @@
             <mat-icon>analytics</mat-icon>
             <span>Bollinger Bands</span>
           </button>
-          <button class="chart-option-btn" 
-                  [class.active]="!selectedPlotType"
-                  (click)="selectChart('')">
-            <mat-icon>chat</mat-icon>
-            <span>Text Only</span>
-          </button>
+          
+          <div class="separator"></div>
+          
+          <button class="quick-action-btn" (click)="askQuickQuestion('Summarize my data')" [disabled]="isLoading">📊 Summarize</button>
+          <button class="quick-action-btn" (click)="askQuickQuestion('Show me trends in the data')" [disabled]="isLoading">📈 Trends</button>
+          <button class="quick-action-btn" (click)="askQuickQuestion('Find outliers in my data')" [disabled]="isLoading">🎯 Outliers</button>
+          <button class="quick-action-btn" (click)="askQuickQuestion('Check for missing values')" [disabled]="isLoading">❓ Missing</button>
         </div>
         
         <!-- Chart Settings Dropdown -->
@@ -58,7 +57,8 @@
   </div>
   
   <!-- Chat Messages Area -->
-  <div class="modern-chat-content">
+  <div class="modern-chat-content" [class.with-matrix]="showAnalysisMatrix">
+    
     <div class="messages-area" #messagesContainer>
       <!-- Welcome State -->
       <div class="welcome-state" *ngIf="!currentDataset && messages.length === 0">
@@ -172,13 +172,13 @@
   </div>
 
   <!-- Modern Input Area -->
-  <div class="modern-input-area">
+  <div class="modern-input-area" *ngIf="currentDataset">
     <div class="input-area">
       <div class="input-container">
         <textarea 
           [(ngModel)]="currentQuery" 
           (keydown)="onKeyPress($event)"
-          placeholder="Ask me anything about your data..."
+          placeholder="{{ getInputPlaceholder() }}"
           class="chat-input"
           rows="1"
           cdkTextareaAutosize
@@ -199,14 +199,5 @@
 
     </div>
     
-    <!-- Quick Actions Only -->
-    <div class="actions-area">
-      <div class="quick-actions-inline">
-        <button class="quick-action-btn" (click)="askQuickQuestion('Summarize my data')" [disabled]="isLoading">📊 Summarize</button>
-        <button class="quick-action-btn" (click)="askQuickQuestion('Show me trends in the data')" [disabled]="isLoading">📈 Trends</button>
-        <button class="quick-action-btn" (click)="askQuickQuestion('Find outliers in my data')" [disabled]="isLoading">🎯 Outliers</button>
-        <button class="quick-action-btn" (click)="askQuickQuestion('Check for missing values')" [disabled]="isLoading">❓ Missing</button>
-      </div>
-    </div>
   </div>
 </div>

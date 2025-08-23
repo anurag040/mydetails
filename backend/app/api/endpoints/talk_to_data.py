@@ -6,6 +6,8 @@ import numpy as np
 import json
 from app.services.file_handler import FileHandler
 from app.services.llm_service import LLMService
+from app.services.analysis_matrix_service import analysis_matrix_service
+from app.models.analysis_matrix import AnalysisType
 
 router = APIRouter()
 file_handler = FileHandler()
@@ -444,7 +446,20 @@ async def talk_to_data_plot(request: TalkToDataRequest):
                     "values": s.tolist()
                 }
                 print("✅ DEBUG: Bollinger Area data prepared successfully")
-                return TalkToDataResponse(answer=f"📈 Bollinger Area analysis created for '{col}' column with {window}-period moving average.", plot_data=plot_data)
+                # Record this analysis in the matrix
+                analysis_matrix_service.record_analysis(
+                    dataset_id=request.dataset_id,
+                    analysis_type=AnalysisType.BOLLINGER_BANDS,
+                    user_query=f"Generate Bollinger Bands for {col}",
+                    method_used="Rolling window with 2-sigma bands",
+                    parameters={"window": window, "column": col, "std_multiplier": 2},
+                    results={"ma": ma.fillna(0).tolist(), "upper": upper.fillna(0).tolist(), 
+                            "lower": lower.fillna(0).tolist(), "values": s.tolist()},
+                    code_executed=f"ma = data['{col}'].rolling({window}).mean(); std = data['{col}'].rolling({window}).std(); upper = ma + 2*std; lower = ma - 2*std",
+                    data=df
+                )
+                
+                return TalkToDataResponse(answer=f"📈 Bollinger Bands analysis created for '{col}' column with {window}-period moving average.", plot_data=plot_data)
             
             except Exception as e:
                 print(f"❌ DEBUG: Bollinger Area error: {str(e)}")

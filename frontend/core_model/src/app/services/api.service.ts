@@ -26,6 +26,15 @@ export class ApiService {
     });
   }
 
+  // Analysis Matrix endpoints
+  getAnalysisMatrix(datasetId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/analysis-matrix/${datasetId}`);
+  }
+
+  getAnalysisReport(datasetId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/analysis-report/${datasetId}`);
+  }
+
   talkToDataPlot(datasetId: string, plotType: string, column?: string, window?: number): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/talk-to-data/plot`, {
       dataset_id: datasetId,

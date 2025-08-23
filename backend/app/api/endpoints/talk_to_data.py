@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import pandas as pd
 import numpy as np
+import json
 from app.services.file_handler import FileHandler
 from app.services.llm_service import LLMService
 
@@ -39,43 +40,48 @@ async def talk_to_data(request: TalkToDataRequest):
         return TalkToDataResponse(answer=f"❌ Error processing your question: {str(e)}")
 
 async def analyze_data_with_ai(df: pd.DataFrame, query: str) -> str:
-    """Generic AI-powered data analysis that can handle any question"""
-    
-    # Create dataset summary for context
-    summary = {
-        "shape": df.shape,
-        "columns": list(df.columns),
-        "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
-        "numeric_columns": df.select_dtypes(include=[np.number]).columns.tolist(),
-        "categorical_columns": df.select_dtypes(include=['object']).columns.tolist(),
-        "sample_data": df.head(3).to_dict('records') if len(df) > 0 else []
-    }
-    
-    # Check for specific statistical operations and handle them directly
-    query_lower = query.lower()
-    
-    # Handle IQR requests
-    if 'iqr' in query_lower or 'interquartile' in query_lower:
-        return calculate_iqr_for_columns(df, query)
-    
-    # Handle other statistical operations
-    if any(stat in query_lower for stat in ['mean', 'median', 'std', 'variance', 'correlation', 'min', 'max']):
-        return calculate_statistics(df, query)
-    
-    # Handle data description requests
-    if any(word in query_lower for word in ['describe', 'summary', 'overview', 'analyze']):
-        return generate_data_description(df, query)
-    
-    # Handle missing data queries
-    if 'missing' in query_lower or 'null' in query_lower or 'nan' in query_lower:
-        return analyze_missing_data(df, query)
-    
-    # Handle outlier detection
-    if 'outlier' in query_lower:
-        return detect_outliers(df, query)
-    
-    # For other queries, try to create a general analysis
-    return await create_ai_response(df, query, summary)
+    """Use proper LLM service for any natural language question"""
+    try:
+        # Use the existing LLM service for proper AI-powered responses
+        llm_service = LLMService()
+        
+        # Create a temporary dataset ID for the LLM service
+        # In a real implementation, you'd use the actual dataset_id
+        temp_dataset_id = "temp_dataset"
+        
+        # Store the dataframe temporarily (this is a workaround)
+        # The LLM service expects to load from file_handler
+        # For now, we'll create the statistical summary directly
+        stats_summary = llm_service._create_efficient_statistical_summary(df)
+        
+        # Create chat prompt with dataset context
+        chat_prompt = f"""You are an expert data analyst. Answer questions about this dataset:
+
+DATASET: {len(df):,} rows × {len(df.columns)} columns
+COLUMNS: {list(df.columns)}
+MISSING DATA: {stats_summary['missing_data']['missing_percentage']:.1f}%
+
+KEY STATISTICS:
+{json.dumps(stats_summary, indent=2, default=str)}
+
+Answer the user's question with specific insights from the data. Be concise but informative.
+Use markdown formatting with headers (###), bold text (**text**), and bullet points (•).
+If asked about missing data, use exact percentages from the statistics above.
+"""
+        
+        # Build messages for the LLM
+        messages = [
+            {"role": "system", "content": chat_prompt},
+            {"role": "user", "content": query}
+        ]
+        
+        # Get AI response
+        response = await llm_service._get_chat_response(messages)
+        return response
+        
+    except Exception as e:
+        print(f"❌ DEBUG: Error in AI analysis: {str(e)}")
+        return f"❌ Error processing your question: {str(e)}"
 
 def calculate_iqr_for_columns(df: pd.DataFrame, query: str) -> str:
     """Calculate IQR for numeric columns with beautiful web-friendly formatting"""

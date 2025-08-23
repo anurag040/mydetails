@@ -1,182 +1,212 @@
-<div class="chat-container">
-  <!-- Chat Header -->
-  <div class="chat-header">
-    <mat-icon class="ai-icon">smart_toy</mat-icon>
-    <h2>Talk to Your Data</h2>
-    <p class="chat-subtitle">
-      Ask questions about your dataset and get instant AI-powered insights
-    </p>
-  </div>
-  
-  <!-- Chat Content -->
-  <div class="chat-content">
-    <!-- Chat Messages Area -->
-    <div class="messages-container" #messagesContainer>
-        <!-- No Dataset Warning -->
-        <div class="message ai-message" *ngIf="!currentDataset">
-          <mat-icon class="message-icon">info</mat-icon>
-          <div class="message-content">
-            📊 Please upload a dataset first in the "Upload Data" tab to start chatting with your data!
-          </div>
-        </div>
-
-        <!-- Chat Messages -->
-        <div *ngFor="let message of messages; trackBy: trackByIndex"
-             class="message"
-             [class.user-message]="message.type === 'user'"
-             [class.ai-message]="message.type === 'ai'"
-             [class.chart-message]="message.plotData && message.type === 'ai'">
-          
-          <mat-icon class="message-icon">{{ message.type === 'user' ? 'person' : 'smart_toy' }}</mat-icon>
-          
-          <div class="message-content"
-               [style.max-width]="message.plotData && message.type === 'ai' ? '90%' : null"
-               [style.min-width]="message.plotData && message.type === 'ai' ? '600px' : null">
-            <div class="message-text">{{ message.content }}</div>
-            
-            <!-- Chart (AI only) -->
-            <div class="chart-container" *ngIf="message.plotData && message.type === 'ai'" 
-                 style="width: 100%; min-width: 500px; max-width: 800px; margin: 16px 0; overflow: visible;">
-              <div class="chart-header">
-                <mat-icon>show_chart</mat-icon>
-                <span>{{ message.plotData.datasets ? 'Numeric Trends' : 'Bollinger Area' }}</span>
-              </div>
-              <div style="position: relative; width: 100%; height: 400px; margin-top: 8px;">
-                <canvas baseChart
-                  [data]="getChartData(message.plotData, !!message.plotData.datasets)"
-                  [options]="getChartOptions(message.plotData)"
-                  [type]="'line'"
-                  style="width: 100% !important; height: 100% !important; max-width: none !important;">
-                </canvas>
-              </div>
-            </div>
-            
-            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
-          </div>
-        </div>
-
-        <!-- Loading Indicator -->
-        <div class="message ai-message" *ngIf="isLoading">
-          <mat-progress-spinner class="message-icon" diameter="24" mode="indeterminate"></mat-progress-spinner>
-          <div class="message-content loading-content">
-            <span class="typing-indicator">
-              <span></span><span></span><span></span>
-            </span>
-            Analyzing your data...
-          </div>
-        </div>
+<div class="modern-chat-container">
+  <!-- Minimal Header -->
+  <div class="modern-header">
+    <div class="header-content">
+      <div class="ai-avatar">
+        <mat-icon>psychology</mat-icon>
       </div>
-      
-      <!-- Input Area -->
-      <div class="input-container">
-        <div class="input-row">
-          <mat-form-field appearance="outline" class="message-input-field">
-            <mat-label>Ask about your data...</mat-label>
-            <textarea matInput 
-                     [(ngModel)]="currentQuery" 
-                     placeholder="e.g., 'show trends', 'summarize data'"
-                     [disabled]="!currentDataset || isLoading"
-                     (keydown)="onKeyPress($event)"
-                     rows="1"
-                     cdkTextareaAutosize
-                     cdkAutosizeMinRows="1"
-                     cdkAutosizeMaxRows="3">
-            </textarea>
-          </mat-form-field>
-          
-          <button mat-mini-fab color="accent" class="send-button"
-                  [disabled]="!currentQuery.trim() || !currentDataset || isLoading"
-                  (click)="sendMessage()">
-            <mat-icon>send</mat-icon>
+      <div class="header-text">
+        <h1>Data Assistant</h1>
+        <p>Ask me anything about your data</p>
+      </div>
+    </div>
+    
+    <!-- Chart Options in Header -->
+    <div class="header-chart-options" *ngIf="currentDataset">
+      <div class="chart-controls">
+        <div class="chart-toggle-group">
+          <button class="chart-option-btn" 
+                  [class.active]="selectedPlotType === 'line_trend'"
+                  (click)="selectChart('line_trend')">
+            <mat-icon>show_chart</mat-icon>
+            <span>Line Chart</span>
           </button>
-          
-          <button mat-icon-button 
-                  class="chart-button"
-                  [class.active]="selectedPlotType"
-                  (click)="toggleChartOptions()"
-                  matTooltip="Chart Options"
-                  matTooltipPosition="above"
-                  matTooltipShowDelay="500"
-                  style="z-index: 15; position: relative; pointer-events: auto;">
-            <mat-icon>{{ selectedPlotType ? 'show_chart' : 'insert_chart' }}</mat-icon>
+          <button class="chart-option-btn" 
+                  [class.active]="selectedPlotType === 'bollinger_band'"
+                  (click)="selectChart('bollinger_band')">
+            <mat-icon>analytics</mat-icon>
+            <span>Bollinger Bands</span>
+          </button>
+          <button class="chart-option-btn" 
+                  [class.active]="!selectedPlotType"
+                  (click)="selectChart('')">
+            <mat-icon>chat</mat-icon>
+            <span>Text Only</span>
           </button>
         </div>
-
-        <!-- Chart Options -->
-        <div class="chart-options" *ngIf="showChartOptions">
-          <!-- Chart Type Selection -->
-          <button mat-stroked-button 
-                  [class.selected]="selectedPlotType === 'line_trend'"
-                  (click)="selectChart('line_trend')"
-                  class="chart-type-btn">
-            📊 Line Chart
-          </button>
-          <button mat-stroked-button 
-                  [class.selected]="selectedPlotType === 'bollinger_band'"
-                  (click)="selectChart('bollinger_band')"
-                  class="chart-type-btn">
-            📈 Bollinger Area
-          </button>
-          <button mat-stroked-button 
-                  [class.selected]="!selectedPlotType"
-                  (click)="selectChart('')"
-                  class="chart-type-btn">
-            💬 Text Only
-          </button>
+        
+        <!-- Chart Settings Dropdown -->
+        <div class="chart-settings-dropdown" *ngIf="selectedPlotType">
+          <select class="native-select" 
+                  [(ngModel)]="selectedColumn"
+                  (ngModelChange)="onColumnChange($event)"
+                  *ngIf="selectedPlotType === 'bollinger_band' || selectedPlotType === 'line_trend'">
+            <option value="">{{ selectedPlotType === 'bollinger_band' ? 'Auto-detect' : 'All columns' }}</option>
+            <option *ngFor="let col of getNumericColumns()" [value]="col">{{ col }}</option>
+          </select>
           
-          <!-- Column Selection -->
-          <mat-form-field appearance="outline" 
-                          class="column-select" 
-                          *ngIf="selectedPlotType === 'bollinger_band' && currentDataset">
-            <mat-label>Column for Analysis</mat-label>
-            <mat-select [(value)]="selectedColumn" panelClass="custom-select-panel">
-              <mat-option value="">Auto-select (Close/Open)</mat-option>
-              <mat-option *ngFor="let col of getNumericColumns()" [value]="col">
-                {{ col }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline" 
-                          class="column-select" 
-                          *ngIf="selectedPlotType === 'line_trend' && currentDataset">
-            <mat-label>Column for Trend</mat-label>
-            <mat-select [(value)]="selectedColumn" panelClass="custom-select-panel">
-              <mat-option value="">All numeric columns</mat-option>
-              <mat-option *ngFor="let col of getNumericColumns()" [value]="col">
-                {{ col }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline" 
-                          class="window-input" 
-                          *ngIf="selectedPlotType === 'bollinger_band' && currentDataset">
-            <mat-label>Window Size</mat-label>
-            <input matInput type="number" [(ngModel)]="bollingerWindow" min="5" max="50">
-          </mat-form-field>
-        </div>
-
-        <!-- Quick Suggestions -->
-        <div class="suggestions" *ngIf="!isLoading && currentDataset && messages.length <= 1">
-          <span class="suggestions-title">💡 Try:</span>
-          <button mat-stroked-button class="suggestion-chip"
-                  (click)="currentQuery = 'Summarize my data'; sendMessage()">
-            Summarize
-          </button>
-          <button mat-stroked-button class="suggestion-chip"
-                  (click)="currentQuery = 'Show averages'; sendMessage()">
-            Averages
-          </button>
-          <button mat-stroked-button class="suggestion-chip"
-                  (click)="currentQuery = 'Missing values?'; sendMessage()">
-            Missing?
-          </button>
-          <button mat-stroked-button class="suggestion-chip"
-                  (click)="selectChart('line_trend'); currentQuery = 'Show trends'; sendMessage()">
-            📈 Trends
-          </button>
+          <input class="native-input" 
+                 type="number" 
+                 [(ngModel)]="bollingerWindow" 
+                 (ngModelChange)="onWindowChange($event)"
+                 min="5" max="50" 
+                 placeholder="Window (20)"
+                 *ngIf="selectedPlotType === 'bollinger_band'">
         </div>
       </div>
     </div>
+  </div>
+  
+  <!-- Chat Messages Area -->
+  <div class="modern-chat-content">
+    <div class="messages-area" #messagesContainer>
+      <!-- Welcome State -->
+      <div class="welcome-state" *ngIf="!currentDataset && messages.length === 0">
+        <div class="welcome-icon">
+          <mat-icon>upload_file</mat-icon>
+        </div>
+        <h3>Ready to analyze your data</h3>
+        <p>Upload a dataset to start our conversation</p>
+      </div>
+      
+      <!-- Empty Chat State -->
+      <div class="empty-chat" *ngIf="currentDataset && messages.length === 0">
+        <div class="dataset-info">
+          <mat-icon>dataset</mat-icon>
+          <span>{{ currentDataset.filename }}</span>
+          <small>{{ currentDataset.rows?.toLocaleString() }} rows</small>
+        </div>
+        <h3>What would you like to know?</h3>
+        <div class="starter-prompts">
+          <button mat-stroked-button class="starter-prompt" (click)="currentQuery = 'Give me a summary of this dataset'; sendMessage()">
+            <mat-icon>summarize</mat-icon>
+            Summarize this dataset
+          </button>
+          <button mat-stroked-button class="starter-prompt" (click)="currentQuery = 'What are the key insights?'; sendMessage()">
+            <mat-icon>insights</mat-icon>
+            Show key insights
+          </button>
+          <button mat-stroked-button class="starter-prompt" (click)="currentQuery = 'Are there any missing values?'; sendMessage()">
+            <mat-icon>error_outline</mat-icon>
+            Check data quality
+          </button>
+          <button mat-stroked-button class="starter-prompt" (click)="selectChart('line_trend'); currentQuery = 'Show me trends in the data'; sendMessage()">
+            <mat-icon>trending_up</mat-icon>
+            Visualize trends
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div class="conversation">
+        <div *ngFor="let message of messages; trackBy: trackByIndex"
+             class="message-pair"
+             [class.has-chart]="message.plotData && message.type === 'ai'">
+          
+          <!-- Typing Indicator -->
+          <div class="typing-indicator" *ngIf="message.content === 'typing-indicator'">
+            <div class="typing-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="typing-text">AI is thinking...</div>
+          </div>
+          
+          <!-- Regular Message -->
+          <div class="message-content" *ngIf="message.content !== 'typing-indicator'">
+            <div class="message-text" [innerHTML]="formatAIResponse(message.content)"></div>
+            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+            
+            <!-- Chart visualization -->
+            <div class="chart-container" *ngIf="message.plotData">
+              <div class="chart-header">
+                <h4>📊 Data Visualization</h4>
+                <button class="chart-fullscreen-btn" title="View Fullscreen">
+                  <i class="material-icons">fullscreen</i>
+                </button>
+              </div>
+              <canvas baseChart
+                      [data]="getChartData(message.plotData)"
+                      [options]="getChartOptions(message.plotData)"
+                      [type]="'line'"
+                      class="chart-canvas">
+              </canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div class="message-pair typing" *ngIf="isLoading">
+        <div class="message assistant">
+          <div class="message-avatar">
+            <mat-icon>psychology</mat-icon>
+          </div>
+          <div class="message-content">
+            <div class="typing-animation">
+              <div class="typing-dots">
+                <span></span><span></span><span></span>
+              </div>
+              <span class="typing-text">Analyzing your data...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error Message -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <div class="error-content">
+      <i class="material-icons">error_outline</i>
+      <span>{{ errorMessage }}</span>
+      <button class="retry-btn" (click)="retryLastQuery()" *ngIf="retryCount < maxRetries">
+        <i class="material-icons">refresh</i>
+        Retry
+      </button>
+      <button class="close-error-btn" (click)="clearError()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modern Input Area -->
+  <div class="modern-input-area">
+    <div class="input-area">
+      <div class="input-container">
+        <textarea 
+          [(ngModel)]="currentQuery" 
+          (keydown)="onKeyPress($event)"
+          placeholder="Ask me anything about your data..."
+          class="chat-input"
+          rows="1"
+          cdkTextareaAutosize
+          cdkAutosizeMinRows="1"
+          cdkAutosizeMaxRows="4"
+          [disabled]="isLoading">
+        </textarea>
+        <button 
+          class="send-button" 
+          (click)="sendMessage()" 
+          [disabled]="!currentQuery.trim() || isLoading">
+          <div class="send-button-content">
+            <div class="loading-spinner" *ngIf="isLoading"></div>
+            <i class="material-icons" *ngIf="!isLoading">send</i>
+          </div>
+        </button>
+      </div>
+
+    </div>
+    
+    <!-- Quick Actions Only -->
+    <div class="actions-area">
+      <div class="quick-actions-inline">
+        <button class="quick-action-btn" (click)="askQuickQuestion('Summarize my data')" [disabled]="isLoading">📊 Summarize</button>
+        <button class="quick-action-btn" (click)="askQuickQuestion('Show me trends in the data')" [disabled]="isLoading">📈 Trends</button>
+        <button class="quick-action-btn" (click)="askQuickQuestion('Find outliers in my data')" [disabled]="isLoading">🎯 Outliers</button>
+        <button class="quick-action-btn" (click)="askQuickQuestion('Check for missing values')" [disabled]="isLoading">❓ Missing</button>
+      </div>
+    </div>
+  </div>
 </div>

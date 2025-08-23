@@ -50,8 +50,12 @@ export class ChatComponent implements OnInit {
   selectedColumn: string = '';
   bollingerWindow: number = 20;
   isLoading: boolean = false;
+  isTyping: boolean = false;
   currentTime: Date = new Date();
   showChartOptions: boolean = false;
+  errorMessage: string = '';
+  retryCount: number = 0;
+  maxRetries: number = 3;
 
   bollingerBandChartOptions: any = {
     responsive: true,
@@ -140,6 +144,10 @@ export class ChatComponent implements OnInit {
   sendMessage() {
     if (!this.currentQuery.trim() || !this.currentDataset || this.isLoading) return;
 
+    // Clear any previous errors
+    this.errorMessage = '';
+    this.retryCount = 0;
+
     // Add user message
     this.messages.push({
       type: 'user',
@@ -150,6 +158,10 @@ export class ChatComponent implements OnInit {
     const query = this.currentQuery;
     this.currentQuery = '';
     this.isLoading = true;
+    this.isTyping = true;
+
+    // Add typing indicator
+    this.addTypingIndicator();
 
     // Handle plot requests
     if (this.selectedPlotType === 'bollinger_band' || this.selectedPlotType === 'line_trend') {
@@ -161,6 +173,7 @@ export class ChatComponent implements OnInit {
         this.bollingerWindow
       ).subscribe({
         next: (resp) => {
+          this.removeTypingIndicator();
           const message: ChatMessage = {
             type: 'ai',
             content: resp.answer,
@@ -169,16 +182,13 @@ export class ChatComponent implements OnInit {
           };
           this.messages.push(message);
           this.isLoading = false;
+          this.isTyping = false;
           this.resetForm();
+          this.scrollToBottom();
         },
         error: (err) => {
-          this.messages.push({
-            type: 'ai',
-            content: `❌ Error creating visualization: ${err.error?.detail || 'Failed to generate plot'}`,
-            timestamp: new Date()
-          });
-          this.isLoading = false;
-          this.resetForm();
+          this.removeTypingIndicator();
+          this.handleError(err, 'visualization', query);
         }
       });
     } else {
@@ -189,22 +199,20 @@ export class ChatComponent implements OnInit {
         this.selectedColumn || undefined
       ).subscribe({
         next: (resp) => {
+          this.removeTypingIndicator();
           this.messages.push({
             type: 'ai',
             content: resp.answer,
             timestamp: new Date()
           });
           this.isLoading = false;
+          this.isTyping = false;
           this.resetForm();
+          this.scrollToBottom();
         },
         error: (err) => {
-          this.messages.push({
-            type: 'ai',
-            content: `❌ Error: ${err.error?.detail || 'Failed to get answer'}`,
-            timestamp: new Date()
-          });
-          this.isLoading = false;
-          this.resetForm();
+          this.removeTypingIndicator();
+          this.handleError(err, 'analysis', query);
         }
       });
     }
@@ -364,6 +372,9 @@ export class ChatComponent implements OnInit {
     if (!type) {
       this.showChartOptions = false;
     }
+    
+    // Don't auto-render immediately - wait for column selection
+    // Charts will render when user selects a column from dropdown
   }
 
   getNumericColumns(): string[] {
@@ -373,4 +384,329 @@ export class ChatComponent implements OnInit {
     // This ensures we show actual column names from the dataset
     return this.currentDataset.column_names;
   }
+
+  // Handle column dropdown change
+  onColumnChange(column: string) {
+    console.log('🔍 DEBUG: Column changed to:', column);
+    this.selectedColumn = column;
+    
+    // Auto-render chart when column is selected
+    if (this.selectedPlotType && (this.selectedPlotType === 'bollinger_band' || this.selectedPlotType === 'line_trend')) {
+      this.renderChartWithSettings();
+    }
+  }
+
+  // Handle Bollinger window change
+  onWindowChange(window: number) {
+    console.log('🔍 DEBUG: Window changed to:', window);
+    this.bollingerWindow = window;
+    
+    // Auto-render Bollinger chart when window changes
+    if (this.selectedPlotType === 'bollinger_band') {
+      this.renderChartWithSettings();
+    }
+  }
+
+  // Render chart with current settings
+  private renderChartWithSettings() {
+    if (!this.currentDataset || this.isLoading) return;
+    
+    console.log('🎯 DEBUG: Rendering chart with settings:', {
+      type: this.selectedPlotType,
+      column: this.selectedColumn,
+      window: this.bollingerWindow
+    });
+    
+    // Add user message to show what was generated
+    let chartDescription = '';
+    if (this.selectedPlotType === 'bollinger_band') {
+      chartDescription = `Bollinger Bands${this.selectedColumn ? ` for ${this.selectedColumn}` : ''} (${this.bollingerWindow}-period)`;
+    } else if (this.selectedPlotType === 'line_trend') {
+      chartDescription = `Line Chart${this.selectedColumn ? ` for ${this.selectedColumn}` : ' for all columns'}`;
+    }
+    
+    this.messages.push({
+      type: 'user',
+      content: chartDescription,
+      timestamp: new Date()
+    });
+    
+    this.isLoading = true;
+    this.isTyping = true;
+    
+    // Add typing indicator
+    this.messages.push({
+      type: 'ai',
+      content: 'typing-indicator',
+      timestamp: new Date()
+    });
+    
+    // Call the plot API directly
+    this.apiService.talkToDataPlot(
+      this.currentDataset.dataset_id,
+      this.selectedPlotType,
+      this.selectedColumn || undefined,
+      this.selectedPlotType === 'bollinger_band' ? this.bollingerWindow : undefined
+    ).subscribe({
+      next: (resp) => {
+        // Remove typing indicator
+        const typingIndex = this.messages.findIndex(msg => msg.content === 'typing-indicator');
+        if (typingIndex !== -1) {
+          this.messages.splice(typingIndex, 1);
+        }
+        
+        const message: ChatMessage = {
+          type: 'ai',
+          content: resp.answer,
+          timestamp: new Date(),
+          plotData: resp.plot_data
+        };
+        this.messages.push(message);
+        this.isLoading = false;
+        this.isTyping = false;
+        
+        // Scroll to bottom
+        setTimeout(() => {
+          const container = document.querySelector('.messages-area');
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }, 100);
+      },
+      error: (err) => {
+        // Remove typing indicator
+        const typingIndex = this.messages.findIndex(msg => msg.content === 'typing-indicator');
+        if (typingIndex !== -1) {
+          this.messages.splice(typingIndex, 1);
+        }
+        
+        this.isLoading = false;
+        this.isTyping = false;
+        
+        const errorDetail = err.error?.detail || err.message || 'Unknown error occurred';
+        this.messages.push({
+          type: 'ai',
+          content: `❌ **Error generating chart:** ${errorDetail}`,
+          timestamp: new Date()
+        });
+      }
+    });
+  }
+
+  clearError() {
+    this.errorMessage = '';
+    this.retryCount = 0;
+  }
+
+  // Auto-render chart when chart type is selected
+  private autoRenderChart(chartType: string) {
+    if (!this.currentDataset || this.isLoading) return;
+    
+    let query = '';
+    if (chartType === 'bollinger_band') {
+      query = 'Generate Bollinger Bands chart';
+    } else if (chartType === 'line_trend') {
+      query = 'Show line trend chart';
+    }
+    
+    if (query) {
+      // Add user message to show what was auto-generated
+      this.messages.push({
+        type: 'user',
+        content: query + (this.selectedColumn ? ` for ${this.selectedColumn}` : ''),
+        timestamp: new Date()
+      });
+      
+      this.isLoading = true;
+      this.isTyping = true;
+      // Add typing indicator manually
+      this.messages.push({
+        type: 'ai',
+        content: 'typing-indicator',
+        timestamp: new Date()
+      });
+      
+      // Generate chart using existing sendMessage logic
+      const originalQuery = this.currentQuery;
+      this.currentQuery = query;
+      
+      // Handle plot requests using existing logic
+      this.apiService.talkToData(
+        this.currentDataset.dataset_id,
+        query,
+        this.selectedColumn || undefined
+      ).subscribe({
+        next: (resp) => {
+          // Remove typing indicator manually
+          const typingIndex = this.messages.findIndex(msg => msg.content === 'typing-indicator');
+          if (typingIndex !== -1) {
+            this.messages.splice(typingIndex, 1);
+          }
+          
+          const message: ChatMessage = {
+            type: 'ai',
+            content: resp.answer,
+            timestamp: new Date(),
+            plotData: resp.plot_data
+          };
+          this.messages.push(message);
+          this.isLoading = false;
+          this.isTyping = false;
+          
+          // Scroll to bottom manually
+          setTimeout(() => {
+            const container = document.querySelector('.messages-area');
+            if (container) {
+              container.scrollTop = container.scrollHeight;
+            }
+          }, 100);
+        },
+        error: (err) => {
+          this.removeTypingIndicator();
+          this.handleError(err, 'visualization', query);
+        }
+      });
+      
+      this.currentQuery = originalQuery;
+    }
+  }
+
+  // Quick action methods
+  askQuickQuestion(question: string) {
+    if (this.isLoading || !this.currentDataset) return;
+    
+    this.currentQuery = question;
+    this.sendMessage();
+  }
+
+  // Format AI response with HTML
+  formatAIResponse(content: string): string {
+    if (!content) return '';
+    
+    // Don't format user messages
+    if (!content.includes('**') && !content.includes('###') && !content.includes('•')) {
+      return this.escapeHtml(content);
+    }
+    
+    let formatted = content;
+    
+    // Convert markdown headers to HTML
+    formatted = formatted.replace(/### (.*?)$/gm, '<h4 class="response-header">$1</h4>');
+    formatted = formatted.replace(/## (.*?)$/gm, '<h3 class="response-header">$1</h3>');
+    formatted = formatted.replace(/# (.*?)$/gm, '<h2 class="response-header">$1</h2>');
+    
+    // Convert bold text
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="response-bold">$1</strong>');
+    
+    // Convert bullet points
+    formatted = formatted.replace(/^• (.*?)$/gm, '<div class="response-bullet">• $1</div>');
+    
+    // Convert code blocks (inline)
+    formatted = formatted.replace(/`([^`]+)`/g, '<code class="response-code">$1</code>');
+    
+    // Convert horizontal rules
+    formatted = formatted.replace(/^---$/gm, '<hr class="response-divider">');
+    
+    // Convert line breaks to proper HTML
+    formatted = formatted.replace(/\n\n/g, '<br><br>');
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Handle emoji spacing
+    formatted = formatted.replace(/([📊📈📋⚠️✅🔍💡🎯⚡🟢🟡🔴💰🤖])/g, '<span class="response-emoji">$1</span>');
+    
+    return formatted;
+  }
+
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Retry last query
+  retryLastQuery() {
+    if (this.retryCount >= this.maxRetries || this.isLoading) return;
+    
+    this.retryCount++;
+    this.errorMessage = '';
+    
+    // Get the last user message to retry
+    const lastUserMessage = [...this.messages].reverse().find(msg => msg.type === 'user');
+    if (lastUserMessage) {
+      this.currentQuery = lastUserMessage.content;
+      this.sendMessage();
+    }
+  }
+
+  // Typing indicator methods
+  private addTypingIndicator() {
+    // Remove any existing typing indicator
+    this.removeTypingIndicator();
+    
+    // Add new typing indicator
+    this.messages.push({
+      type: 'ai',
+      content: 'typing-indicator',
+      timestamp: new Date()
+    });
+  }
+
+  private removeTypingIndicator() {
+    // Remove typing indicator message
+    const typingIndex = this.messages.findIndex(msg => msg.content === 'typing-indicator');
+    if (typingIndex !== -1) {
+      this.messages.splice(typingIndex, 1);
+    }
+  }
+
+  // Scroll to bottom
+  private scrollToBottom() {
+    setTimeout(() => {
+      const container = document.querySelector('.messages-area');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }, 100);
+  }
+
+  // Error handling
+  private handleError(err: any, context: string, originalQuery: string) {
+    this.isLoading = false;
+    this.isTyping = false;
+    
+    const errorDetail = err.error?.detail || err.message || 'Unknown error occurred';
+    this.errorMessage = errorDetail;
+    
+    // Determine if error is retryable
+    const isRetryable = this.isRetryableError(err);
+    
+    let errorContent = `❌ **Error during ${context}:** ${errorDetail}`;
+    
+    if (isRetryable && this.retryCount < this.maxRetries) {
+      errorContent += `\n\n🔄 **Retry available** (${this.retryCount + 1}/${this.maxRetries})`;
+    } else if (this.retryCount >= this.maxRetries) {
+      errorContent += `\n\n⚠️ **Maximum retries reached.** Please try a different query or check your connection.`;
+    }
+    
+    this.messages.push({
+      type: 'ai',
+      content: errorContent,
+      timestamp: new Date()
+    });
+    
+    this.resetForm();
+    this.scrollToBottom();
+  }
+
+  private isRetryableError(err: any): boolean {
+    const status = err.status;
+    const errorMessage = (err.error?.detail || err.message || '').toLowerCase();
+    
+    // Network errors, timeouts, and server errors are retryable
+    return status >= 500 || status === 0 || 
+           errorMessage.includes('timeout') || 
+           errorMessage.includes('network') ||
+           errorMessage.includes('connection');
+  }
+
 }

@@ -26,10 +26,12 @@ import { AppComponent } from './app.component';
 import { FileUploadComponent } from './components/file-upload/file-upload.component';
 import { StatisticsDashboardComponent } from './components/statistics-dashboard/statistics-dashboard.component';
 import { ChatComponent } from './components/chat/chat.component';
+import { AnalysisMetricsComponent } from './components/analysis-metrics/analysis-metrics.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    AnalysisMetricsComponent
   ],
   imports: [
     BrowserModule,

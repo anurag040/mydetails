@@ -14,6 +14,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
@@ -47,6 +48,7 @@ interface StatOption {
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
+    MatTooltipModule,
     FormsModule,
     NgChartsModule
   ],
@@ -521,6 +523,18 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         console.error('Failed to load quick summary:', error);
       }
     });
+  }
+
+  getSelectedCount(): number {
+    return this.basicOptions.filter(opt => opt.selected).length;
+  }
+
+  selectAllOptions(): void {
+    this.basicOptions.forEach(option => option.selected = true);
+  }
+
+  unselectAllOptions(): void {
+    this.basicOptions.forEach(option => option.selected = false);
   }
 
   calculateBasicStatistics() {
@@ -2247,13 +2261,6 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return 'High Impact';
   }
 
-  getQualityScoreClass(percentage: number): string {
-    if (percentage >= 95) return 'score-excellent';
-    if (percentage >= 85) return 'score-good';
-    if (percentage >= 70) return 'score-fair';
-    return 'score-poor';
-  }
-
   getQualityLabel(percentage: number): string {
     if (percentage >= 95) return 'Excellent';
     if (percentage >= 85) return 'Good';
@@ -3334,10 +3341,372 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return score.toFixed(3);
   }
 
+  getOptionIcon(optionName: string): string {
+    const iconMap: { [key: string]: string } = {
+      'Descriptive Statistics': 'bar_chart',
+      'Correlation Analysis': 'device_hub',
+      'Distribution Analysis': 'show_chart',
+      'Missing Data Summary': 'help_outline',
+      'Outlier Detection': 'scatter_plot',
+      'Missing Value Analysis': 'assignment',
+      'Duplicates Analysis': 'content_copy',
+      'Type/Integrity Validation': 'verified',
+      'Univariate Summaries': 'analytics',
+      'Feature Engineering Ideas': 'build',
+      'Multicollinearity Assessment': 'link',
+      'Dimensionality Insights': 'hub',
+      'Baseline Model Sanity': 'model_training',
+      'Drift/Stability Analysis': 'trending_up',
+      'Bias/Fairness Flags': 'balance',
+      'Documentation Summary': 'description',
+      'Reproducibility Info': 'refresh'
+    };
+    return iconMap[optionName] || 'analytics';
+  }
 
+  getConfidenceTooltip(confidence: any): string {
+    if (!confidence) return '';
+    
+    const score = Math.round(confidence.score * 100);
+    const explanation = confidence.explanation || 'AI analysis confidence level';
+    
+    let tooltip = `${score}% Confidence\n\n${explanation}\n\n`;
+    
+    if (confidence.factors && confidence.factors.length > 0) {
+      tooltip += 'Why we\'re confident:\n';
+      confidence.factors.forEach((factor: string, index: number) => {
+        tooltip += `✓ ${factor}\n`;
+      });
+      tooltip += '\n';
+    }
+    
+    // Add user-friendly explanation
+    tooltip += 'What confidence levels mean:\n';
+    if (score >= 85) {
+      tooltip += '🟢 Very High: Based on mathematical facts and well-established statistical principles';
+    } else if (score >= 70) {
+      tooltip += '🟡 High: Reliable interpretation with minor uncertainty';
+    } else if (score >= 50) {
+      tooltip += '🟠 Moderate: Good insights but consider additional analysis';
+    } else {
+      tooltip += '🔴 Low: Preliminary insights only, needs more investigation';
+    }
+    
+    return tooltip;
+  }
 
+  getInsightIcon(type: string): string {
+    const iconMap: { [key: string]: string } = {
+      'warning': 'warning',
+      'strong': 'trending_up',
+      'moderate': 'info',
+      'weak': 'help_outline'
+    };
+    return iconMap[type] || 'info';
+  }
 
+  // Enhanced Data Quality Methods
+  getQualityScoreClass(score: number): string {
+    if (score >= 90) return 'excellent';
+    if (score >= 80) return 'good';
+    if (score >= 70) return 'fair';
+    if (score >= 60) return 'poor';
+    return 'critical';
+  }
 
+  getQualityGradeClass(grade: string): string {
+    const gradeMap: { [key: string]: string } = {
+      'A+': 'excellent',
+      'A': 'excellent',
+      'A-': 'good',
+      'B+': 'good',
+      'B': 'good',
+      'B-': 'fair',
+      'C+': 'fair',
+      'C': 'fair',
+      'C-': 'poor',
+      'D': 'poor',
+      'F': 'critical'
+    };
+    return gradeMap[grade] || 'unknown';
+  }
 
+  getQualityMetrics(): Array<{name: string, value: number, description: string, icon: string}> {
+    if (!this.basicResults?.type_integrity_validation?.quality_dimensions) {
+      return [];
+    }
+
+    const dimensions = this.basicResults.type_integrity_validation.quality_dimensions;
+    return [
+      {
+        name: 'Completeness',
+        value: Math.round(dimensions.completeness?.score * 100) || 0,
+        description: 'Data availability',
+        icon: 'inventory_2'
+      },
+      {
+        name: 'Consistency',
+        value: Math.round(dimensions.consistency?.score * 100) || 0,
+        description: 'Data uniformity',
+        icon: 'check_circle'
+      },
+      {
+        name: 'Validity',
+        value: Math.round(dimensions.validity?.score * 100) || 0,
+        description: 'Format compliance',
+        icon: 'verified_user'
+      },
+      {
+        name: 'Accuracy',
+        value: Math.round(dimensions.accuracy?.score * 100) || 0,
+        description: 'Data correctness',
+        icon: 'fact_check'
+      },
+      {
+        name: 'Uniqueness',
+        value: Math.round(dimensions.uniqueness?.score * 100) || 0,
+        description: 'Duplicate detection',
+        icon: 'filter_list'
+      }
+    ];
+  }
+
+  getMetricClass(value: number): string {
+    if (value >= 90) return 'excellent';
+    if (value >= 80) return 'good';
+    if (value >= 70) return 'fair';
+    if (value >= 60) return 'poor';
+    return 'critical';
+  }
+
+  getColumnQualityData(): any[] {
+    if (!this.basicResults?.type_integrity_validation?.column_analysis) {
+      return [];
+    }
+
+    const columns = this.basicResults.type_integrity_validation.column_analysis;
+    return Object.keys(columns).map(columnName => {
+      const colData = columns[columnName];
+      const flags = this.getColumnFlags(colData);
+      const issues = this.getColumnIssues(colData);
+      const metrics = this.getColumnMetrics(colData);
+      
+      return {
+        name: columnName,
+        score: Math.round(colData.overall_score * 100) || 0,
+        flags: flags,
+        issues: issues,
+        metrics: metrics
+      };
+    });
+  }
+
+  getColumnFlags(colData: any): Array<{icon: string, label: string, color: string}> {
+    const flags: Array<{icon: string, label: string, color: string}> = [];
+    
+    if (colData.has_nulls) {
+      flags.push({
+        icon: 'error',
+        label: 'Contains null values',
+        color: 'warning'
+      });
+    }
+    
+    if (colData.has_duplicates) {
+      flags.push({
+        icon: 'content_copy',
+        label: 'Contains duplicates',
+        color: 'info'
+      });
+    }
+    
+    if (colData.type_inconsistencies && colData.type_inconsistencies.length > 0) {
+      flags.push({
+        icon: 'report_problem',
+        label: 'Type inconsistencies',
+        color: 'error'
+      });
+    }
+    
+    if (colData.outliers_detected) {
+      flags.push({
+        icon: 'scatter_plot',
+        label: 'Outliers detected',
+        color: 'warning'
+      });
+    }
+    
+    return flags;
+  }
+
+  getColumnIssues(colData: any): Array<{message: string, severity: string}> {
+    const issues: Array<{message: string, severity: string}> = [];
+    
+    if (colData.validation_errors && colData.validation_errors.length > 0) {
+      colData.validation_errors.forEach((error: string) => {
+        issues.push({
+          message: error,
+          severity: 'error'
+        });
+      });
+    }
+    
+    if (colData.quality_flags && colData.quality_flags.length > 0) {
+      colData.quality_flags.forEach((flag: string) => {
+        issues.push({
+          message: flag,
+          severity: 'warning'
+        });
+      });
+    }
+    
+    return issues;
+  }
+
+  getColumnMetrics(colData: any): Array<{label: string, value: number}> {
+    const metrics: Array<{label: string, value: number}> = [];
+    
+    if (colData.completeness_percentage !== undefined) {
+      metrics.push({
+        label: 'Complete',
+        value: Math.round(colData.completeness_percentage)
+      });
+    }
+    
+    if (colData.uniqueness_percentage !== undefined) {
+      metrics.push({
+        label: 'Unique',
+        value: Math.round(colData.uniqueness_percentage)
+      });
+    }
+    
+    if (colData.validity_score !== undefined) {
+      metrics.push({
+        label: 'Valid',
+        value: Math.round(colData.validity_score * 100)
+      });
+    }
+    
+    return metrics;
+  }
+
+  getActionIcon(priority: string): string {
+    const iconMap: { [key: string]: string } = {
+      'high': 'priority_high',
+      'medium': 'warning',
+      'low': 'info'
+    };
+    return iconMap[priority] || 'assignment';
+  }
+
+  // Helper method for skewness classification
+  getSkewnessClass(skewness: number): string {
+    if (skewness > 1) return 'high-positive';
+    if (skewness > 0.5) return 'moderate-positive';
+    if (skewness < -1) return 'high-negative';
+    if (skewness < -0.5) return 'moderate-negative';
+    return 'normal';
+  }
+
+  // Helper method for calculating category percentages
+  getCategoryPercentage(value: any, total: any): number {
+    const numValue = Number(value) || 0;
+    const numTotal = Number(total) || 1;
+    return (numValue / numTotal) * 100;
+  }
+
+  // Feature Engineering Helper Methods
+  getCorrelationClass(correlation: number): string {
+    const abs = Math.abs(correlation);
+    if (abs >= 0.8) return 'very-strong';
+    if (abs >= 0.6) return 'strong';
+    if (abs >= 0.4) return 'moderate';
+    return 'weak';
+  }
+
+  hasFeatureEngineeringSuggestions(): boolean {
+    if (!this.basicResults?.feature_engineering_ideas) return false;
+    
+    const ideas = this.basicResults.feature_engineering_ideas;
+    return (ideas.transformation_ideas?.length > 0) ||
+           (ideas.interaction_features?.length > 0) ||
+           (ideas.encoding_suggestions?.length > 0) ||
+           (ideas.temporal_features?.length > 0) ||
+           (ideas.scaling_recommendations?.length > 0);
+  }
+
+  scrollToPCASection(): void {
+    const pcaElement = document.querySelector('[data-analysis-type="pca_analysis"]');
+    if (pcaElement) {
+      pcaElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // If PCA section not found, show a message
+      console.log('PCA analysis not available. Please run advanced analysis first.');
+    }
+  }
+
+  // PCA Analysis Helper Methods
+  getPCAVarianceExplained(): number {
+    if (!this.advancedResults?.pca_analysis?.explained_variance_ratio) return 0;
+    const ratios = this.advancedResults.pca_analysis.explained_variance_ratio as number[];
+    const total = ratios.reduce((sum: number, variance: number) => sum + variance, 0);
+    return Math.round(total * 100);
+  }
+
+  getCumulativeVarianceClass(cumVar: number): string {
+    if (cumVar >= 0.95) return 'excellent';
+    if (cumVar >= 0.90) return 'very-good';
+    if (cumVar >= 0.80) return 'good';
+    if (cumVar >= 0.70) return 'fair';
+    return 'poor';
+  }
+
+  getFeatureImportanceItems(): Array<{feature: string, value: number, percentage: number}> {
+    if (!this.advancedResults?.pca_analysis?.feature_importance) return [];
+    
+    const importance = this.advancedResults.pca_analysis.feature_importance;
+    const entries = Object.entries(importance);
+    const values = entries.map(([, value]) => value as number);
+    const maxValue = values.length > 0 ? Math.max(...values) : 0;
+    
+    return entries
+      .map(([feature, value]) => ({
+        feature,
+        value: value as number,
+        percentage: maxValue > 0 ? (value as number / maxValue) * 100 : 0
+      }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  getImportanceClass(value: number): string {
+    if (value >= 0.5) return 'very-high';
+    if (value >= 0.3) return 'high';
+    if (value >= 0.2) return 'medium';
+    if (value >= 0.1) return 'low';
+    return 'very-low';
+  }
+
+  getPCARecommendationClass(componentsFor95: number): string {
+    if (!componentsFor95) return 'neutral';
+    const originalCount = this.getOriginalFeatureCount();
+    const reductionRatio = componentsFor95 / originalCount;
+    
+    if (reductionRatio <= 0.3) return 'excellent';
+    if (reductionRatio <= 0.5) return 'good';
+    if (reductionRatio <= 0.7) return 'fair';
+    return 'poor';
+  }
+
+  getOriginalFeatureCount(): number {
+    if (!this.advancedResults?.pca_analysis?.feature_importance) return 0;
+    return Object.keys(this.advancedResults.pca_analysis.feature_importance).length;
+  }
+
+  getFirst3ComponentsVariance(): number {
+    if (!this.advancedResults?.pca_analysis?.cumulative_variance_ratio) return 0;
+    const cumulative = this.advancedResults.pca_analysis.cumulative_variance_ratio;
+    const first3Index = Math.min(2, cumulative.length - 1);
+    return Math.round(cumulative[first3Index] * 100);
+  }
 
 }

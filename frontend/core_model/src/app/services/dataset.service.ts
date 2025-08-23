@@ -220,6 +220,14 @@ export class DatasetService {
         requirements: 'Any dataset'
       },
       {
+        id: 'feature_engineering_ideas',
+        name: 'Feature Engineering Ideas',
+        description: 'Generate feature engineering suggestions based on data characteristics',
+        completed: false,
+        type: 'ml',
+        requirements: 'Any dataset'
+      },
+      {
         id: 'spearman_correlation',
         name: 'Spearman Correlation',
         description: 'Non-parametric correlation analysis',

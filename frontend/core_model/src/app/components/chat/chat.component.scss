@@ -1,41 +1,35 @@
-/* Simplified Chat Interface - No Card Wrapper */
+/* Clean Chat Interface */
 .chat-container {
   height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(0, 255, 136, 0.2);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   margin: 0.5rem;
 }
 
-/* Simplified Chat Header - No Card Header */
+/* Clean Chat Header */
 .chat-header {
-  background: rgba(0, 255, 136, 0.1);
-  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+  background: rgba(0, 255, 136, 0.05);
   padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   
-  .chat-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    
-    .ai-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      color: #00ff88;
-    }
-    
-    h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0;
-      color: #00ff88;
-    }
+  .ai-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: #00ff88;
+  }
+  
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #00ff88;
   }
   
   .chat-subtitle {
@@ -124,33 +118,20 @@
   flex-direction: row;
 }
 
-.message-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.message-icon {
+  width: 32px;
+  height: 32px;
+  color: #00ff88;
   flex-shrink: 0;
-  font-size: 18px;
+  font-size: 20px;
 }
 
-.user-avatar {
-  background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
-  color: #00ff88;
-  border: 1px solid rgba(0, 255, 136, 0.3);
-}
-
-.ai-avatar {
-  background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
-  color: #00ff88;
-  border: 1px solid rgba(0, 255, 136, 0.3);
-}
-
-.message-bubble {
+.message-content {
   max-width: 75%;
   padding: 12px 16px;
-  border-radius: 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
+  color: #e0e0e0;
   position: relative;
   
   /* For messages with charts, allow more width */
@@ -159,22 +140,18 @@
   }
 }
 
-.user-bubble {
+.user-message .message-content {
   background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
   color: #e0e0e0;
-  border: 1px solid rgba(0, 255, 136, 0.3);
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 255, 136, 0.2);
 }
 
-.ai-bubble {
+.ai-message .message-content {
   background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
   color: #e0e0e0;
-  border: 1px solid rgba(0, 255, 136, 0.2);
   border-bottom-left-radius: 4px;
-  max-width: 95%; /* Even wider for charts and content */
+  max-width: 95%;
   
-  /* Special handling for chart containers */
   .chart-container {
     width: 100%;
     margin-left: -4px;
@@ -183,21 +160,15 @@
   }
 }
 
-/* Specific styles for chart bubbles */
-.chart-bubble {
-  max-width: 90% !important;
-  min-width: 600px !important;
-  width: auto !important;
+.loading-content {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
 }
 
 /* Specific styles for chart messages */
-.chart-message {
-  max-width: 95% !important;
-}
-
-.loading-bubble {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(0, 255, 136, 0.3);
+.chart-message .message-content {
+  max-width: 90% !important;
+  min-width: 600px !important;
+  width: auto !important;
 }
 
 .message-text {
@@ -243,13 +214,12 @@
   30% { opacity: 1; transform: scale(1); }
 }
 
-/* Chart Container - Simplified */
+/* Chart Container */
 .chart-container {
   margin-top: 12px;
   padding: 16px;
   background: rgba(10, 10, 10, 0.8);
   border-radius: 8px;
-  border: 1px solid rgba(0, 255, 136, 0.2);
   width: 100% !important;
   min-width: 500px !important;
   max-width: 800px !important;
@@ -276,9 +246,11 @@
 
 /* Input Container */
 .input-container {
-  border-top: 1px solid rgba(0, 255, 136, 0.2);
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
   padding: 20px 24px;
+  position: relative;
+  z-index: 5;
+  overflow: visible;
 }
 
 .options-container {
@@ -304,14 +276,32 @@
 .message-input-field {
   flex: 1;
   z-index: 1;
+  position: relative;
+  margin-right: 8px; /* Add some spacing to prevent overlap */
+  
+  /* Ensure form field doesn't overflow into button area */
+  ::ng-deep .mat-mdc-form-field-infix {
+    padding-right: 0 !important;
+  }
+  
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    overflow: visible !important;
+    max-width: calc(100% - 8px) !important;
+  }
+  
+  ::ng-deep textarea {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 .send-button {
   background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%) !important;
   color: #000 !important;
   position: relative;
-  z-index: 10;
+  z-index: 15;
   pointer-events: auto;
+  flex-shrink: 0;
   
   &:disabled {
     background: rgba(0, 255, 136, 0.3) !important;
@@ -319,39 +309,36 @@
   }
 }
 
-.options-button {
-  color: #999;
-  
-  &.active {
-    color: #00ff88;
-    background: rgba(0, 255, 136, 0.1);
-  }
-  
-  &:hover {
-    color: #00ff88;
-    background: rgba(0, 255, 136, 0.1);
-  }
-}
-
 .chart-button {
   color: #999;
   position: relative;
-  z-index: 10;
-  pointer-events: auto;
-  cursor: pointer;
+  z-index: 15;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  transition: all 0.3s ease;
   
   &.active {
     color: #00ff88;
     background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
   }
   
   &:hover {
     color: #00ff88;
     background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.3);
+    transform: scale(1.05);
   }
   
   mat-icon {
     pointer-events: none;
+    position: relative;
+    z-index: 16;
   }
 }
 
@@ -537,17 +524,26 @@
 /* Form Field Overrides */
 ::ng-deep .chat-card {
   .mat-mdc-form-field {
+    position: relative;
+    z-index: 2;
+    
     .mat-mdc-text-field-wrapper {
       background: rgba(10, 10, 10, 0.95) !important;
       border-radius: 8px !important;
+      position: relative;
+      z-index: 2;
     }
     
     .mat-mdc-form-field-input-control {
       color: #e0e0e0 !important;
+      position: relative;
+      z-index: 2;
     }
     
     .mat-mdc-floating-label {
       color: #888 !important;
+      position: relative;
+      z-index: 3;
     }
     
     &.mat-focused .mat-mdc-floating-label {
@@ -559,6 +555,8 @@
     .mdc-notched-outline__trailing {
       border-color: rgba(0, 255, 136, 0.4) !important;
       border-width: 2px !important;
+      position: relative;
+      z-index: 2;
     }
     
     &.mat-focused {
@@ -583,6 +581,8 @@
     resize: none;
     font-weight: 500 !important;
     font-size: 14px !important;
+    position: relative;
+    z-index: 2;
     
     &::placeholder {
       color: #888 !important;
@@ -594,6 +594,8 @@
     background: rgba(10, 10, 10, 0.95) !important;
     font-weight: 500 !important;
     font-size: 14px !important;
+    position: relative;
+    z-index: 2;
     
     &::placeholder {
       color: #888 !important;
@@ -642,4 +644,31 @@
 
 ::ng-deep .cdk-overlay-connected-position-bounding-box {
   position: relative !important;
+}
+
+/* Ensure tooltip doesn't interfere with button clicks */
+::ng-deep .mat-mdc-tooltip {
+  z-index: 20 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure all overlay elements don't interfere with buttons */
+::ng-deep .cdk-overlay-backdrop {
+  pointer-events: none !important;
+}
+
+/* Ensure chart button is always clickable */
+.chart-button {
+  isolation: isolate !important;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    z-index: -1;
+    pointer-events: auto;
+  }
 }

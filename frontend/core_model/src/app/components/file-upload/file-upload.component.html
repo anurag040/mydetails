@@ -38,19 +38,16 @@
     </div>
   </div>
 
-  <!-- Current Dataset Info (simplified without heavy card wrapper) -->
+  <!-- Current Dataset Info -->
   <div class="dataset-section" *ngIf="currentDataset">
     <div class="dataset-header">
-      <div class="dataset-icon">
-        <mat-icon [ngClass]="'file-icon'">{{ getFileIcon(currentDataset.filename) }}</mat-icon>
-      </div>
+      <mat-icon class="dataset-icon">{{ getFileIcon(currentDataset.filename) }}</mat-icon>
       <div class="dataset-details">
         <h3 class="dataset-title">{{ currentDataset.filename }}</h3>
         <p class="dataset-subtitle">{{ formatFileSize(currentDataset.size) }} • {{ formatDate(currentDataset.upload_timestamp) }}</p>
       </div>
     </div>
 
-    <!-- Dataset Info -->
     <div class="dataset-info">
       <mat-chip-set aria-label="Dataset properties">
         <mat-chip *ngIf="currentDataset.rows">
@@ -121,26 +118,20 @@
         <div class="action-buttons">
           <button mat-raised-button color="primary" (click)="selectBasicAnalysis()" class="action-button">
             <mat-icon>analytics</mat-icon>
-            <div class="button-content">
-              <span class="button-title">Basic Statistics</span>
-              <span class="button-subtitle">Quick overview & data quality</span>
-            </div>
+            <span class="button-title">Basic Statistics</span>
+            <span class="button-subtitle">Quick overview & data quality</span>
           </button>
 
           <button mat-raised-button color="accent" (click)="selectAdvancedAnalysis()" class="action-button">
             <mat-icon>science</mat-icon>
-            <div class="button-content">
-              <span class="button-title">Advanced Analysis</span>
-              <span class="button-subtitle">ML insights & deep analysis</span>
-            </div>
+            <span class="button-title">Advanced Analysis</span>
+            <span class="button-subtitle">ML insights & deep analysis</span>
           </button>
 
           <button mat-raised-button color="warn" (click)="openChatWithData()" class="action-button">
             <mat-icon>chat</mat-icon>
-            <div class="button-content">
-              <span class="button-title">Chat with Data</span>
-              <span class="button-subtitle">AI-powered questions & answers</span>
-            </div>
+            <span class="button-title">Chat with Data</span>
+            <span class="button-subtitle">AI-powered questions & answers</span>
           </button>
         </div>
       </div>

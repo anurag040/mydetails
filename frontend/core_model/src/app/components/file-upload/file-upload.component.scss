@@ -114,9 +114,8 @@
   margin-top: 32px;
   padding: 24px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(0, 255, 136, 0.2);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 
   .dataset-header {
     display: flex;
@@ -124,24 +123,12 @@
     gap: 16px;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
 
     .dataset-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 48px;
-      background: rgba(0, 255, 136, 0.1);
-      border-radius: 12px;
-      border: 1px solid rgba(0, 255, 136, 0.3);
-
-      mat-icon {
-        font-size: 28px;
-        width: 28px;
-        height: 28px;
-        color: #00ff88;
-      }
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: #00ff88;
     }
 
     .dataset-details {
@@ -167,7 +154,6 @@
 .dataset-actions {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid rgba(0, 255, 136, 0.2);
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
@@ -175,7 +161,6 @@
   button {
     font-weight: 500;
     border-radius: 6px;
-    padding: 8px 16px;
     
     &[color="warn"] {
       background: rgba(255, 102, 0, 0.1);
@@ -392,13 +377,11 @@
   border-radius: 12px;
   overflow: hidden;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(0, 255, 136, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 
   .mat-expansion-panel-header {
-    background: rgba(0, 255, 136, 0.1) !important;
+    background: rgba(0, 255, 136, 0.05) !important;
     color: #e0e0e0 !important;
-    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
     
     mat-panel-title {
       display: flex;
@@ -446,9 +429,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(0, 255, 136, 0.05);
     border-radius: 6px;
-    border: 1px solid rgba(0, 255, 136, 0.2);
 
     .column-name {
       font-weight: 500;
@@ -458,10 +440,9 @@
     .column-type {
       font-size: 12px;
       color: #00ff88;
-      background: rgba(0, 255, 136, 0.2);
+      background: rgba(0, 255, 136, 0.1);
       padding: 4px 8px;
       border-radius: 4px;
-      border: 1px solid rgba(0, 255, 136, 0.3);
     }
   }
 
@@ -474,7 +455,6 @@
     border-radius: 6px;
     color: #999;
     font-style: italic;
-    border: 1px dashed rgba(0, 255, 136, 0.2);
   }
 }
 
@@ -541,9 +521,8 @@
   margin-top: 24px;
   padding: 24px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(0, 255, 136, 0.2);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 
   h3 {
     color: #00ff88;
@@ -567,48 +546,42 @@
   }
 
   .action-button {
-    padding: 20px;
-    border-radius: 12px;
+    padding: 16px;
+    border-radius: 8px;
     background: rgba(20, 20, 20, 0.8);
-    border: 1px solid rgba(0, 255, 136, 0.2);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
     text-align: left;
-    min-height: 80px;
+    min-height: 64px;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     cursor: pointer;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0, 255, 136, 0.2);
-      border-color: rgba(0, 255, 136, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.1);
     }
 
     mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
     }
 
-    .button-content {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .button-title {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.2;
+      color: #e0e0e0;
+      display: block;
+    }
 
-      .button-title {
-        font-size: 16px;
-        font-weight: 600;
-        line-height: 1.2;
-        color: #e0e0e0;
-      }
-
-      .button-subtitle {
-        font-size: 14px;
-        line-height: 1.2;
-        color: #999;
-      }
+    .button-subtitle {
+      font-size: 12px;
+      line-height: 1.2;
+      color: #999;
+      display: block;
+      margin-top: 2px;
     }
 
     &[color="primary"] {

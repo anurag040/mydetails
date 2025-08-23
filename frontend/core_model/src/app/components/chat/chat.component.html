@@ -1,10 +1,8 @@
 <div class="chat-container">
-  <!-- Chat Header - Simplified -->
+  <!-- Chat Header -->
   <div class="chat-header">
-    <div class="chat-title">
-      <mat-icon class="ai-icon">smart_toy</mat-icon>
-      <h2>Talk to Your Data</h2>
-    </div>
+    <mat-icon class="ai-icon">smart_toy</mat-icon>
+    <h2>Talk to Your Data</h2>
     <p class="chat-subtitle">
       Ask questions about your dataset and get instant AI-powered insights
     </p>
@@ -16,36 +14,22 @@
     <div class="messages-container" #messagesContainer>
         <!-- No Dataset Warning -->
         <div class="message ai-message" *ngIf="!currentDataset">
-          <div class="message-avatar ai-avatar">
-            <mat-icon>info</mat-icon>
-          </div>
-          <div class="message-bubble ai-bubble">
-            <div class="message-text">
-              📊 Please upload a dataset first in the "Upload Data" tab to start chatting with your data!
-            </div>
-            <div class="message-time">Now</div>
+          <mat-icon class="message-icon">info</mat-icon>
+          <div class="message-content">
+            📊 Please upload a dataset first in the "Upload Data" tab to start chatting with your data!
           </div>
         </div>
 
-        <!-- Chat Messages - Simplified Structure -->
+        <!-- Chat Messages -->
         <div *ngFor="let message of messages; trackBy: trackByIndex"
              class="message"
              [class.user-message]="message.type === 'user'"
              [class.ai-message]="message.type === 'ai'"
              [class.chart-message]="message.plotData && message.type === 'ai'">
           
-          <!-- Avatar -->
-          <div class="message-avatar"
-               [class.user-avatar]="message.type === 'user'"
-               [class.ai-avatar]="message.type === 'ai'">
-            <mat-icon>{{ message.type === 'user' ? 'person' : 'smart_toy' }}</mat-icon>
-          </div>
+          <mat-icon class="message-icon">{{ message.type === 'user' ? 'person' : 'smart_toy' }}</mat-icon>
           
-          <!-- Message Content -->
-          <div class="message-bubble"
-               [class.user-bubble]="message.type === 'user'"
-               [class.ai-bubble]="message.type === 'ai'"
-               [class.chart-bubble]="message.plotData && message.type === 'ai'"
+          <div class="message-content"
                [style.max-width]="message.plotData && message.type === 'ai' ? '90%' : null"
                [style.min-width]="message.plotData && message.type === 'ai' ? '600px' : null">
             <div class="message-text">{{ message.content }}</div>
@@ -71,12 +55,10 @@
           </div>
         </div>
 
-        <!-- Loading Indicator - Simplified -->
+        <!-- Loading Indicator -->
         <div class="message ai-message" *ngIf="isLoading">
-          <div class="message-avatar ai-avatar">
-            <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
-          </div>
-          <div class="message-bubble ai-bubble loading-bubble">
+          <mat-progress-spinner class="message-icon" diameter="24" mode="indeterminate"></mat-progress-spinner>
+          <div class="message-content loading-content">
             <span class="typing-indicator">
               <span></span><span></span><span></span>
             </span>
@@ -85,9 +67,8 @@
         </div>
       </div>
       
-      <!-- Input Area - Simplified -->
+      <!-- Input Area -->
       <div class="input-container">
-        <!-- Main Input Row -->
         <div class="input-row">
           <mat-form-field appearance="outline" class="message-input-field">
             <mat-label>Ask about your data...</mat-label>
@@ -114,12 +95,14 @@
                   [class.active]="selectedPlotType"
                   (click)="toggleChartOptions()"
                   matTooltip="Chart Options"
-                  matTooltipPosition="above">
+                  matTooltipPosition="above"
+                  matTooltipShowDelay="500"
+                  style="z-index: 15; position: relative; pointer-events: auto;">
             <mat-icon>{{ selectedPlotType ? 'show_chart' : 'insert_chart' }}</mat-icon>
           </button>
         </div>
 
-        <!-- Chart Options - Flattened Structure -->
+        <!-- Chart Options -->
         <div class="chart-options" *ngIf="showChartOptions">
           <!-- Chart Type Selection -->
           <button mat-stroked-button 
@@ -141,7 +124,7 @@
             💬 Text Only
           </button>
           
-          <!-- Column Selection - Simplified -->
+          <!-- Column Selection -->
           <mat-form-field appearance="outline" 
                           class="column-select" 
                           *ngIf="selectedPlotType === 'bollinger_band' && currentDataset">
@@ -174,7 +157,7 @@
           </mat-form-field>
         </div>
 
-        <!-- Quick Suggestions - Simplified -->
+        <!-- Quick Suggestions -->
         <div class="suggestions" *ngIf="!isLoading && currentDataset && messages.length <= 1">
           <span class="suggestions-title">💡 Try:</span>
           <button mat-stroked-button class="suggestion-chip"

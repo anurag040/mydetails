@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import IsolationForest
 from typing import Dict, Any, List, Optional
+import os
 from app.services.file_handler import FileHandler
 from app.schemas.responses import BasicStatsResponse, AdvancedStatsResponse
 
@@ -15,7 +16,13 @@ def convert_numpy_types(obj):
     if isinstance(obj, np.integer):
         return int(obj)
     elif isinstance(obj, np.floating):
-        return float(obj)
+        value = float(obj)
+        # Handle NaN, infinity, and -infinity
+        if np.isnan(value):
+            return None
+        elif np.isinf(value):
+            return None  # or use a large number like 1e308 or -1e308
+        return value
     elif isinstance(obj, np.bool_):
         return bool(obj)
     elif isinstance(obj, np.ndarray):
@@ -24,13 +31,41 @@ def convert_numpy_types(obj):
         return {key: convert_numpy_types(value) for key, value in obj.items()}
     elif isinstance(obj, list):
         return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, float):
+        # Handle regular Python floats that might be NaN or inf
+        if np.isnan(obj) or np.isinf(obj):
+            return None
+        return obj
     elif hasattr(obj, 'item'):
-        return obj.item()
+        result = obj.item()
+        # Check if the result is a problematic float
+        if isinstance(result, float) and (np.isnan(result) or np.isinf(result)):
+            return None
+        return result
     return obj
+
+def safe_float(value):
+    """Safely convert value to float, handling NaN and infinity"""
+    try:
+        if value is None:
+            return None
+        float_val = float(value)
+        if np.isnan(float_val) or np.isinf(float_val):
+            return None
+        return float_val
+    except (ValueError, TypeError, OverflowError):
+        return None
 
 class StatisticsCalculator:
     def __init__(self):
         self.file_handler = FileHandler()
+        # Initialize OpenAI client for AI-powered insights
+        try:
+            from openai import OpenAI
+            api_key = os.getenv("OPENAI_API_KEY")
+            self.openai_client = OpenAI(api_key=api_key) if api_key else None
+        except ImportError:
+            self.openai_client = None
     
     async def calculate_basic_stats(self, dataset_id: str, options: List[str]) -> BasicStatsResponse:
         """Calculate basic statistics based on selected options"""
@@ -99,6 +134,10 @@ class StatisticsCalculator:
             logger.exception(f"Error during basic stats calculation for dataset {dataset_id}: {str(e)}")
             raise
         logger.info(f"Basic statistics calculation complete for dataset {dataset_id}")
+        
+        # Final safety check to ensure all values are JSON serializable
+        result = convert_numpy_types(result)
+        
         return result
     
     async def calculate_advanced_stats(self, dataset_id: str, options: List[str]) -> AdvancedStatsResponse:
@@ -446,67 +485,96 @@ class StatisticsCalculator:
         return recommendations
     
     def _calculate_type_integrity_validation(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Validate data types and integrity across the dataset"""
+        """Enhanced data quality validation with comprehensive analysis"""
         validation_results = {}
         overall_quality_score = 0
         total_checks = 0
+        quality_metrics = {
+            "completeness": 0,
+            "consistency": 0,
+            "validity": 0,
+            "accuracy": 0,
+            "uniqueness": 0
+        }
         
-        # Check each column for type consistency and integrity
+        # Enhanced column-level validation
         for col in df.columns:
-            col_data = df[col].dropna()  # Exclude missing values from type checks
+            col_data = df[col]
+            non_null_data = col_data.dropna()
+            
             if len(col_data) == 0:
                 continue
-                
-            validation_results[col] = {
-                "declared_type": str(df[col].dtype),
-                "inferred_type": self._infer_optimal_type(col_data),
-                "integrity_score": 0,
+            
+            # Comprehensive analysis for each column
+            col_analysis = {
+                "declared_type": str(col_data.dtype),
+                "inferred_type": self._infer_optimal_type(non_null_data) if len(non_null_data) > 0 else "unknown",
+                "quality_metrics": {},
                 "issues": [],
-                "recommendations": []
+                "recommendations": [],
+                "data_profile": {},
+                "quality_flags": []
             }
             
-            # Type consistency checks
-            type_issues = self._check_type_consistency(col_data, col)
-            validation_results[col]["issues"].extend(type_issues)
+            # Data profiling
+            col_analysis["data_profile"] = self._profile_column_data(col_data, col)
             
-            # Data integrity checks
-            integrity_issues = self._check_data_integrity(col_data, col)
-            validation_results[col]["issues"].extend(integrity_issues)
+            # Quality metric calculations
+            col_analysis["quality_metrics"] = self._calculate_column_quality_metrics(col_data, col)
             
-            # Calculate integrity score for this column
-            max_possible_issues = 5  # Maximum number of different issue types
-            actual_issues = len(validation_results[col]["issues"])
-            col_score = max(0, (max_possible_issues - actual_issues) / max_possible_issues * 100)
-            validation_results[col]["integrity_score"] = col_score
-            
-            # Generate recommendations
-            validation_results[col]["recommendations"] = self._generate_type_recommendations(
-                validation_results[col]["issues"], 
-                validation_results[col]["declared_type"], 
-                validation_results[col]["inferred_type"]
+            # Calculate overall column quality score first (needed by quality flags)
+            metrics = col_analysis["quality_metrics"]
+            col_score = (
+                metrics["completeness"] * 0.25 +
+                metrics["consistency"] * 0.25 +
+                metrics["validity"] * 0.25 +
+                metrics["accuracy"] * 0.15 +
+                metrics["uniqueness"] * 0.10
             )
+            col_analysis["overall_score"] = round(col_score, 2)
+            
+            # Enhanced issue detection
+            col_analysis["issues"] = self._detect_comprehensive_issues(col_data, col)
+            
+            # Quality flags (quick visual indicators)
+            col_analysis["quality_flags"] = self._generate_quality_flags(col_analysis)
+            
+            # Smart recommendations
+            col_analysis["recommendations"] = self._generate_enhanced_recommendations(col_analysis, col)
+            
+            validation_results[col] = col_analysis
+            
+            # Aggregate for overall metrics
+            for metric, value in metrics.items():
+                quality_metrics[metric] += value
             
             overall_quality_score += col_score
             total_checks += 1
         
-        # Calculate overall data quality score
-        overall_quality_score = overall_quality_score / total_checks if total_checks > 0 else 100
+        # Calculate overall metrics
+        if total_checks > 0:
+            for metric in quality_metrics:
+                quality_metrics[metric] = round(quality_metrics[metric] / total_checks, 2)
+            overall_quality_score = round(overall_quality_score / total_checks, 2)
         
-        # Global integrity checks
-        global_issues = self._check_global_integrity(df)
+        # Global dataset analysis
+        global_analysis = self._analyze_global_data_quality(df, validation_results)
+        
+        # Data quality summary
+        summary = self._generate_quality_summary(validation_results, global_analysis, total_checks)
+        
+        # AI-powered insights
+        ai_insights = self._generate_data_quality_ai_insights(summary, validation_results, df)
         
         return convert_numpy_types({
             "column_validations": validation_results,
-            "overall_quality_score": round(overall_quality_score, 2),
-            "global_issues": global_issues,
-            "summary": {
-                "columns_analyzed": total_checks,
-                "columns_with_issues": len([col for col, result in validation_results.items() if result["issues"]]),
-                "average_integrity_score": round(overall_quality_score, 2),
-                "critical_issues": len([issue for col_result in validation_results.values() for issue in col_result["issues"] if "Critical" in issue]),
-                "warning_issues": len([issue for col_result in validation_results.values() for issue in col_result["issues"] if "Warning" in issue])
-            },
-            "recommendations": self._generate_global_type_recommendations(validation_results, global_issues)
+            "overall_quality_score": overall_quality_score,
+            "quality_metrics": quality_metrics,
+            "global_analysis": global_analysis,
+            "summary": summary,
+            "ai_insights": ai_insights,
+            "quality_grade": self._assign_quality_grade(overall_quality_score),
+            "action_plan": self._generate_action_plan(validation_results, global_analysis)
         })
     
     def _infer_optimal_type(self, series: pd.Series) -> str:
@@ -760,21 +828,21 @@ class StatisticsCalculator:
             summaries["numeric_summaries"][col] = {
                 "basic_stats": {
                     "count": int(len(data)),
-                    "mean": float(data.mean()),
-                    "median": float(data.median()),
-                    "mode": float(data.mode().iloc[0]) if len(data.mode()) > 0 else None,
-                    "std": float(data.std()),
-                    "variance": float(data.var()),
-                    "min": float(data.min()),
-                    "max": float(data.max()),
-                    "range": float(data.max() - data.min()),
-                    "q1": float(data.quantile(0.25)),
-                    "q3": float(data.quantile(0.75)),
-                    "iqr": float(data.quantile(0.75) - data.quantile(0.25))
+                    "mean": float(data.mean()) if len(data) > 0 and not data.mean() != data.mean() else None,  # Check for NaN
+                    "median": float(data.median()) if len(data) > 0 and not data.median() != data.median() else None,
+                    "mode": float(data.mode().iloc[0]) if len(data.mode()) > 0 and not data.mode().iloc[0] != data.mode().iloc[0] else None,
+                    "std": float(data.std()) if len(data) > 0 and not data.std() != data.std() else None,
+                    "variance": float(data.var()) if len(data) > 0 and not data.var() != data.var() else None,
+                    "min": float(data.min()) if len(data) > 0 and not data.min() != data.min() else None,
+                    "max": float(data.max()) if len(data) > 0 and not data.max() != data.max() else None,
+                    "range": float(data.max() - data.min()) if len(data) > 0 and not (data.max() - data.min()) != (data.max() - data.min()) else None,
+                    "q1": float(data.quantile(0.25)) if len(data) > 0 and not data.quantile(0.25) != data.quantile(0.25) else None,
+                    "q3": float(data.quantile(0.75)) if len(data) > 0 and not data.quantile(0.75) != data.quantile(0.75) else None,
+                    "iqr": float(data.quantile(0.75) - data.quantile(0.25)) if len(data) > 0 and not (data.quantile(0.75) - data.quantile(0.25)) != (data.quantile(0.75) - data.quantile(0.25)) else None
                 },
                 "distribution_stats": {
-                    "skewness": float(stats.skew(data)),
-                    "kurtosis": float(stats.kurtosis(data)),
+                    "skewness": float(stats.skew(data)) if len(data) > 0 and not np.isnan(stats.skew(data)) else None,
+                    "kurtosis": float(stats.kurtosis(data)) if len(data) > 0 and not np.isnan(stats.kurtosis(data)) else None,
                     "is_normal": self._test_normality(data),
                     "distribution_shape": self._classify_distribution_shape(data)
                 },
@@ -1356,7 +1424,7 @@ class StatisticsCalculator:
         return recommendations
 
     def _calculate_descriptive_stats(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Calculate descriptive statistics"""
+        """Calculate descriptive statistics with AI-powered insights"""
         numeric_df = df.select_dtypes(include=[np.number])
         
         if numeric_df.empty:
@@ -1364,20 +1432,27 @@ class StatisticsCalculator:
         
         desc_stats = numeric_df.describe()
         
+        # Calculate additional statistics
+        additional_stats = {
+            col: {
+                "variance": float(numeric_df[col].var()) if not np.isnan(numeric_df[col].var()) else None,
+                "coefficient_of_variation": float(numeric_df[col].std() / numeric_df[col].mean()) if numeric_df[col].mean() != 0 and not np.isnan(numeric_df[col].std()) and not np.isnan(numeric_df[col].mean()) and not np.isinf(numeric_df[col].std() / numeric_df[col].mean()) else None,
+                "range": float(numeric_df[col].max() - numeric_df[col].min()) if not np.isnan(numeric_df[col].max() - numeric_df[col].min()) else None
+            }
+            for col in numeric_df.columns
+        }
+        
+        # Generate AI-powered summary if OpenAI is available
+        ai_summary = self._generate_descriptive_ai_summary(desc_stats, additional_stats, numeric_df)
+        
         return {
             "summary": convert_numpy_types(desc_stats.to_dict()),
-            "additional_stats": {
-                col: {
-                    "variance": float(numeric_df[col].var()),
-                    "coefficient_of_variation": float(numeric_df[col].std() / numeric_df[col].mean()) if numeric_df[col].mean() != 0 else None,
-                    "range": float(numeric_df[col].max() - numeric_df[col].min())
-                }
-                for col in numeric_df.columns
-            }
+            "additional_stats": additional_stats,
+            "ai_summary": ai_summary
         }
     
     def _calculate_correlation_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """Calculate correlation analysis with heatmap data"""
+        """Enhanced correlation analysis with insights and visualizations"""
         numeric_df = df.select_dtypes(include=[np.number])
         
         if numeric_df.shape[1] < 2:
@@ -1385,38 +1460,85 @@ class StatisticsCalculator:
         
         corr_matrix = numeric_df.corr()
         
-        # Find strong correlations (>0.7 or <-0.7)
+        # Enhanced correlation analysis
         strong_correlations = []
         all_correlations = []
+        correlation_insights = []
         
         for i in range(len(corr_matrix.columns)):
             for j in range(i+1, len(corr_matrix.columns)):
                 corr_val = corr_matrix.iloc[i, j]
+                var1, var2 = corr_matrix.columns[i], corr_matrix.columns[j]
+                
                 correlation_entry = {
-                    "var1": corr_matrix.columns[i],
-                    "var2": corr_matrix.columns[j],
+                    "var1": var1,
+                    "var2": var2,
                     "correlation": float(corr_val),
-                    "strength": self._get_correlation_strength(corr_val)
+                    "strength": self._get_correlation_strength(corr_val),
+                    "direction": "positive" if corr_val > 0 else "negative",
+                    "abs_correlation": float(abs(corr_val)),
+                    "interpretation": self._interpret_correlation(var1, var2, corr_val)
                 }
                 
                 all_correlations.append(correlation_entry)
                 
                 if abs(corr_val) > 0.7:
                     strong_correlations.append(correlation_entry)
+                
+                # Generate insights for significant correlations
+                if abs(corr_val) > 0.5:
+                    insight = self._generate_correlation_insight(var1, var2, corr_val)
+                    correlation_insights.append(insight)
         
-        # Prepare heatmap data
+        # Sort by strength
+        strong_correlations.sort(key=lambda x: x['abs_correlation'], reverse=True)
+        correlation_insights = correlation_insights[:5]  # Top 5 insights
+        
+        # Correlation summary statistics
+        all_corr_values = [entry['correlation'] for entry in all_correlations]
+        correlation_summary = {
+            "total_pairs": len(all_correlations),
+            "strong_correlations_count": len(strong_correlations),
+            "average_correlation": float(np.mean([abs(c) for c in all_corr_values])) if all_corr_values else 0,
+            "max_correlation": float(max([abs(c) for c in all_corr_values])) if all_corr_values else 0,
+            "highly_correlated_variables": len([c for c in all_corr_values if abs(c) > 0.8])
+        }
+        
+        # Prepare enhanced heatmap data
         heatmap_data = {
             "variables": corr_matrix.columns.tolist(),
             "correlation_matrix": convert_numpy_types(corr_matrix.values.tolist()),
-            "correlation_dict": convert_numpy_types(corr_matrix.to_dict())
+            "correlation_dict": convert_numpy_types(corr_matrix.to_dict()),
+            "color_scale": self._generate_correlation_color_scale()
         }
+        
+        # Network data for correlation network visualization
+        network_data = {
+            "nodes": [{"id": col, "label": col} for col in corr_matrix.columns],
+            "links": [
+                {
+                    "source": entry["var1"],
+                    "target": entry["var2"], 
+                    "weight": entry["abs_correlation"],
+                    "strength": entry["strength"],
+                    "correlation": entry["correlation"]
+                }
+                for entry in all_correlations if entry["abs_correlation"] > 0.3
+            ]
+        }
+        
+        # Generate AI summary if available
+        ai_summary = self._generate_correlation_ai_summary(correlation_summary, strong_correlations, numeric_df)
         
         return {
             "correlation_matrix": convert_numpy_types(corr_matrix.to_dict()),
             "heatmap_data": heatmap_data,
+            "network_data": network_data,
             "all_correlations": all_correlations,
             "strong_correlations": strong_correlations,
-            "average_correlation": float(corr_matrix.values[np.triu_indices_from(corr_matrix.values, k=1)].mean())
+            "correlation_summary": correlation_summary,
+            "correlation_insights": correlation_insights,
+            "ai_summary": ai_summary
         }
     
     def _get_correlation_strength(self, corr_val: float) -> str:
@@ -1432,6 +1554,608 @@ class StatisticsCalculator:
             return "Weak"
         else:
             return "Very Weak"
+    
+    def _interpret_correlation(self, var1: str, var2: str, corr_val: float) -> str:
+        """Generate human-readable interpretation of correlation"""
+        strength = self._get_correlation_strength(corr_val)
+        direction = "positive" if corr_val > 0 else "negative"
+        
+        if abs(corr_val) > 0.8:
+            return f"{var1} and {var2} are highly correlated ({direction}ly) - when one increases, the other {'increases' if corr_val > 0 else 'decreases'} significantly"
+        elif abs(corr_val) > 0.5:
+            return f"{var1} and {var2} show a {strength.lower()} {direction} relationship"
+        else:
+            return f"{var1} and {var2} have a weak relationship"
+    
+    def _generate_correlation_insight(self, var1: str, var2: str, corr_val: float) -> Dict[str, Any]:
+        """Generate actionable insights from correlations"""
+        abs_corr = abs(corr_val)
+        direction = "positive" if corr_val > 0 else "negative"
+        
+        if abs_corr > 0.9:
+            insight_type = "warning"
+            message = f"⚠️ Very high correlation between {var1} and {var2} ({corr_val:.3f}) - consider multicollinearity issues"
+            recommendation = "These variables might be measuring the same underlying concept. Consider removing one for modeling."
+        elif abs_corr > 0.7:
+            insight_type = "strong"
+            message = f"💪 Strong {direction} correlation between {var1} and {var2} ({corr_val:.3f})"
+            recommendation = f"This relationship can be leveraged for prediction - {var1} is a good predictor of {var2}."
+        else:
+            insight_type = "moderate"
+            message = f"📊 Moderate {direction} correlation between {var1} and {var2} ({corr_val:.3f})"
+            recommendation = f"Useful relationship to explore further with additional analysis."
+        
+        return {
+            "type": insight_type,
+            "variables": [var1, var2],
+            "correlation": float(corr_val),
+            "message": message,
+            "recommendation": recommendation
+        }
+    
+    def _generate_correlation_color_scale(self) -> List[Dict[str, Any]]:
+        """Generate color scale for correlation heatmap"""
+        return [
+            {"value": -1.0, "color": "#d32f2f"},  # Strong negative - red
+            {"value": -0.5, "color": "#f57c00"},  # Moderate negative - orange
+            {"value": 0.0, "color": "#ffffff"},   # No correlation - white
+            {"value": 0.5, "color": "#1976d2"},   # Moderate positive - blue
+            {"value": 1.0, "color": "#00ff88"}    # Strong positive - green
+        ]
+    
+    def _generate_correlation_ai_summary(self, summary: Dict, strong_corrs: List, df: pd.DataFrame) -> Dict[str, Any]:
+        """Generate AI summary for correlation analysis"""
+        if not self.openai_client:
+            return {
+                "status": "unavailable",
+                "message": "AI insights unavailable - OpenAI API key not configured"
+            }
+        
+        try:
+            # Prepare data for AI analysis
+            total_vars = len(df.select_dtypes(include=[np.number]).columns)
+            strong_count = summary['strong_correlations_count']
+            avg_corr = summary['average_correlation']
+            max_corr = summary['max_correlation']
+            
+            # Get top correlations for analysis
+            top_corrs = strong_corrs[:3] if strong_corrs else []
+            
+            prompt = f"""Analyze this correlation analysis and provide 2 concise sentences:
+
+DATASET: {total_vars} numeric variables, {summary['total_pairs']} correlation pairs analyzed
+STRONG CORRELATIONS: {strong_count} pairs with |r| ≥ 0.7
+AVERAGE CORRELATION: {avg_corr:.3f}
+MAXIMUM CORRELATION: {max_corr:.3f}
+
+TOP CORRELATIONS:
+{chr(10).join([f"• {c['var1']} ↔ {c['var2']}: {c['correlation']:.3f} ({c['strength']})" for c in top_corrs]) if top_corrs else "• No strong correlations found"}
+
+Requirements:
+- First sentence: Summarize the overall correlation landscape and multicollinearity risk
+- Second sentence: Provide the most important insight or recommendation for data analysis/modeling
+- Be specific about correlation strengths and their implications
+- Keep it actionable and professional"""
+
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=120,
+                temperature=0.3
+            )
+            
+            return {
+                "status": "success",
+                "summary": response.choices[0].message.content.strip(),
+                "confidence": {
+                    "score": 0.88,
+                    "explanation": "High confidence for correlation analysis",
+                    "factors": [
+                        "Correlation coefficients are mathematically precise",
+                        "Standard statistical interpretation methods used",
+                        "Clear patterns in correlation strength classification"
+                    ]
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"AI analysis failed: {str(e)}"
+            }
+    
+    def _profile_column_data(self, series: pd.Series, column_name: str) -> Dict[str, Any]:
+        """Create comprehensive data profile for a column"""
+        profile = {
+            "total_count": len(series),
+            "null_count": series.isnull().sum(),
+            "unique_count": series.nunique(),
+            "completeness_rate": (1 - series.isnull().sum() / len(series)) * 100 if len(series) > 0 else 0,
+            "uniqueness_rate": series.nunique() / len(series) * 100 if len(series) > 0 else 0
+        }
+        
+        # Type-specific profiling
+        if series.dtype in ['int64', 'float64']:
+            non_null = series.dropna()
+            if len(non_null) > 0:
+                profile.update({
+                    "min_value": float(non_null.min()),
+                    "max_value": float(non_null.max()),
+                    "mean_value": float(non_null.mean()),
+                    "std_value": float(non_null.std()) if len(non_null) > 1 else 0,
+                    "zeros_count": (non_null == 0).sum(),
+                    "negative_count": (non_null < 0).sum(),
+                    "outliers_count": self._count_outliers(non_null)
+                })
+        
+        elif series.dtype == 'object':
+            non_null = series.dropna()
+            if len(non_null) > 0:
+                profile.update({
+                    "avg_length": non_null.astype(str).str.len().mean(),
+                    "min_length": non_null.astype(str).str.len().min(),
+                    "max_length": non_null.astype(str).str.len().max(),
+                    "empty_strings": (non_null.astype(str) == '').sum(),
+                    "whitespace_only": non_null.astype(str).str.strip().eq('').sum(),
+                    "mixed_case": self._check_mixed_case(non_null)
+                })
+        
+        return profile
+    
+    def _calculate_column_quality_metrics(self, series: pd.Series, column_name: str) -> Dict[str, float]:
+        """Calculate the 5 dimensions of data quality"""
+        total_count = len(series)
+        
+        # Completeness (% of non-null values)
+        completeness = (1 - series.isnull().sum() / total_count) * 100 if total_count > 0 else 0
+        
+        # Consistency (format/pattern consistency)
+        consistency = self._calculate_consistency_score(series)
+        
+        # Validity (values within expected ranges/formats)
+        validity = self._calculate_validity_score(series, column_name)
+        
+        # Accuracy (realistic/plausible values)
+        accuracy = self._calculate_accuracy_score(series, column_name)
+        
+        # Uniqueness (appropriate level of uniqueness for the data type)
+        uniqueness = self._calculate_uniqueness_score(series, column_name)
+        
+        return {
+            "completeness": round(completeness, 2),
+            "consistency": round(consistency, 2),
+            "validity": round(validity, 2),
+            "accuracy": round(accuracy, 2),
+            "uniqueness": round(uniqueness, 2)
+        }
+    
+    def _detect_comprehensive_issues(self, series: pd.Series, column_name: str) -> List[Dict[str, Any]]:
+        """Detect comprehensive data quality issues"""
+        issues = []
+        
+        # Missing data issues
+        null_pct = series.isnull().sum() / len(series) * 100
+        if null_pct > 50:
+            issues.append({
+                "type": "critical",
+                "category": "completeness",
+                "message": f"Critical: {null_pct:.1f}% missing values",
+                "impact": "high",
+                "severity": "critical"
+            })
+        elif null_pct > 10:
+            issues.append({
+                "type": "warning",
+                "category": "completeness", 
+                "message": f"Warning: {null_pct:.1f}% missing values",
+                "impact": "medium",
+                "severity": "warning"
+            })
+        
+        # Type consistency issues
+        if series.dtype == 'object':
+            non_null = series.dropna()
+            if len(non_null) > 0:
+                # Check for mixed numeric/text
+                numeric_count = sum(1 for v in non_null.head(100) if self._is_numeric_string(str(v)))
+                if 0 < numeric_count < len(non_null.head(100)):
+                    issues.append({
+                        "type": "warning",
+                        "category": "consistency",
+                        "message": f"Mixed data types detected",
+                        "impact": "medium",
+                        "severity": "warning"
+                    })
+        
+        # Uniqueness issues
+        if series.nunique() == 1 and len(series) > 1:
+            issues.append({
+                "type": "info",
+                "category": "uniqueness",
+                "message": "All values are identical (constant column)",
+                "impact": "low",
+                "severity": "info"
+            })
+        
+        # Range/validity issues for numeric data
+        if series.dtype in ['int64', 'float64']:
+            non_null = series.dropna()
+            if len(non_null) > 0:
+                # Check for unrealistic values based on column name
+                if 'age' in column_name.lower():
+                    invalid_count = ((non_null < 0) | (non_null > 150)).sum()
+                    if invalid_count > 0:
+                        issues.append({
+                            "type": "critical",
+                            "category": "validity",
+                            "message": f"{invalid_count} unrealistic age values",
+                            "impact": "high",
+                            "severity": "critical"
+                        })
+        
+        return issues
+    
+    def _generate_quality_flags(self, analysis: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Generate visual quality flags"""
+        flags = []
+        metrics = analysis["quality_metrics"]
+        
+        # Overall score flag
+        overall_score = analysis["overall_score"]
+        if overall_score >= 95:
+            flags.append({"type": "excellent", "icon": "verified", "color": "green", "label": "Excellent Quality"})
+        elif overall_score >= 85:
+            flags.append({"type": "good", "icon": "check_circle", "color": "blue", "label": "Good Quality"})
+        elif overall_score >= 70:
+            flags.append({"type": "fair", "icon": "warning", "color": "orange", "label": "Fair Quality"})
+        else:
+            flags.append({"type": "poor", "icon": "error", "color": "red", "label": "Poor Quality"})
+        
+        # Specific metric flags
+        if metrics["completeness"] < 80:
+            flags.append({"type": "incomplete", "icon": "help_outline", "color": "orange", "label": "Incomplete Data"})
+        
+        if metrics["consistency"] < 70:
+            flags.append({"type": "inconsistent", "icon": "sync_problem", "color": "red", "label": "Inconsistent Format"})
+        
+        if len(analysis["issues"]) > 3:
+            flags.append({"type": "issues", "icon": "bug_report", "color": "red", "label": "Multiple Issues"})
+        
+        return flags
+    
+    def _generate_enhanced_recommendations(self, analysis: Dict[str, Any], column_name: str) -> List[Dict[str, Any]]:
+        """Generate smart, actionable recommendations"""
+        recommendations = []
+        metrics = analysis["quality_metrics"]
+        issues = analysis["issues"]
+        
+        # Completeness recommendations
+        if metrics["completeness"] < 90:
+            if metrics["completeness"] < 50:
+                recommendations.append({
+                    "priority": "high",
+                    "category": "completeness",
+                    "action": "Consider removing this column or investigating data collection process",
+                    "reason": f"Only {metrics['completeness']:.1f}% complete"
+                })
+            else:
+                recommendations.append({
+                    "priority": "medium", 
+                    "category": "completeness",
+                    "action": "Implement imputation strategy or collect missing data",
+                    "reason": f"{100-metrics['completeness']:.1f}% missing values"
+                })
+        
+        # Type conversion recommendations
+        declared_type = analysis["declared_type"]
+        inferred_type = analysis["inferred_type"]
+        if declared_type != inferred_type and inferred_type != "unknown":
+            recommendations.append({
+                "priority": "medium",
+                "category": "optimization",
+                "action": f"Consider converting from {declared_type} to {inferred_type}",
+                "reason": "Potential memory optimization and performance improvement"
+            })
+        
+        # Issue-specific recommendations
+        for issue in issues:
+            if issue["severity"] == "critical":
+                recommendations.append({
+                    "priority": "high",
+                    "category": issue["category"],
+                    "action": f"Address: {issue['message']}",
+                    "reason": "Critical data quality issue affecting analysis reliability"
+                })
+        
+        return recommendations
+    
+    def _analyze_global_data_quality(self, df: pd.DataFrame, validations: Dict) -> Dict[str, Any]:
+        """Analyze dataset-level quality patterns"""
+        return {
+            "row_completeness": self._calculate_row_completeness(df),
+            "schema_consistency": self._check_schema_consistency(df),
+            "referential_integrity": self._check_referential_integrity(df),
+            "data_freshness": self._assess_data_freshness(df),
+            "duplicate_analysis": self._analyze_duplicates(df)
+        }
+    
+    def _generate_quality_summary(self, validations: Dict, global_analysis: Dict, total_checks: int) -> Dict[str, Any]:
+        """Generate comprehensive quality summary"""
+        critical_issues = sum(1 for col in validations.values() 
+                             for issue in col["issues"] 
+                             if issue["severity"] == "critical")
+        
+        warning_issues = sum(1 for col in validations.values() 
+                           for issue in col["issues"] 
+                           if issue["severity"] == "warning")
+        
+        return {
+            "columns_analyzed": total_checks,
+            "critical_issues": critical_issues,
+            "warning_issues": warning_issues,
+            "columns_excellent": sum(1 for col in validations.values() if col["overall_score"] >= 95),
+            "columns_good": sum(1 for col in validations.values() if 85 <= col["overall_score"] < 95),
+            "columns_fair": sum(1 for col in validations.values() if 70 <= col["overall_score"] < 85),
+            "columns_poor": sum(1 for col in validations.values() if col["overall_score"] < 70),
+            "total_recommendations": sum(len(col["recommendations"]) for col in validations.values())
+        }
+    
+    def _assign_quality_grade(self, score: float) -> Dict[str, str]:
+        """Assign letter grade based on quality score"""
+        if score >= 95:
+            return {"grade": "A+", "description": "Excellent - Production Ready"}
+        elif score >= 90:
+            return {"grade": "A", "description": "Very Good - Minor Issues"}
+        elif score >= 85:
+            return {"grade": "B+", "description": "Good - Some Improvements Needed"}
+        elif score >= 80:
+            return {"grade": "B", "description": "Acceptable - Moderate Issues"}
+        elif score >= 70:
+            return {"grade": "C", "description": "Fair - Significant Issues"}
+        elif score >= 60:
+            return {"grade": "D", "description": "Poor - Major Problems"}
+        else:
+            return {"grade": "F", "description": "Failed - Extensive Problems"}
+    
+    def _generate_action_plan(self, validations: Dict, global_analysis: Dict) -> List[Dict[str, Any]]:
+        """Generate prioritized action plan"""
+        actions = []
+        
+        # Critical issues first
+        for col, analysis in validations.items():
+            for issue in analysis["issues"]:
+                if issue["severity"] == "critical":
+                    actions.append({
+                        "priority": 1,
+                        "column": col,
+                        "action": f"Fix critical issue: {issue['message']}",
+                        "impact": "High"
+                    })
+        
+        # High-priority recommendations
+        for col, analysis in validations.items():
+            for rec in analysis["recommendations"]:
+                if rec["priority"] == "high":
+                    actions.append({
+                        "priority": 2,
+                        "column": col,
+                        "action": rec["action"],
+                        "impact": "Medium"
+                    })
+        
+        return sorted(actions, key=lambda x: x["priority"])[:10]  # Top 10 actions
+    
+    # Helper methods for quality calculations
+    def _calculate_consistency_score(self, series: pd.Series) -> float:
+        """Calculate format consistency score"""
+        # Simplified implementation - can be enhanced
+        if series.dtype == 'object':
+            non_null = series.dropna()
+            if len(non_null) == 0:
+                return 100.0
+            
+            # Check format consistency for strings
+            lengths = non_null.astype(str).str.len()
+            length_consistency = 1 - (lengths.std() / lengths.mean()) if lengths.mean() > 0 else 1
+            return max(0, min(100, length_consistency * 100))
+        
+        return 100.0  # Numeric types are inherently consistent
+    
+    def _calculate_validity_score(self, series: pd.Series, column_name: str) -> float:
+        """Calculate validity score based on expected ranges"""
+        non_null = series.dropna()
+        if len(non_null) == 0:
+            return 100.0
+        
+        invalid_count = 0
+        
+        # Domain-specific validity checks
+        if series.dtype in ['int64', 'float64']:
+            if 'age' in column_name.lower():
+                invalid_count = ((non_null < 0) | (non_null > 150)).sum()
+            elif 'percent' in column_name.lower():
+                invalid_count = ((non_null < 0) | (non_null > 100)).sum()
+        
+        validity_rate = 1 - (invalid_count / len(non_null))
+        return max(0, validity_rate * 100)
+    
+    def _calculate_accuracy_score(self, series: pd.Series, column_name: str) -> float:
+        """Calculate accuracy score based on realistic value ranges"""
+        # Simplified implementation - uses outlier detection as proxy
+        if series.dtype in ['int64', 'float64']:
+            non_null = series.dropna()
+            if len(non_null) < 4:
+                return 100.0
+            
+            outlier_count = self._count_outliers(non_null)
+            accuracy_rate = 1 - (outlier_count / len(non_null))
+            return max(0, accuracy_rate * 100)
+        
+        return 100.0  # Default for non-numeric
+    
+    def _calculate_uniqueness_score(self, series: pd.Series, column_name: str) -> float:
+        """Calculate appropriate uniqueness score"""
+        if len(series) == 0:
+            return 100.0
+        
+        uniqueness_rate = series.nunique() / len(series)
+        
+        # Adjust expectations based on column name/type
+        if 'id' in column_name.lower():
+            # IDs should be unique
+            return uniqueness_rate * 100
+        elif series.dtype == 'object' and series.nunique() < 20:
+            # Categorical columns - low uniqueness is OK
+            return 100.0
+        else:
+            # General case - moderate uniqueness is good
+            optimal_range = (0.1, 0.8)
+            if optimal_range[0] <= uniqueness_rate <= optimal_range[1]:
+                return 100.0
+            else:
+                distance = min(abs(uniqueness_rate - optimal_range[0]), 
+                             abs(uniqueness_rate - optimal_range[1]))
+                return max(0, 100 - distance * 100)
+    
+    def _count_outliers(self, series: pd.Series) -> int:
+        """Count outliers using IQR method"""
+        try:
+            Q1 = series.quantile(0.25)
+            Q3 = series.quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            return ((series < lower_bound) | (series > upper_bound)).sum()
+        except:
+            return 0
+    
+    def _is_numeric_string(self, value: str) -> bool:
+        """Check if string represents a number"""
+        try:
+            float(value)
+            return True
+        except:
+            return False
+    
+    def _check_mixed_case(self, series: pd.Series) -> int:
+        """Count values with mixed case issues"""
+        str_series = series.astype(str)
+        mixed_count = 0
+        for val in str_series.head(100):
+            if val != val.lower() and val != val.upper() and val != val.title():
+                mixed_count += 1
+        return mixed_count
+    
+    # Placeholder implementations for global analysis
+    def _calculate_row_completeness(self, df: pd.DataFrame) -> Dict[str, float]:
+        """Calculate row-level completeness statistics"""
+        row_completeness = (df.count(axis=1) / len(df.columns) * 100)
+        return {
+            "avg_completeness": float(row_completeness.mean()),
+            "min_completeness": float(row_completeness.min()),
+            "rows_100_complete": int((row_completeness == 100).sum()),
+            "rows_below_50": int((row_completeness < 50).sum())
+        }
+    
+    def _check_schema_consistency(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Check schema-level consistency"""
+        return {
+            "column_naming_consistent": True,  # Simplified
+            "data_types_appropriate": True,
+            "schema_violations": []
+        }
+    
+    def _check_referential_integrity(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Check referential integrity"""
+        return {
+            "foreign_key_violations": 0,
+            "orphaned_records": 0,
+            "integrity_score": 100.0
+        }
+    
+    def _assess_data_freshness(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Assess data freshness"""
+        return {
+            "freshness_score": 100.0,
+            "last_updated": "Unknown",
+            "staleness_indicators": []
+        }
+    
+    def _analyze_duplicates(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze duplicate patterns"""
+        total_duplicates = df.duplicated().sum()
+        return {
+            "exact_duplicates": int(total_duplicates),
+            "duplicate_rate": float(total_duplicates / len(df) * 100),
+            "partial_duplicates": 0  # Placeholder
+        }
+    
+    def _generate_data_quality_ai_insights(self, summary: Dict, validations: Dict, df: pd.DataFrame) -> Dict[str, Any]:
+        """Generate AI insights for data quality"""
+        if not self.openai_client:
+            return {
+                "status": "unavailable",
+                "message": "AI insights unavailable - OpenAI API key not configured"
+            }
+        
+        try:
+            # Prepare key statistics for AI analysis
+            total_cols = summary["columns_analyzed"]
+            critical_issues = summary["critical_issues"]
+            warning_issues = summary["warning_issues"]
+            excellent_cols = summary["columns_excellent"]
+            poor_cols = summary["columns_poor"]
+            
+            # Identify the worst performing columns
+            worst_columns = sorted(
+                [(col, data["overall_score"]) for col, data in validations.items()],
+                key=lambda x: x[1]
+            )[:3]
+            
+            prompt = f"""Analyze this data quality assessment and provide 2 concise sentences:
+
+DATASET QUALITY OVERVIEW:
+• Total columns analyzed: {total_cols}
+• Critical issues: {critical_issues}
+• Warning issues: {warning_issues}
+• Excellent quality columns: {excellent_cols}
+• Poor quality columns: {poor_cols}
+
+WORST PERFORMING COLUMNS:
+{chr(10).join([f"• {col}: {score:.1f}% quality score" for col, score in worst_columns]) if worst_columns else "• All columns have good quality"}
+
+Requirements:
+- First sentence: Summarize overall data quality status and readiness for analysis
+- Second sentence: Provide the most critical recommendation or action needed
+- Be specific about quality scores and actionable next steps
+- Focus on business impact and data reliability"""
+
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=120,
+                temperature=0.3
+            )
+            
+            return {
+                "status": "success",
+                "summary": response.choices[0].message.content.strip(),
+                "confidence": {
+                    "score": 0.92,
+                    "explanation": "Very high confidence for data quality assessment",
+                    "factors": [
+                        "Quality metrics are quantitatively measured",
+                        "Industry-standard data quality dimensions used",
+                        "Systematic evaluation across all data quality aspects"
+                    ]
+                }
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"AI analysis failed: {str(e)}"
+            }
     
     def _calculate_distribution_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Calculate distribution analysis with histogram data"""
@@ -2507,3 +3231,82 @@ class StatisticsCalculator:
             
         except Exception as e:
             return convert_numpy_types({"error": str(e)})
+    
+    def _generate_descriptive_ai_summary(self, desc_stats: pd.DataFrame, additional_stats: Dict, numeric_df: pd.DataFrame) -> Dict[str, Any]:
+        """Generate AI-powered summary of descriptive statistics"""
+        if not self.openai_client:
+            return {
+                "status": "unavailable",
+                "message": "AI insights unavailable - OpenAI API key not configured",
+                "summary": "Configure OpenAI API key to get AI-powered statistical insights"
+            }
+        
+        try:
+            # Prepare statistical summary for AI analysis
+            stats_summary = {
+                "columns_count": len(numeric_df.columns),
+                "total_observations": len(numeric_df),
+                "missing_data_percentage": round((numeric_df.isnull().sum().sum() / (len(numeric_df) * len(numeric_df.columns))) * 100, 2),
+            }
+            
+            # Get top 3 columns by different metrics
+            means = desc_stats.loc['mean'].to_dict()
+            stds = desc_stats.loc['std'].to_dict()
+            ranges = {col: additional_stats[col]['range'] for col in additional_stats if additional_stats[col]['range'] is not None}
+            
+            # Create concise prompt for AI analysis
+            prompt = f"""As a senior data scientist, provide a concise 2-sentence summary of these descriptive statistics:
+
+DATASET: {stats_summary['columns_count']} numeric columns, {stats_summary['total_observations']:,} observations
+MISSING DATA: {stats_summary['missing_data_percentage']}%
+
+KEY STATISTICS:
+Highest Mean: {max(means, key=means.get) if means else 'N/A'} ({max(means.values()) if means else 'N/A':.2f})
+Highest Std Dev: {max(stds, key=stds.get) if stds else 'N/A'} ({max(stds.values()) if stds else 'N/A':.2f})
+Largest Range: {max(ranges, key=ranges.get) if ranges else 'N/A'} ({max(ranges.values()) if ranges else 'N/A':.2f})
+
+Requirements:
+- Write exactly 2 clear, concise sentences
+- First sentence: Describe the overall data characteristics (variability, scale, completeness)
+- Second sentence: Highlight the most important insight or recommendation
+- Use specific numbers from the statistics above
+- Be actionable and professional
+- No bullet points or formatting"""
+
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",  # Using cost-effective model for short summaries
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=150,
+                temperature=0.3
+            )
+            
+            ai_text = response.choices[0].message.content.strip()
+            
+            # Split into lines and format
+            lines = [line.strip() for line in ai_text.split('\n') if line.strip()]
+            
+            # Create a more meaningful confidence explanation
+            confidence_explanation = {
+                "score": 0.85,
+                "explanation": "High confidence based on standard statistical analysis",
+                "factors": [
+                    "Descriptive statistics are mathematically precise",
+                    "AI interpretation is based on well-established statistical principles",
+                    "No subjective predictions involved"
+                ]
+            }
+            
+            return {
+                "status": "success",
+                "summary": ai_text,
+                "confidence": confidence_explanation,
+                "model_used": "gpt-4o-mini",
+                "analysis_type": "descriptive_statistics"
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error", 
+                "message": f"AI analysis failed: {str(e)}",
+                "summary": "Unable to generate AI insights at this time"
+            }

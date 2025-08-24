@@ -133,7 +133,7 @@
                 <div class="score-fill" [style.width.%]="record.score.accuracy_score"
                      [style.background-color]="getScoreColor(record.score.accuracy_score)"></div>
               </div>
-              <span>{{ record.score.accuracy_score?.toFixed(0) }}%</span>
+              <span>{{ record.score.accuracy_score.toFixed(0) }}%</span>
             </div>
             <div class="score-item">
               <span>Interpretation</span>
@@ -141,7 +141,7 @@
                 <div class="score-fill" [style.width.%]="record.score.interpretation_score"
                      [style.background-color]="getScoreColor(record.score.interpretation_score)"></div>
               </div>
-              <span>{{ record.score.interpretation_score?.toFixed(0) }}%</span>
+              <span>{{ record.score.interpretation_score.toFixed(0) }}%</span>
             </div>
           </div>
 

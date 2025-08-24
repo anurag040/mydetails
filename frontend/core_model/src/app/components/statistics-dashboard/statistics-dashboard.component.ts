@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -450,7 +450,8 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private apiService: ApiService,
     private datasetService: DatasetService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -549,21 +550,53 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    console.log('🔍 SELECTED OPTIONS DEBUG:');
+    console.log('Selected options:', selectedOptions);
+    console.log('All basic options:', this.basicOptions);
+    console.log('Dimensionality option selected:', this.basicOptions.find(opt => opt.name?.toLowerCase().includes('dimensionality') || opt.description?.toLowerCase().includes('dimensionality')));
+
     this.isLoading = true;
     this.apiService.calculateBasicStats({
       dataset_id: this.currentDataset.dataset_id,
       options: selectedOptions
     }).subscribe({
       next: (results) => {
+        console.log('📊 Basic Statistics Results:', results);
+        console.log('🔍 Dimensionality Insights Data:', results.dimensionality_insights);
+        console.log('📈 PCA Analysis:', results.dimensionality_insights?.pca_analysis);
+        
         this.basicResults = results;
-        this.numericColumnsCache = this.getNumericColumns(); // Update cache with fresh data
-        this.processChartData(); // Process the chart data
-        this.debugDistributionData(); // Debug the loaded data
         this.isLoading = false;
-        this.snackBar.open('Basic statistics calculated successfully!', 'Close', { duration: 3000 });
+        
+        // Force change detection to ensure template updates
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          console.log('🔄 Forcing change detection for dimensionality insights');
+          this.cdr.detectChanges();
+        }, 0);
+        
+        // Call debug methods for troubleshooting
+        this.debugDistributionData();
+        this.debugDimensionalityData();
+        
+        // Process chart data for distribution analysis
+        this.processChartData();
+        
+        // Additional debug for PCA chart visibility
+        setTimeout(() => {
+          console.log('🎯 POST-RENDER DEBUG - Checking if dimensionality section is visible');
+          const dimensionalitySection = document.querySelector('.dimensionality-section');
+          const pcaSection = document.querySelector('.pca-analysis');
+          const pcaCharts = document.querySelector('.pca-charts');
+          console.log('Dimensionality section found:', !!dimensionalitySection);
+          console.log('PCA analysis section found:', !!pcaSection);
+          console.log('PCA charts section found:', !!pcaCharts);
+        }, 1000);
+        
+        this.snackBar.open('Statistics calculated successfully!', 'Close', { duration: 3000 });
       },
       error: (error) => {
-        console.error('Failed to calculate basic statistics:', error);
+        console.error('Failed to calculate statistics:', error);
         this.isLoading = false;
         this.snackBar.open('Failed to calculate statistics', 'Close', { duration: 5000 });
       }
@@ -1569,21 +1602,97 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return 'Poor';
   }
 
-  // Debug method to check data structure
-  debugDistributionData(): void {
-    console.log('=== DISTRIBUTION DEBUG ===');
+  debugDistributionData() {
+    console.log('🔍 Debug Distribution Data:');
     console.log('Basic Results:', this.basicResults);
-    console.log('Descriptive Stats:', this.basicResults?.descriptive_stats);
-    console.log('Summary:', this.basicResults?.descriptive_stats?.summary);
     console.log('Distribution Analysis:', this.basicResults?.distribution_analysis);
     console.log('Numeric Columns:', this.getNumericColumns());
-    console.log('Stats Data:', this.getDescriptiveStatsData());
+  }
+
+  debugDimensionalityData(): void {
+    console.log('=== DIMENSIONALITY DEBUG ===');
+    console.log('Basic Results Available:', !!this.basicResults);
+    console.log('Dimensionality Insights Available:', !!this.basicResults?.dimensionality_insights);
+    console.log('PCA Analysis Available:', !!this.basicResults?.dimensionality_insights?.pca_analysis);
+    console.log('Component Variances Available:', !!this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances);
+    console.log('Component Variances:', this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances);
+    console.log('Component Features:', this.basicResults?.dimensionality_insights?.pca_analysis?.component_features);
+    console.log('Clustering Analysis Available:', !!this.basicResults?.dimensionality_insights?.clustering_analysis);
+    console.log('getPCAComponentFeatures():', this.getPCAComponentFeatures());
+    console.log('getPCAScreePlotData():', this.getPCAScreePlotData());
     
-    const columns = this.getNumericColumns();
-    columns.forEach(column => {
-      const stats = this.getDescriptiveStatsData()[column];
-      console.log(`Column ${column}:`, stats);
-    });
+    // Check HTML template conditions
+    console.log('🔍 HTML Template Conditions:');
+    console.log('  - basicResults?.dimensionality_insights:', !!this.basicResults?.dimensionality_insights);
+    console.log('  - basicResults?.dimensionality_insights?.pca_analysis:', !!this.basicResults?.dimensionality_insights?.pca_analysis);
+    console.log('  - basicResults?.dimensionality_insights?.pca_analysis?.component_variances:', !!this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances);
+    
+    // Full object structure
+    console.log('📋 Full dimensionality_insights object:', this.basicResults?.dimensionality_insights);
+    
+    // Deep inspection of the object structure
+    if (this.basicResults?.dimensionality_insights) {
+      const insights = this.basicResults.dimensionality_insights;
+      console.log('🔬 Deep Analysis:');
+      console.log('  - Object keys:', Object.keys(insights));
+      console.log('  - pca_analysis exists:', 'pca_analysis' in insights);
+      console.log('  - pca_analysis value:', insights.pca_analysis);
+      
+      if (insights.pca_analysis) {
+        console.log('  - PCA Analysis keys:', Object.keys(insights.pca_analysis));
+        console.log('  - component_variances exists:', 'component_variances' in insights.pca_analysis);
+        console.log('  - component_variances value:', insights.pca_analysis.component_variances);
+        console.log('  - component_variances type:', typeof insights.pca_analysis.component_variances);
+        console.log('  - component_variances length:', insights.pca_analysis.component_variances?.length);
+      }
+    }
+  }
+
+  // Manual debug trigger for dimensionality data
+  manualDebugDimensionality(): void {
+    console.log('🔍 MANUAL DEBUG TRIGGER');
+    this.debugDimensionalityData();
+    
+    // Test template conditions directly
+    console.log('🧪 TEMPLATE CONDITION TESTS:');
+    console.log('  basicResults exists:', !!this.basicResults);
+    console.log('  basicResults.dimensionality_insights exists:', !!this.basicResults?.dimensionality_insights);
+    console.log('  basicResults.dimensionality_insights.pca_analysis exists:', !!this.basicResults?.dimensionality_insights?.pca_analysis);
+    console.log('  basicResults.dimensionality_insights.pca_analysis.component_variances exists:', !!this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances);
+    
+    // Force another change detection
+    this.cdr.detectChanges();
+  }
+
+  // Safe template helper methods for PCA data
+  getPCAComponentCount(): number {
+    console.log('🔍 DEBUG getPCAComponentCount called');
+    console.log('  - basicResults exists:', !!this.basicResults);
+    console.log('  - dimensionality_insights exists:', !!this.basicResults?.dimensionality_insights);
+    console.log('  - pca_analysis exists:', !!this.basicResults?.dimensionality_insights?.pca_analysis);
+    console.log('  - component_variances exists:', !!this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances);
+    console.log('  - component_variances length:', this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances?.length);
+    
+    const data = this.getPCAScreePlotData();
+    const count = data?.labels?.length || 0;
+    console.log('  - getPCAScreePlotData labels length:', count);
+    console.log('  - getPCAScreePlotData:', data);
+    return count;
+  }
+
+  getPCAFirstComponentVariance(): number {
+    const data = this.getPCAScreePlotData();
+    const firstValue = data?.datasets?.[0]?.data?.[0];
+    return typeof firstValue === 'number' ? firstValue : 0;
+  }
+
+  getPCAFirstTwoComponentsVariance(): number {
+    const data = this.getPCAScreePlotData();
+    const firstValue = data?.datasets?.[0]?.data?.[0];
+    const secondValue = data?.datasets?.[0]?.data?.[1];
+    const first = typeof firstValue === 'number' ? firstValue : 0;
+    const second = typeof secondValue === 'number' ? secondValue : 0;
+    return first + second;
   }
 
   // Debug method for regression
@@ -1607,16 +1716,24 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   processChartData(): void {
-    console.log('Processing chart data...');
+    console.log('📊 Processing chart data...');
+    console.log('Distribution analysis data:', this.basicResults?.distribution_analysis);
+    console.log('Correlation matrix data:', this.basicResults?.correlation_matrix);
     
     // Process histogram data from backend
     if (this.basicResults?.distribution_analysis?.histograms) {
+      console.log('📈 Creating histogram charts...');
       this.createHistogramCharts();
+    } else {
+      console.log('❌ No distribution analysis histograms found');
     }
     
     // Process correlation heatmap data from backend
     if (this.basicResults?.correlation_matrix?.heatmap_data) {
+      console.log('🔥 Creating correlation heatmap...');
       this.createCorrelationHeatmap();
+    } else {
+      console.log('❌ No correlation matrix heatmap data found');
     }
   }
 
@@ -2959,15 +3076,6 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getClusteringQualityClass(quality?: string): string {
-    switch (quality?.toLowerCase()) {
-      case 'excellent': case 'very good': return 'quality-excellent';
-      case 'good': case 'moderate': return 'quality-good';
-      case 'fair': case 'poor': return 'quality-fair';
-      default: return 'quality-unknown';
-    }
-  }
-
   formatClusteringQuality(quality?: string): string {
     return quality?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
   }
@@ -3167,6 +3275,188 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
 
   // Math helper for templates
   Math = Math;
+
+  // PCA Visualization Chart Data Methods
+  getPCAScreePlotData(): ChartData<'line'> {
+    const pcaData = this.basicResults?.dimensionality_insights?.pca_analysis;
+    console.log('📊 Getting PCA Scree Plot Data:', pcaData);
+    
+    if (!pcaData?.component_variances) {
+      console.log('❌ No component_variances found for scree plot');
+      return { labels: [], datasets: [] };
+    }
+
+    const labels = pcaData.component_variances.map((_: any, index: number) => `PC${index + 1}`);
+    const varianceData = pcaData.component_variances.map((variance: number) => variance * 100);
+    
+    console.log('📈 Scree Plot Labels:', labels.slice(0, 15));
+    console.log('📈 Scree Plot Data:', varianceData.slice(0, 15));
+
+    const chartData = {
+      labels: labels.slice(0, 15), // Show first 15 components
+      datasets: [{
+        label: 'Variance Explained (%)',
+        data: varianceData.slice(0, 15),
+        borderColor: '#00ff7f',
+        backgroundColor: 'rgba(0, 255, 127, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#00ff7f',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }]
+    };
+    
+    console.log('📊 Final Scree Plot Chart Data:', chartData);
+    return chartData;
+  }
+
+  getPCACumulativeVarianceData(): ChartData<'line'> {
+    const pcaData = this.basicResults?.dimensionality_insights?.pca_analysis;
+    console.log('📊 Getting PCA Cumulative Variance Data:', pcaData);
+    
+    if (!pcaData?.cumulative_variance) {
+      console.log('❌ No cumulative_variance found for cumulative plot');
+      return { labels: [], datasets: [] };
+    }
+
+    const labels = pcaData.cumulative_variance.map((_: any, index: number) => `PC${index + 1}`);
+    const cumulativeData = pcaData.cumulative_variance.map((cumVar: number) => cumVar * 100);
+    
+    console.log('📈 Cumulative Plot Labels:', labels.slice(0, 15));
+    console.log('📈 Cumulative Plot Data:', cumulativeData.slice(0, 15));
+
+    const chartData = {
+      labels: labels.slice(0, 15),
+      datasets: [{
+        label: 'Cumulative Variance (%)',
+        data: cumulativeData.slice(0, 15),
+        borderColor: '#2196f3',
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#2196f3',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }, {
+        label: '95% Threshold',
+        data: Array(15).fill(95),
+        borderColor: '#ff9800',
+        backgroundColor: 'transparent',
+        borderWidth: 2,
+        borderDash: [10, 5],
+        fill: false,
+        pointRadius: 0
+      }]
+    };
+    
+    console.log('📊 Final Cumulative Variance Chart Data:', chartData);
+    return chartData;
+  }
+
+  pcaScreePlotOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#00ff7f',
+          font: { size: 12, weight: 'bold' }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        titleColor: '#00ff7f',
+        bodyColor: '#ffffff',
+        borderColor: '#00ff7f',
+        borderWidth: 2
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#00ff7f', font: { size: 11, weight: 'bold' } },
+        grid: { color: 'rgba(0, 255, 127, 0.2)' },
+        title: { display: true, text: 'Principal Components', color: '#00ff7f', font: { size: 14, weight: 'bold' } }
+      },
+      y: {
+        ticks: { color: '#00ff7f', font: { size: 11, weight: 'bold' } },
+        grid: { color: 'rgba(0, 255, 127, 0.2)' },
+        title: { display: true, text: 'Variance Explained (%)', color: '#00ff7f', font: { size: 14, weight: 'bold' } }
+      }
+    }
+  };
+
+  pcaCumulativeVarianceOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#00ff7f',
+          font: { size: 12, weight: 'bold' }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        titleColor: '#00ff7f',
+        bodyColor: '#ffffff',
+        borderColor: '#00ff7f',
+        borderWidth: 2
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#00ff7f', font: { size: 11, weight: 'bold' } },
+        grid: { color: 'rgba(0, 255, 127, 0.2)' },
+        title: { display: true, text: 'Principal Components', color: '#00ff7f', font: { size: 14, weight: 'bold' } }
+      },
+      y: {
+        min: 0,
+        max: 100,
+        ticks: { color: '#00ff7f', font: { size: 11, weight: 'bold' } },
+        grid: { color: 'rgba(0, 255, 127, 0.2)' },
+        title: { display: true, text: 'Cumulative Variance (%)', color: '#00ff7f', font: { size: 14, weight: 'bold' } }
+      }
+    }
+  };
+
+  getVarianceReductionPercentage(): number {
+    const pcaData = this.basicResults?.dimensionality_insights?.pca_analysis;
+    if (!pcaData?.components_for_95_variance || !pcaData?.cumulative_variance) return 95;
+    
+    const index = pcaData.components_for_95_variance - 1;
+    return pcaData.cumulative_variance[index] ? (pcaData.cumulative_variance[index] * 100) : 95;
+  }
+
+  getDimensionalityReduction(): number {
+    const pcaData = this.basicResults?.dimensionality_insights?.pca_analysis;
+    if (!pcaData?.total_components || !pcaData?.components_for_95_variance) return 0;
+    
+    const reduction = ((pcaData.total_components - pcaData.components_for_95_variance) / pcaData.total_components) * 100;
+    return Math.round(reduction);
+  }
+
+  getComputationalSpeedup(): number {
+    const reduction = this.getDimensionalityReduction();
+    if (reduction <= 0) return 1;
+    
+    // Rough estimate: computational complexity often scales quadratically with dimensions
+    const originalComplexity = 100;
+    const reducedComplexity = 100 - reduction;
+    const speedup = Math.pow(originalComplexity / reducedComplexity, 1.5);
+    
+    return Math.round(speedup * 10) / 10; // Round to 1 decimal place
+  }
 
   // PCA Component Features Helper Methods
   getPCAComponentFeatures(): any[] {
@@ -3708,5 +3998,194 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     const first3Index = Math.min(2, cumulative.length - 1);
     return Math.round(cumulative[first3Index] * 100);
   }
+
+  // Dimensionality Insights Helper Methods
+  getTopComponents(): any[] {
+    if (!this.basicResults?.dimensionality_insights?.pca_analysis?.component_features) return [];
+    return this.basicResults.dimensionality_insights.pca_analysis.component_features.slice(0, 5);
+  }
+
+  getClusteringQualityClass(): string {
+    if (!this.basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation) return '';
+    const recommendation = this.basicResults.dimensionality_insights.clustering_analysis.clustering_recommendation.toLowerCase();
+    if (recommendation.includes('strong')) return 'strong';
+    if (recommendation.includes('moderate')) return 'moderate';
+    if (recommendation.includes('weak')) return 'weak';
+    return '';
+  }
+
+  getBestSilhouetteScore(): number {
+    if (!this.basicResults?.dimensionality_insights?.clustering_analysis?.silhouette_scores) return 0;
+    const scores = this.basicResults.dimensionality_insights.clustering_analysis.silhouette_scores as number[];
+    return Math.max(...scores);
+  }
+
+  getSilhouetteScoreClass(score: number): string {
+    if (score >= 0.7) return 'excellent';
+    if (score >= 0.5) return 'good';
+    if (score >= 0.3) return 'fair';
+    if (score >= 0.1) return 'poor';
+    return 'very-poor';
+  }
+
+  // Helper method for PCA section visibility
+  hasPCAData(): boolean {
+    console.log('🔍 hasPCAData() called');
+    console.log('  - basicResults:', !!this.basicResults);
+    
+    if (!this.basicResults) {
+      console.log('  ❌ No basicResults');
+      return false;
+    }
+    
+    console.log('  - dimensionality_insights:', !!this.basicResults.dimensionality_insights);
+    if (!this.basicResults.dimensionality_insights) {
+      console.log('  ❌ No dimensionality_insights');
+      return false;
+    }
+    
+    console.log('  - pca_analysis:', !!this.basicResults.dimensionality_insights.pca_analysis);
+    if (!this.basicResults.dimensionality_insights.pca_analysis) {
+      console.log('  ❌ No pca_analysis');
+      return false;
+    }
+    
+    console.log('  - component_variances:', !!this.basicResults.dimensionality_insights.pca_analysis.component_variances);
+    if (!this.basicResults.dimensionality_insights.pca_analysis.component_variances) {
+      console.log('  ❌ No component_variances');
+      return false;
+    }
+    
+    const length = this.basicResults.dimensionality_insights.pca_analysis.component_variances.length;
+    console.log('  - component_variances.length:', length);
+    const result = length > 0;
+    console.log('  ✅ hasPCAData() result:', result);
+    
+    return result;
+  }
+
+  // Helper methods for debug display
+  getPCAVariancesLength(): number {
+    return this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances?.length || 0;
+  }
+
+  hasPCAVariances(): boolean {
+    return !!this.basicResults?.dimensionality_insights?.pca_analysis?.component_variances;
+  }
+
+  // Debug helper methods
+  getPCAFeatureContributionDebugInfo(): {components: number, labels: number, datasets: number} {
+    const topComponents = this.getTopComponents();
+    const data = this.getPCAFeatureContributionData();
+    return {
+      components: topComponents?.length || 0,
+      labels: data?.labels?.length || 0,
+      datasets: data?.datasets?.length || 0
+    };
+  }
+
+  // PCA Feature Contribution Chart Data
+  getPCAFeatureContributionData(): ChartData<'bar'> {
+    const componentFeatures = this.getTopComponents(); // Use the working method
+    console.log('📊 Getting PCA Feature Contribution Data:', componentFeatures);
+    
+    if (!componentFeatures || componentFeatures.length === 0) {
+      console.log('❌ No component features found for contribution chart');
+      return { labels: [], datasets: [] };
+    }
+
+    // Get first 3 components for visualization
+    const firstThreeComponents = componentFeatures.slice(0, 3);
+    const allFeatures = new Set<string>();
+    
+    // Collect all feature names from top_features arrays
+    firstThreeComponents.forEach(component => {
+      if (component.top_features) {
+        component.top_features.forEach((feature: any) => {
+          allFeatures.add(feature.feature);
+        });
+      }
+    });
+
+    const labels = Array.from(allFeatures).slice(0, 10); // Show top 10 features
+    const datasets = firstThreeComponents.map((component, index) => {
+      const colors = ['#00ff7f', '#ff6b6b', '#4ecdc4'];
+      const data = labels.map(featureName => {
+        // Find the feature in this component's top_features
+        const featureData = component.top_features?.find((f: any) => f.feature === featureName);
+        return featureData ? featureData.percentage : 0;
+      });
+
+      return {
+        label: component.component || `PC${index + 1}`,
+        data: data,
+        backgroundColor: colors[index],
+        borderColor: colors[index],
+        borderWidth: 2,
+        borderRadius: 4,
+      };
+    });
+
+    console.log('📈 Feature Contribution Labels:', labels);
+    console.log('📈 Feature Contribution Datasets:', datasets);
+    return { labels, datasets };
+  }
+
+  // PCA Feature Contribution Chart Options
+  pcaFeatureContributionOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#333',
+          font: { size: 12, weight: 'bold' }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        titleColor: '#00ff7f',
+        bodyColor: '#ffffff',
+        borderColor: '#00ff7f',
+        borderWidth: 2,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y.toFixed(3)}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { 
+          color: '#333', 
+          font: { size: 10, weight: 'bold' },
+          maxRotation: 45
+        },
+        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+        title: { 
+          display: true, 
+          text: 'Features', 
+          color: '#333', 
+          font: { size: 14, weight: 'bold' } 
+        }
+      },
+      y: {
+        ticks: { 
+          color: '#333', 
+          font: { size: 11, weight: 'bold' } 
+        },
+        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+        title: { 
+          display: true, 
+          text: 'Absolute Contribution', 
+          color: '#333', 
+          font: { size: 14, weight: 'bold' } 
+        }
+      }
+    }
+  };
 
 }

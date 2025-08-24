@@ -68,6 +68,10 @@
       <mat-icon>rocket_launch</mat-icon>
       Launch Analysis
     </button>
+    <button mat-stroked-button (click)="manualDebugDimensionality()" *ngIf="basicResults" style="margin-left: 10px;">
+      <mat-icon>bug_report</mat-icon>
+      Debug PCA Data
+    </button>
     <mat-spinner *ngIf="isLoading" diameter="24" class="loading-spinner"></mat-spinner>
   </div>
 
@@ -275,12 +279,27 @@
         <mat-icon>show_chart</mat-icon>
         <h3>Distribution Analysis</h3>
       </div>
+      
+      <!-- Debug Info -->
+      <div style="background: #f0f0f0; padding: 10px; margin-bottom: 15px; font-size: 12px;">
+        <strong>Distribution Debug:</strong>
+        Numeric Columns: {{ getNumericColumns().length }}, 
+        Histograms Available: {{ !!basicResults.distribution_analysis?.histograms }}, 
+        Distribution Charts: {{ distributionCharts.size }}
+      </div>
+      
       <div class="distribution-grid">
         <div *ngFor="let column of getNumericColumns()" class="distribution-item">
           <div class="distribution-header">
             <h4>{{ column }}</h4>
             <div class="distribution-shape">{{ getDistributionShape(column) }}</div>
           </div>
+          
+          <!-- Debug for individual chart -->
+          <div style="background: #e8f5e8; padding: 5px; margin: 5px 0; font-size: 11px;">
+            Chart Data Available: {{ !!getChartData(column) }}
+          </div>
+          
           <div *ngIf="getChartData(column)" class="chart-container">
             <canvas baseChart
                     [data]="getChartData(column)!"
@@ -888,6 +907,213 @@
           </ul>
         </div>
       </div>
+
+      <!-- Dimensionality Insights -->
+      <div *ngIf="basicResults.dimensionality_insights" class="analysis-section dimensionality-section">
+        <div class="section-header">
+          <mat-icon>scatter_plot</mat-icon>
+          <h3>Dimensionality Insights</h3>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="dimensionality-overview">
+          <div class="overview-card">
+            <div class="card-icon">
+              <mat-icon>view_column</mat-icon>
+            </div>
+            <div class="card-content">
+              <span class="card-value">{{ basicResults.dimensionality_insights.data_complexity?.original_dimensions || 0 }}</span>
+              <span class="card-label">Original Features</span>
+            </div>
+          </div>
+          
+          <div class="overview-card" *ngIf="basicResults.dimensionality_insights.pca_analysis?.components_for_95_variance">
+            <div class="card-icon">
+              <mat-icon>compress</mat-icon>
+            </div>
+            <div class="card-content">
+              <span class="card-value">{{ basicResults.dimensionality_insights.pca_analysis.components_for_95_variance }}</span>
+              <span class="card-label">Components (95% Variance)</span>
+            </div>
+          </div>
+          
+          <div class="overview-card" *ngIf="basicResults.dimensionality_insights.clustering_analysis?.optimal_clusters">
+            <div class="card-icon">
+              <mat-icon>grain</mat-icon>
+            </div>
+            <div class="card-content">
+              <span class="card-value">{{ basicResults.dimensionality_insights.clustering_analysis.optimal_clusters }}</span>
+              <span class="card-label">Optimal Clusters</span>
+            </div>
+          </div>
+          
+          <div class="overview-card">
+            <div class="card-icon">
+              <mat-icon>assessment</mat-icon>
+            </div>
+            <div class="card-content">
+              <span class="card-value complexity-{{ basicResults.dimensionality_insights.overview?.data_complexity }}">
+                {{ (basicResults.dimensionality_insights.overview?.data_complexity || 'Unknown') | titlecase }}
+              </span>
+              <span class="card-label">Data Complexity</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PCA Analysis Summary -->
+        <div *ngIf="basicResults.dimensionality_insights.pca_analysis" class="pca-summary-section">
+          <h4>
+            <mat-icon>analytics</mat-icon>
+            Principal Component Analysis Summary
+          </h4>
+          
+          <div class="pca-metrics">
+            <div class="metric-item">
+              <span class="metric-label">First Component Explains</span>
+              <span class="metric-value">{{ (basicResults.dimensionality_insights.pca_analysis.first_component_variance * 100).toFixed(1) }}%</span>
+            </div>
+            
+            <div class="metric-item">
+              <span class="metric-label">Reduction Potential</span>
+              <span class="metric-value potential-{{ basicResults.dimensionality_insights.pca_analysis.dimensionality_reduction_potential }}">
+                {{ (basicResults.dimensionality_insights.pca_analysis.dimensionality_reduction_potential || 'Unknown') | titlecase }}
+              </span>
+            </div>
+            
+            <div class="metric-item" *ngIf="basicResults.dimensionality_insights.pca_analysis.components_for_90_variance">
+              <span class="metric-label">90% Variance Components</span>
+              <span class="metric-value">{{ basicResults.dimensionality_insights.pca_analysis.components_for_90_variance }}</span>
+            </div>
+          </div>
+
+          <!-- Top Components -->
+          <div *ngIf="basicResults.dimensionality_insights.pca_analysis.component_features" class="components-overview">
+            <h5>Top Principal Components</h5>
+            <div class="components-grid">
+              <div *ngFor="let component of getTopComponents(); let i = index" class="component-card">
+                <div class="component-header">
+                  <span class="component-name">{{ component.component }}</span>
+                  <span class="component-variance">{{ component.variance_percentage.toFixed(1) }}%</span>
+                </div>
+                <div class="top-features">
+                  <div *ngFor="let feature of component.top_features.slice(0, 3)" class="feature-contribution">
+                    <span class="feature-name">{{ feature.feature }}</span>
+                    <div class="contribution-bar">
+                      <div class="contribution-fill" [style.width.%]="feature.percentage"></div>
+                    </div>
+                    <span class="contribution-value">{{ feature.percentage.toFixed(1) }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PCA Visualizations -->
+          <div *ngIf="basicResults.dimensionality_insights.pca_analysis.component_variances" class="pca-visualizations">
+            <h5>
+              <mat-icon>bar_chart</mat-icon>
+              PCA Component Analysis Charts
+            </h5>
+            
+            <!-- Scree Plot -->
+            <div class="chart-container">
+              <h6>Scree Plot - Variance Explained by Components</h6>
+              <div style="height: 300px; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
+                <canvas baseChart
+                        [data]="getPCAScreePlotData()"
+                        [options]="pcaScreePlotOptions"
+                        type="line">
+                </canvas>
+              </div>
+            </div>
+
+            <!-- Feature Contribution Chart -->
+            <div *ngIf="getTopComponents().length > 0" class="chart-container">
+              <h6>Feature Contributions to Principal Components</h6>
+              
+              <!-- Debug info -->
+              <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 12px;">
+                <strong>Debug:</strong> Components: {{ getPCAFeatureContributionDebugInfo().components }}, 
+                Chart Data Labels: {{ getPCAFeatureContributionDebugInfo().labels }}, 
+                Datasets: {{ getPCAFeatureContributionDebugInfo().datasets }}
+              </div>
+              
+              <div style="height: 300px; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
+                <canvas baseChart
+                        [data]="getPCAFeatureContributionData()"
+                        [options]="pcaFeatureContributionOptions"
+                        type="bar">
+                </canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clustering Analysis Summary -->
+        <div *ngIf="basicResults.dimensionality_insights.clustering_analysis && !basicResults.dimensionality_insights.clustering_analysis.message" class="clustering-summary-section">
+          <h4>
+            <mat-icon>grain</mat-icon>
+            Clustering Structure Analysis
+          </h4>
+          
+          <div class="clustering-metrics">
+            <div class="metric-item">
+              <span class="metric-label">Optimal Clusters</span>
+              <span class="metric-value">{{ basicResults.dimensionality_insights.clustering_analysis.optimal_clusters }}</span>
+            </div>
+            
+            <div class="metric-item">
+              <span class="metric-label">Clustering Quality</span>
+              <span class="metric-value clustering-{{ getClusteringQualityClass() }}">
+                {{ basicResults.dimensionality_insights.clustering_analysis.clustering_recommendation | titlecase }}
+              </span>
+            </div>
+            
+            <div class="metric-item" *ngIf="basicResults.dimensionality_insights.clustering_analysis.silhouette_scores">
+              <span class="metric-label">Best Silhouette Score</span>
+              <span class="metric-value">{{ getBestSilhouetteScore().toFixed(3) }}</span>
+            </div>
+          </div>
+
+          <!-- Clustering Visualization -->
+          <div class="clustering-viz" *ngIf="basicResults.dimensionality_insights.clustering_analysis.silhouette_scores">
+            <h5>Silhouette Scores by Cluster Count</h5>
+            <div class="silhouette-bars">
+              <div *ngFor="let score of basicResults.dimensionality_insights.clustering_analysis.silhouette_scores; let i = index" 
+                   class="silhouette-bar">
+                <div class="bar-label">{{ i + 2 }} clusters</div>
+                <div class="bar-container">
+                  <div class="bar-fill" 
+                       [style.width.%]="(score * 100)"
+                       [ngClass]="getSilhouetteScoreClass(score)">
+                  </div>
+                </div>
+                <div class="bar-value">{{ score.toFixed(3) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div *ngIf="basicResults.dimensionality_insights.recommendations" class="dimensionality-recommendations">
+          <h4>
+            <mat-icon>lightbulb</mat-icon>
+            Recommendations
+          </h4>
+          <div class="recommendations-list">
+            <div *ngFor="let recommendation of basicResults.dimensionality_insights.recommendations" class="recommendation-item">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ recommendation }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Data Message -->
+        <div *ngIf="!basicResults.dimensionality_insights.pca_analysis && !basicResults.dimensionality_insights.clustering_analysis" class="no-analysis">
+          <mat-icon>info</mat-icon>
+          <p>Insufficient data for dimensionality analysis. Need at least 2 numeric columns.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1039,204 +1265,86 @@
       </div>
     </div>
 
-    <!-- Dimensionality Insights Section -->
-    <div *ngIf="basicResults?.dimensionality_insights" class="analysis-section dimensionality-section">
-      <div class="section-header">
-        <mat-icon>hub</mat-icon>
-        <h3>Dimensionality Insights</h3>
-        <div class="section-summary">
-          <span class="summary-badge" [ngClass]="getDimensionalityReductionClass()">
-            {{ getDimensionalityRecommendationSummary() }}
-          </span>
+    <!-- Simple PCA Scree Plot Implementation -->
+    <!-- Debug: Check conditions -->
+    <div *ngIf="basicResults" style="background: yellow; padding: 10px; margin: 5px; font-size: 12px;">
+      <strong>PCA Debug Info:</strong><br>
+      basicResults exists: {{ !!basicResults }}<br>
+      dimensionality_insights exists: {{ !!basicResults.dimensionality_insights }}<br>
+      pca_analysis exists: {{ !!basicResults.dimensionality_insights?.pca_analysis }}<br>
+      component_variances exists: {{ hasPCAVariances() }}<br>
+      component_variances length: {{ getPCAVariancesLength() }}<br>
+      hasPCAData(): {{ hasPCAData() }}<br>
+      getPCAComponentCount(): {{ getPCAComponentCount() }}<br>
+    </div>
+    
+    <!-- Test PCA section with simpler condition -->
+    <div *ngIf="basicResults" class="analysis-section pca-analysis" style="background: white; padding: 20px; margin: 10px; border: 2px solid #00ff7f;">
+      <div class="section-header" style="margin-bottom: 20px;">
+        <mat-icon style="color: #00ff7f;">analytics</mat-icon>
+        <h3 style="color: #00ff7f; display: inline-block; margin-left: 10px;">PCA Scree Plot Analysis (Test)</h3>
+      </div>
+      
+      <!-- Show condition status -->
+      <div style="background: #f0f0f0; padding: 10px; margin-bottom: 15px; font-size: 12px;">
+        <strong>PCA Condition Status:</strong><br>
+        hasPCAData(): {{ hasPCAData() }}<br>
+        component_variances exists: {{ hasPCAVariances() }}<br>
+        component_variances length: {{ getPCAVariancesLength() }}<br>
+      </div>
+      
+      <!-- PCA Metrics Cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+          <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Components</div>
+          <div style="font-size: 24px; font-weight: bold; color: #00ff7f;">{{ getPCAComponentCount() }}</div>
+        </div>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+          <div style="color: #666; font-size: 14px; margin-bottom: 5px;">First Component</div>
+          <div style="font-size: 24px; font-weight: bold; color: #00ff7f;">{{ getPCAFirstComponentVariance().toFixed(1) }}%</div>
+        </div>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+          <div style="color: #666; font-size: 14px; margin-bottom: 5px;">First Two Components</div>
+          <div style="font-size: 24px; font-weight: bold; color: #00ff7f;">{{ getPCAFirstTwoComponentsVariance().toFixed(1) }}%</div>
         </div>
       </div>
 
-      <!-- PCA Analysis -->
-      <div *ngIf="basicResults?.dimensionality_insights?.pca_analysis" class="pca-analysis">
-        <h4>
-          <mat-icon>analytics</mat-icon>
-          Principal Component Analysis (PCA)
-        </h4>
-        
-        <!-- PCA Overview Cards -->
-        <div class="pca-overview-grid">
-          <div class="pca-card">
-            <div class="pca-metric">
-              <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.total_components }}</span>
-              <span class="metric-label">Total Components</span>
-            </div>
-          </div>
-          <div class="pca-card">
-            <div class="pca-metric">
-              <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_95_variance }}</span>
-              <span class="metric-label">For 95% Variance</span>
-            </div>
-          </div>
-          <div class="pca-card">
-            <div class="pca-metric">
-              <span class="metric-value">{{ basicResults?.dimensionality_insights?.pca_analysis?.components_for_90_variance }}</span>
-              <span class="metric-label">For 90% Variance</span>
-            </div>
-          </div>
-          <div class="pca-card">
-            <div class="pca-metric">
-              <span class="metric-value">{{ ((basicResults?.dimensionality_insights?.pca_analysis?.first_component_variance || 0) * 100).toFixed(1) }}%</span>
-              <span class="metric-label">First Component</span>
-            </div>
+      <!-- PCA Charts Container -->
+      <div class="pca-charts">
+        <!-- PCA Scree Plot Chart -->
+        <div style="margin-bottom: 30px;">
+          <h4 style="color: #333; margin-bottom: 15px;">
+            <mat-icon>trending_down</mat-icon>
+            Scree Plot - Variance Explained by Components
+          </h4>
+          <div style="height: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <canvas baseChart
+                    [data]="getPCAScreePlotData()"
+                    [options]="pcaScreePlotOptions"
+                    type="line">
+            </canvas>
           </div>
         </div>
 
-        <!-- Component Features -->
-        <div *ngIf="getPCAComponentFeatures().length > 0" class="component-features">
-          <h5>
-            <mat-icon>view_list</mat-icon>
-            Top Component Features
-          </h5>
-          <div class="components-grid">
-            <div *ngFor="let component of getPCAComponentFeatures().slice(0, 5)" class="component-card">
-              <div class="component-header">
-                <span class="component-name">{{ component.component }}</span>
-                <span class="component-variance">{{ (component.variance_percentage).toFixed(1) }}%</span>
-              </div>
-              <div class="top-features">
-                <div *ngFor="let feature of component.top_features.slice(0, 3)" class="feature-item">
-                  <span class="feature-name">{{ feature.feature }}</span>
-                  <div class="feature-bar">
-                    <div class="feature-fill" [style.width.%]="feature.percentage"></div>
-                  </div>
-                  <span class="feature-percentage">{{ feature.percentage.toFixed(1) }}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PCA Business Insights -->
-        <div class="pca-business-insights">
-          <h5>
-            <mat-icon>lightbulb</mat-icon>
-            Business Insights
-          </h5>
-          <div class="insights-grid">
-            <div *ngFor="let insight of getPCABusinessInsights()" class="insight-card" [ngClass]="insight.type">
-              <mat-icon>{{ insight.icon }}</mat-icon>
-              <h6>{{ insight.title }}</h6>
-              <p>{{ insight.description }}</p>
-              <ul *ngIf="insight.actions" class="action-list">
-                <li *ngFor="let action of insight.actions">{{ action }}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Clustering Analysis -->
-      <div *ngIf="basicResults?.dimensionality_insights?.clustering_analysis" class="clustering-analysis">
-        <h4>
-          <mat-icon>scatter_plot</mat-icon>
-          Clustering Analysis
-        </h4>
-        
-        <div class="clustering-overview">
-          <div class="clustering-card">
-            <div class="clustering-metric">
-              <span class="metric-value">{{ basicResults?.dimensionality_insights?.clustering_analysis?.optimal_clusters }}</span>
-              <span class="metric-label">Optimal Clusters</span>
-            </div>
-          </div>
-          <div class="clustering-card">
-            <div class="clustering-metric">
-              <span class="metric-value">{{ basicResults?.dimensionality_insights?.clustering_analysis?.clustering_recommendation }}</span>
-              <span class="metric-label">Structure Quality</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Silhouette Scores -->
-        <div *ngIf="basicResults?.dimensionality_insights?.clustering_analysis?.silhouette_scores" class="silhouette-analysis">
-          <h5>
-            <mat-icon>assessment</mat-icon>
-            Cluster Quality Scores
-          </h5>
-          <div class="silhouette-grid">
-            <div *ngFor="let score of basicResults?.dimensionality_insights?.clustering_analysis?.silhouette_scores; let i = index" 
-                 class="silhouette-item">
-              <span class="cluster-count">{{ i + 2 }} clusters</span>
-              <div class="score-bar">
-                <div class="score-fill" [style.width.%]="(score * 100)" 
-                     [ngClass]="{'good-score': score > 0.5, 'moderate-score': score > 0.3, 'poor-score': score <= 0.3}"></div>
-              </div>
-              <span class="score-value">{{ (score * 100).toFixed(1) }}%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Strategic Recommendations -->
-      <div class="strategic-recommendations">
-        <h4>
-          <mat-icon>strategy</mat-icon>
-          Strategic Recommendations
-        </h4>
-        <div class="recommendations-grid">
-          <div *ngFor="let rec of getStrategicRecommendations()" class="recommendation-card" [ngClass]="rec.priority">
-            <div class="recommendation-header">
-              <span class="priority-badge">{{ rec.priority }}</span>
-              <h6>{{ rec.title }}</h6>
-            </div>
-            <p>{{ rec.description }}</p>
-            <ul *ngIf="rec.benefits" class="benefits-list">
-              <li *ngFor="let benefit of rec.benefits">{{ benefit }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Technical Recommendations -->
-      <div class="technical-recommendations">
-        <h4>
-          <mat-icon>build</mat-icon>
-          Technical Implementation
-        </h4>
-        <div class="tech-recommendations-grid">
-          <div *ngFor="let tech of getTechnicalRecommendations()" class="tech-card">
-            <div class="tech-header">
-              <mat-icon>{{ tech.icon }}</mat-icon>
-              <h6>{{ tech.method }}</h6>
-            </div>
-            <p>{{ tech.description }}</p>
-            <ol *ngIf="tech.steps" class="steps-list">
-              <li *ngFor="let step of tech.steps">{{ step }}</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data Complexity Overview -->
-      <div *ngIf="basicResults?.dimensionality_insights?.data_complexity" class="data-complexity">
-        <h4>
-          <mat-icon>info</mat-icon>
-          Data Complexity Assessment
-        </h4>
-        <div class="complexity-metrics">
-          <div class="complexity-item">
-            <span class="complexity-label">Original Dimensions:</span>
-            <span class="complexity-value">{{ basicResults?.dimensionality_insights?.data_complexity?.original_dimensions }}</span>
-          </div>
-          <div class="complexity-item">
-            <span class="complexity-label">Sample Size:</span>
-            <span class="complexity-value">{{ basicResults?.dimensionality_insights?.data_complexity?.samples?.toLocaleString() }}</span>
-          </div>
-          <div class="complexity-item">
-            <span class="complexity-label">Dimensions/Samples Ratio:</span>
-            <span class="complexity-value">{{ (basicResults?.dimensionality_insights?.data_complexity?.dimensions_to_samples_ratio * 100)?.toFixed(2) }}%</span>
+        <!-- PCA Feature Contribution Chart -->
+        <div *ngIf="getPCAComponentFeatures().length > 0" style="margin-bottom: 30px;">
+          <h4 style="color: #333; margin-bottom: 15px;">
+            <mat-icon>bar_chart</mat-icon>
+            Feature Contributions to Principal Components
+          </h4>
+          <div style="height: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <canvas baseChart
+                    [data]="getPCAFeatureContributionData()"
+                    [options]="pcaFeatureContributionOptions"
+                    type="bar">
+            </canvas>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Regression Analysis Results (if any) -->
-    <div *ngIf="advancedResults.regression_analysis" class="analysis-section regression-analysis-section">
+    <div *ngIf="advancedResults?.regression_analysis" class="analysis-section regression-analysis-section">
       <div class="section-header">
         <mat-icon>trending_up</mat-icon>
         <h3>Regression Analysis</h3>

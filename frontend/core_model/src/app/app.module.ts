@@ -21,6 +21,9 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 
+// Chart.js Module
+import { NgChartsModule } from 'ng2-charts';
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { FileUploadComponent } from './components/file-upload/file-upload.component';
@@ -56,6 +59,9 @@ import { AnalysisMetricsComponent } from './components/analysis-metrics/analysis
     MatSnackBarModule,
     MatDialogModule,
     MatExpansionModule,
+    
+    // Chart.js Module
+    NgChartsModule,
     
     // Standalone Components
     FileUploadComponent,

@@ -2,37 +2,61 @@
   <!-- Minimal Header -->
   <div class="modern-header">
     <div class="header-content">
-      <div class="header-chat-options" *ngIf="!currentDataset">
+      <div class="header-chat-options" *ngIf="currentDataset">
         <div class="chat-header-compact">
           <h1>Data Assistant</h1>
           <p>Ask me anything about your data</p>
-        <div class="all-options-row">
-          <button class="chart-option-btn" 
-                  [class.active]="selectedPlotType === ''"
-                  (click)="selectChart('')">
+        </div>
+        
+        <div class="unified-options-row">
+          <div class="chart-type-compact" 
+               [class.selected]="selectedPlotType === 'text'"
+               (click)="selectChart('text')">
             <mat-icon>text_fields</mat-icon>
             <span>Text Only</span>
-          </button>
-          <button class="chart-option-btn" 
-                  [class.active]="selectedPlotType === 'line_trend'"
-                  (click)="selectChart('line_trend')">
+          </div>
+          
+          <div class="chart-type-compact" 
+               [class.selected]="selectedPlotType === 'line_trend'"
+               (click)="selectChart('line_trend')">
             <mat-icon>show_chart</mat-icon>
             <span>Line Chart</span>
-          </button>
-          <button class="chart-option-btn" 
-                  [class.active]="selectedPlotType === 'bollinger_band'"
-                  (click)="selectChart('bollinger_band')">
-            <mat-icon>analytics</mat-icon>
+          </div>
+          
+          <div class="chart-type-compact" 
+               [class.selected]="selectedPlotType === 'bollinger_band'"
+               (click)="selectChart('bollinger_band')">
+            <mat-icon>stacked_line_chart</mat-icon>
             <span>Bollinger Bands</span>
-          </button>
+          </div>
           
           <div class="separator"></div>
           
-          <button class="quick-action-btn" (click)="askQuickQuestion('Summarize my data')" [disabled]="isLoading">📊 Summarize</button>
-          <button class="quick-action-btn" (click)="askQuickQuestion('Show me trends in the data')" [disabled]="isLoading">📈 Trends</button>
-          <button class="quick-action-btn" (click)="askQuickQuestion('Find outliers in my data')" [disabled]="isLoading">🎯 Outliers</button>
-          <button class="quick-action-btn" (click)="askQuickQuestion('Check for missing values')" [disabled]="isLoading">❓ Missing</button>
+          <button class="quick-action-btn" 
+                  (click)="sendQuickMessage('Summarize the key insights from this data')"
+                  [disabled]="isLoading">
+            Summarize
+          </button>
+          
+          <button class="quick-action-btn" 
+                  (click)="sendQuickMessage('Analyze trends in this dataset')"
+                  [disabled]="isLoading">
+            Trends
+          </button>
+          
+          <button class="quick-action-btn" 
+                  (click)="sendQuickMessage('Identify outliers in the data')"
+                  [disabled]="isLoading">
+            Outliers
+          </button>
+          
+          <button class="quick-action-btn" 
+                  (click)="sendQuickMessage('Check for missing values and data quality issues')"
+                  [disabled]="isLoading">
+            Missing
+          </button>
         </div>
+      </div>
         
         <!-- Chart Settings Dropdown -->
         <div class="chart-settings-dropdown" *ngIf="selectedPlotType">
@@ -200,4 +224,3 @@
     </div>
     
   </div>
-</div>

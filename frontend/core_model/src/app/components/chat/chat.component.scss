@@ -33,6 +33,37 @@
   gap: 16px;
 }
 
+.header-chat-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.chat-header-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  p {
+    margin: 0;
+    color: #888;
+    font-size: 14px;
+  }
+}
+
 /* Header Chart Options */
 .header-chart-options {
   display: flex;
@@ -226,7 +257,7 @@
   flex-direction: column;
   height: calc(100vh - 100px);
   background: #0a0a0a;
-  overflow: hidden;
+  overflow: visible;
   
   &.with-matrix {
     display: none;
@@ -243,6 +274,7 @@
   margin: 0 auto;
   width: 100%;
   height: 100%;
+  z-index: 1;
   
   &::-webkit-scrollbar {
     width: 8px;
@@ -609,9 +641,11 @@
   flex-shrink: 0;
   width: 100%;
   box-sizing: border-box;
-  position: sticky;
+  position: fixed;
   bottom: 0;
-  z-index: 100;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 
 .input-wrapper {
@@ -846,12 +880,37 @@
     margin: 0 auto;
   }
   
-  .all-options-row {
+  .chart-buttons-row {
     display: flex;
     gap: 8px;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    margin-bottom: 12px;
+  }
+  
+  .unified-options-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-bottom: 12px;
+    
+    .separator {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 8px;
+    }
+  }
+  
+  .quick-actions-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
     
     .separator {
       width: 1px;

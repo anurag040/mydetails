@@ -731,4 +731,9 @@ export class ChatComponent implements OnInit {
     return 'Continue the conversation...';
   }
 
+  sendQuickMessage(message: string) {
+    this.currentQuery = message;
+    this.sendMessage();
+  }
+
 }

@@ -22,9 +22,10 @@ export class AnalysisMetricsComponent implements OnInit {
   constructor(private datasetService: DatasetService) { }
 
   ngOnInit(): void {
-    // Subscribe to current dataset
+    // Subscribe to current dataset and trigger matrix reload when dataset changes
     this.datasetService.currentDataset$.subscribe(dataset => {
       this.currentDataset = dataset;
+      console.log('📊 Analysis Metrics - Dataset changed:', dataset);
     });
   }
 }

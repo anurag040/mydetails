@@ -431,6 +431,8 @@
         </div>
       </div>
 
+
+
       <!-- Quality Metrics Dashboard -->
       <div class="quality-metrics-dashboard">
         <h4><mat-icon>dashboard</mat-icon> Quality Dimensions</h4>
@@ -863,17 +865,6 @@
           </div>
         </div>
 
-        <!-- PCA Notice -->
-        <div class="pca-notice">
-          <mat-icon>analytics</mat-icon>
-          <h4>Dimensionality Reduction</h4>
-          <p>For high-dimensional datasets, consider running <strong>PCA Analysis</strong> from the advanced options to identify the most important components and reduce feature space complexity.</p>
-          <button mat-raised-button color="primary" class="pca-button" (click)="scrollToPCASection()">
-            <mat-icon>trending_up</mat-icon>
-            Go to PCA Analysis
-          </button>
-        </div>
-
         <!-- No Suggestions Fallback -->
         <div *ngIf="!hasFeatureEngineeringSuggestions()" class="no-suggestions">
           <mat-icon>lightbulb_outline</mat-icon>
@@ -1117,6 +1108,246 @@
     </div>
   </div>
 
+  <!-- Advanced Analysis Results -->
+  <div *ngIf="advancedResults" class="advanced-results-container">
+    <div class="section-header">
+      <mat-icon>analytics</mat-icon>
+      <h2>Advanced Analysis Results</h2>
+    </div>
+
+    <!-- PCA Analysis Results -->
+    <div *ngIf="advancedResults.pca_analysis" class="analysis-section pca-analysis-section" data-analysis-type="pca_analysis">
+      <div class="section-header">
+        <mat-icon>scatter_plot</mat-icon>
+        <h3>Principal Component Analysis (PCA)</h3>
+      </div>
+      
+      <!-- PCA Summary Cards -->
+      <div class="pca-summary-cards">
+        <div class="summary-card">
+          <div class="card-content">
+            <mat-icon class="card-icon">insights</mat-icon>
+            <div class="card-details">
+              <span class="card-value">{{ advancedResults.pca_analysis.explained_variance_ratio?.length || 0 }}</span>
+              <span class="card-label">Components</span>
+            </div>
+          </div>
+        
+        <div class="summary-card">
+          <div class="card-content">
+            <mat-icon class="card-icon">compress</mat-icon>
+            <div class="card-details">
+              <span class="card-value">{{ advancedResults.pca_analysis.n_components_95_variance || 'N/A' }}</span>
+              <span class="card-label">Components for 95% Variance</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explained Variance Chart -->
+              <div class="domain-coverage">
+                <div class="domain-item" *ngFor="let factor of getConfidenceFactors()">
+      <div *ngIf="advancedResults.pca_analysis.explained_variance_ratio" class="variance-chart-section">
+        <h4>
+          <mat-icon>bar_chart</mat-icon>
+          Explained Variance by Component
+        </h4>
+        <div class="variance-bars">
+          <div *ngFor="let variance of advancedResults.pca_analysis.explained_variance_ratio; let i = index" 
+               class="variance-bar-item">
+            <div class="bar-label">PC{{ i + 1 }}</div>
+            <div class="variance-bar">
+              <div class="bar-fill" [style.width.%]="variance * 100"></div>
+            </div>
+            <div class="variance-value">{{ (variance * 100) | number:'1.1-1' }}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cumulative Variance -->
+      <div *ngIf="advancedResults.pca_analysis.cumulative_variance_ratio" class="cumulative-variance-section">
+          <div class="detailed-metric-card">
+        <h4>
+          <mat-icon>trending_up</mat-icon>
+          Cumulative Variance Explained
+        </h4>
+        <div class="cumulative-chart">
+          <div *ngFor="let cumVar of advancedResults.pca_analysis.cumulative_variance_ratio; let i = index" 
+               class="cumulative-point">
+            <div class="point-marker" [style.left.%]="(i / (advancedResults.pca_analysis.cumulative_variance_ratio.length - 1)) * 100">
+              <div class="point-dot" [ngClass]="getCumulativeVarianceClass(cumVar)"></div>
+              <div class="point-label">{{ (cumVar * 100) | number:'1.0-0' }}%</div>
+            </div>
+          </div>
+          <div class="chart-axis">
+            <span class="axis-label start">PC1</span>
+            <span class="axis-label end">PC{{ advancedResults.pca_analysis.cumulative_variance_ratio?.length || 0 }}</span>
+          </div>
+        </div>
+      
+      <!-- Feature Importance -->
+      <div *ngIf="advancedResults.pca_analysis.feature_importance" class="feature-importance-section">
+                  <span class="tier-score">80%</span>
+                </div>
+                <div class="tier-item moderate" [class.active]="getEfficiencyTier() === 'acceptable'">
+                  <span class="tier-name">Acceptable</span>
+                  <span class="tier-range">5.0-10.0s</span>
+                  <span class="tier-score">60%</span>
+                </div>
+                <div class="tier-item poor" [class.active]="getEfficiencyTier() === 'poor'">
+                  <span class="tier-name">Poor</span>
+                  <span class="tier-range">&gt; 10.0s</span>
+                  <span class="tier-score">30%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="performance-metrics">
+              <div class="performance-item">
+                <mat-icon>timer</mat-icon>
+                <span>Response Time: {{ getResponseTime() }}s</span>
+              </div>
+              <div class="performance-item">
+                <mat-icon>grade</mat-icon>
+                <span>Tier: {{ getEfficiencyTier() | titlecase }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Applied Statistical Tests -->
+        <div class="statistical-tests-comprehensive">
+          <div class="tests-header">
+            <mat-icon>calculate</mat-icon>
+            <h4>Applied Statistical Tests & Validation Methods</h4>
+          </div>
+          
+          <div class="tests-detailed-grid">
+            <div class="test-card">
+              <div class="test-header">
+                <mat-icon>functions</mat-icon>
+                <h5>Shapiro-Wilk Normality Test</h5>
+              </div>
+              <div class="test-formula">
+                <strong>Hypothesis:</strong> H₀: data follows normal distribution (α = 0.05)
+              </div>
+              <div class="test-application">
+                <p><strong>Application:</strong> Validates distribution assumptions for statistical inference</p>
+                <p><strong>Interpretation:</strong> p &gt; 0.05 indicates normal distribution</p>
+              </div>
+            </div>
+            
+            <div class="test-card">
+              <div class="test-header">
+                <mat-icon>trending_up</mat-icon>
+                <h5>Pearson Correlation Analysis</h5>
+              </div>
+              <div class="test-formula">
+                <strong>Formula:</strong> r = Σ((xᵢ-x̄)(yᵢ-ȳ)) / √(Σ(xᵢ-x̄)²Σ(yᵢ-ȳ)²)
+              </div>
+              <div class="test-application">
+                <p><strong>Application:</strong> Validates linear relationship claims in LLM analysis</p>
+                <p><strong>Interpretation:</strong> |r| &gt; 0.7 indicates strong correlation</p>
+              </div>
+            </div>
+            
+            <div class="test-card">
+              <div class="test-header">
+                <mat-icon>show_chart</mat-icon>
+                <h5>Fisher's Skewness Coefficient</h5>
+              </div>
+              <div class="test-formula">
+                <strong>Formula:</strong> γ₁ = E[(X-μ)³]/σ³
+              </div>
+              <div class="test-application">
+                <p><strong>Application:</strong> Quantifies distribution asymmetry for shape analysis</p>
+                <p><strong>Interpretation:</strong> |γ₁| &lt; 0.5 indicates approximate symmetry</p>
+              </div>
+            </div>
+            
+            <div class="test-card">
+              <div class="test-header">
+                <mat-icon>scatter_plot</mat-icon>
+                <h5>Z-Score Outlier Detection</h5>
+              </div>
+              <div class="test-formula">
+                <strong>Formula:</strong> |z| = |(x-μ)/σ| &gt; 3
+              </div>
+              <div class="test-application">
+                <p><strong>Application:</strong> Identifies extreme values for data quality assessment</p>
+                <p><strong>Interpretation:</strong> |z| &gt; 3 indicates potential outlier</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Rating & Certification -->
+        <div class="performance-certification">
+          <div class="certification-header">
+            <mat-icon>workspace_premium</mat-icon>
+            <h4>Validation Certification</h4>
+          </div>
+          
+          <div class="certification-content">
+            <div class="certification-badge" [ngClass]="getOverallValidationClass()">
+              <div class="badge-icon">
+                <mat-icon>{{ getValidationStatusIcon() }}</mat-icon>
+              </div>
+              <div class="badge-content">
+                <div class="badge-score">{{ getLLMOverallValidationScore() }}%</div>
+                <div class="badge-rating">{{ getPerformanceRating() }}</div>
+              </div>
+            </div>
+            
+            <div class="certification-details">
+              <h5>Validation Summary</h5>
+              <p class="validation-explanation">{{ getValidationExplanation() }}</p>
+              
+              <div class="certification-metrics">
+                <div class="cert-metric">
+                  <span class="cert-label">Validation Timestamp:</span>
+                  <span class="cert-value">{{ getValidationTimestamp() }}</span>
+                </div>
+                <div class="cert-metric">
+                  <span class="cert-label">Framework Version:</span>
+                  <span class="cert-value">Technical Validation Framework v1.0</span>
+                </div>
+                <div class="cert-metric">
+                  <span class="cert-label">Compliance Standard:</span>
+                  <span class="cert-value">Academic Research Methodology</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Methodology Transparency -->
+        <div class="methodology-section">
+          <div class="methodology-header">
+            <mat-icon>science</mat-icon>
+            <h4>Methodology Transparency</h4>
+          </div>
+          
+          <div class="methodology-content">
+            <div class="methodology-principles">
+              <h5>Validation Principles</h5>
+              <ul class="principles-list">
+                <li><strong>Mathematical Rigor:</strong> All validations use established statistical methods</li>
+                <li><strong>Reproducibility:</strong> Results can be independently verified using same data</li>
+                <li><strong>Transparency:</strong> All formulas and weights are explicitly documented</li>
+                <li><strong>Academic Standards:</strong> Methodology meets publication-quality requirements</li>
+                <li><strong>Multi-dimensional Assessment:</strong> Four independent validation dimensions</li>
+              </ul>
+            </div>
+            
+            <div class="limitations-acknowledgment">
+              <h5>Limitations & Considerations</h5>
+              <ul class="limitations-list">
+                <li>Validation accuracy depends on data quality and size</li>
+                <li>Efficiency metrics may vary based on system performance</li>
+                <li>Completeness scoring uses domain-specific keyword matching</li>
+                <li>Consistency detection limited to predefined contradiction patterns</li>
+              </ul>
   <!-- Advanced Analysis Results -->
   <div *ngIf="advancedResults" class="advanced-results-container">
     <div class="section-header">

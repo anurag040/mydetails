@@ -2,12 +2,16 @@ from fastapi import APIRouter, HTTPException
 import logging
 from app.schemas.responses import StatisticsRequest, BasicStatsResponse, AdvancedStatsRequest, AdvancedStatsResponse
 from app.services.statistics_calculator import StatisticsCalculator
+from app.services.comprehensive_analysis_validator import ComprehensiveAnalysisValidator
+from app.services.file_handler import FileHandler
 from typing import List
 
 router = APIRouter()
 logger = logging.getLogger("statistics")
 logging.basicConfig(level=logging.INFO)
 stats_calculator = StatisticsCalculator()
+analysis_validator = ComprehensiveAnalysisValidator()
+file_handler = FileHandler()
 
 @router.post("/statistics/basic", response_model=BasicStatsResponse)
 async def calculate_basic_statistics(request: StatisticsRequest):
@@ -217,3 +221,130 @@ async def get_statistics_summary(dataset_id: str):
         raise HTTPException(status_code=404, detail="Dataset not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
+
+@router.post("/statistics/{dataset_id}/validate")
+async def validate_analysis_accuracy(dataset_id: str):
+    """
+    Validate the accuracy and quality of statistical analyses performed on a dataset.
+    
+    This endpoint evaluates:
+    - Statistical accuracy of computed metrics
+    - Completeness of analysis coverage
+    - Methodology appropriateness
+    - Data quality considerations
+    
+    Returns comprehensive validation metrics for each analysis type.
+    """
+    try:
+        logger.info(f"Starting comprehensive analysis validation for dataset: {dataset_id}")
+        
+        # Load the dataset
+        df = await file_handler.load_dataset(dataset_id)
+        if df is None:
+            raise HTTPException(status_code=404, detail="Dataset not found")
+        
+        # Get all available analysis options and run comprehensive analysis
+        basic_options = [
+            "descriptive", "correlation", "distribution", "missing_data",
+            "missing_value_analysis", "duplicates_analysis", "type_integrity_validation",
+            "univariate_summaries", "outlier_detection", "feature_engineering_ideas",
+            "multicollinearity_assessment", "dimensionality_insights", 
+            "baseline_model_sanity", "drift_stability_analysis", "bias_fairness_flags",
+            "documentation_summary", "reproducibility_info"
+        ]
+        
+        # Calculate comprehensive statistics
+        analysis_results = await stats_calculator.calculate_basic_stats(dataset_id, basic_options)
+        
+        # Convert to dictionary for validation
+        analysis_dict = {
+            'descriptive_stats': analysis_results.descriptive_stats,
+            'correlation_matrix': analysis_results.correlation_matrix,
+            'distribution_analysis': analysis_results.distribution_analysis,
+            'missing_data_summary': analysis_results.missing_data_summary,
+            'missing_value_analysis': analysis_results.missing_value_analysis,
+            'duplicates_analysis': analysis_results.duplicates_analysis,
+            'type_integrity_validation': analysis_results.type_integrity_validation,
+            'univariate_summaries': analysis_results.univariate_summaries,
+            'outlier_detection': analysis_results.outlier_detection,
+            'feature_engineering_ideas': analysis_results.feature_engineering_ideas,
+            'multicollinearity_assessment': analysis_results.multicollinearity_assessment,
+            'dimensionality_insights': analysis_results.dimensionality_insights,
+            'baseline_model_sanity': analysis_results.baseline_model_sanity,
+            'drift_stability_analysis': analysis_results.drift_stability_analysis,
+            'bias_fairness_flags': analysis_results.bias_fairness_flags,
+            'documentation_summary': analysis_results.documentation_summary,
+            'reproducibility_info': analysis_results.reproducibility_info
+        }
+        
+        # Perform comprehensive validation
+        validation_report = analysis_validator.validate_analysis_results(
+            dataset_id, analysis_dict, df
+        )
+        
+        logger.info(f"Validation completed for dataset: {dataset_id}, overall score: {validation_report['overall_quality_score']}")
+        
+        return validation_report
+        
+    except FileNotFoundError:
+        logger.error(f"Dataset not found: {dataset_id}")
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    except Exception as e:
+        logger.exception(f"Analysis validation failed for dataset: {dataset_id}")
+        raise HTTPException(status_code=500, detail=f"Analysis validation failed: {str(e)}")
+
+@router.get("/statistics/{dataset_id}/validation-metrics")
+async def get_validation_metrics(dataset_id: str):
+    """
+    Get detailed validation metrics for a specific dataset's analyses.
+    
+    Returns:
+    - Quality scores for each analysis type
+    - Accuracy assessments
+    - Methodology evaluations
+    - Recommendations for improvement
+    """
+    try:
+        # This endpoint returns cached validation results or triggers new validation
+        validation_report = await validate_analysis_accuracy(dataset_id)
+        
+        # Format for Analysis Matrix display
+        formatted_metrics = {
+            'dataset_id': dataset_id,
+            'overall_quality_score': validation_report['overall_quality_score'],
+            'analysis_scores': {},
+            'quality_breakdown': {
+                'excellent_analyses': 0,
+                'good_analyses': 0,
+                'needs_improvement': 0
+            },
+            'detailed_evaluations': validation_report['analysis_validations'],
+            'summary': validation_report['summary'],
+            'recommendations': validation_report['recommendations'],
+            'validation_timestamp': pd.Timestamp.now().isoformat()
+        }
+        
+        # Process individual analysis scores
+        for analysis_type, validation in validation_report['analysis_validations'].items():
+            score = validation['quality_score']
+            formatted_metrics['analysis_scores'][analysis_type] = {
+                'quality_score': score,
+                'grade': validation_report.get('summary', {}).get('overall_grade', 'N/A'),
+                'accuracy_metrics': validation.get('accuracy_metrics', {}),
+                'strengths': validation.get('strengths', []),
+                'issues': validation.get('issues', [])
+            }
+            
+            # Categorize quality levels
+            if score >= 85:
+                formatted_metrics['quality_breakdown']['excellent_analyses'] += 1
+            elif score >= 70:
+                formatted_metrics['quality_breakdown']['good_analyses'] += 1
+            else:
+                formatted_metrics['quality_breakdown']['needs_improvement'] += 1
+        
+        return formatted_metrics
+        
+    except Exception as e:
+        logger.exception(f"Failed to get validation metrics for dataset: {dataset_id}")
+        raise HTTPException(status_code=500, detail=f"Failed to get validation metrics: {str(e)}")

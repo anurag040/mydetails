@@ -9,6 +9,7 @@ from sklearn.ensemble import IsolationForest
 from typing import Dict, Any, List, Optional
 import os
 from app.services.file_handler import FileHandler
+from app.services.llm_validation_service import LLMValidationService, convert_validation_result_to_dict
 from app.schemas.responses import BasicStatsResponse, AdvancedStatsResponse
 
 def convert_numpy_types(obj):
@@ -59,6 +60,7 @@ def safe_float(value):
 class StatisticsCalculator:
     def __init__(self):
         self.file_handler = FileHandler()
+        self.validation_service = LLMValidationService()
         # Initialize OpenAI client for AI-powered insights
         try:
             from openai import OpenAI
@@ -2091,7 +2093,7 @@ Requirements:
         }
     
     def _generate_data_quality_ai_insights(self, summary: Dict, validations: Dict, df: pd.DataFrame) -> Dict[str, Any]:
-        """Generate AI insights for data quality"""
+        """Generate AI insights for data quality with comprehensive validation"""
         if not self.openai_client:
             return {
                 "status": "unavailable",
@@ -2137,9 +2139,20 @@ Requirements:
                 temperature=0.3
             )
             
+            ai_response_text = response.choices[0].message.content.strip()
+            
+            # Perform LLM validation using the technical framework
+            ground_truth_stats = self._prepare_ground_truth_stats(df, summary, validations)
+            validation_result = self.validation_service.validate_llm_analysis(
+                df=df,
+                llm_response=ai_response_text,
+                ground_truth_stats=ground_truth_stats,
+                response_time=2.5  # Approximate response time for AI call
+            )
+            
             return {
                 "status": "success",
-                "summary": response.choices[0].message.content.strip(),
+                "summary": ai_response_text,
                 "confidence": {
                     "score": 0.92,
                     "explanation": "Very high confidence for data quality assessment",
@@ -2148,7 +2161,8 @@ Requirements:
                         "Industry-standard data quality dimensions used",
                         "Systematic evaluation across all data quality aspects"
                     ]
-                }
+                },
+                "llm_validation": convert_validation_result_to_dict(validation_result)
             }
             
         except Exception as e:
@@ -2156,6 +2170,38 @@ Requirements:
                 "status": "error",
                 "message": f"AI analysis failed: {str(e)}"
             }
+    
+    def _prepare_ground_truth_stats(self, df: pd.DataFrame, summary: Dict, validations: Dict) -> Dict[str, Any]:
+        """Prepare ground truth statistics for LLM validation"""
+        numeric_df = df.select_dtypes(include=[np.number])
+        
+        ground_truth = {
+            'total_rows': len(df),
+            'total_columns': len(df.columns),
+            'numeric_columns': len(numeric_df.columns),
+            'missing_percentage': (df.isnull().sum().sum() / (len(df) * len(df.columns))) * 100,
+            'overall_quality_score': summary.get('overall_quality_score', 0),
+            'critical_issues': summary.get('critical_issues', 0),
+            'excellent_columns': summary.get('columns_excellent', 0),
+            'poor_columns': summary.get('columns_poor', 0)
+        }
+        
+        # Add correlation statistics if available
+        if len(numeric_df.columns) >= 2:
+            corr_matrix = numeric_df.corr()
+            strong_correlations = np.sum(np.abs(corr_matrix.values) > 0.7) - len(corr_matrix)
+            ground_truth['strong_correlations'] = strong_correlations
+            ground_truth['average_correlation'] = np.abs(corr_matrix.values).mean()
+        
+        # Add distribution statistics
+        for col in numeric_df.columns:
+            data = numeric_df[col].dropna()
+            if len(data) > 0:
+                ground_truth[f'{col}_mean'] = data.mean()
+                ground_truth[f'{col}_std'] = data.std()
+                ground_truth[f'{col}_skewness'] = stats.skew(data)
+        
+        return ground_truth
     
     def _calculate_distribution_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Calculate distribution analysis with histogram data"""

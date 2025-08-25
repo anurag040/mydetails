@@ -28,11 +28,20 @@ export class ApiService {
 
   // Analysis Matrix endpoints
   getAnalysisMatrix(datasetId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/analysis-matrix/${datasetId}`);
+    return this.http.get(`${this.baseUrl}/analysis-matrix/${datasetId}`);
   }
 
-  getAnalysisReport(datasetId: string): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/analysis-report/${datasetId}`);
+  recordAnalysis(datasetId: string, analysisData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/analysis-matrix/${datasetId}/record`, analysisData);
+  }
+
+  // Comprehensive Analysis Validation endpoints
+  validateAnalysisAccuracy(datasetId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/statistics/${datasetId}/validate`, {});
+  }
+
+  getValidationMetrics(datasetId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/statistics/${datasetId}/validation-metrics`);
   }
 
   talkToDataPlot(datasetId: string, plotType: string, column?: string, window?: number): Observable<any> {
@@ -126,7 +135,7 @@ export class ApiService {
     });
   }
 
-  getValidationMetrics(datasetId: string): Observable<any> {
+  getAnalysisValidationMetrics(datasetId: string): Observable<any> {
     return this.http.get(`${this.baseUrl}/analysis/${datasetId}/validation`);
   }
 

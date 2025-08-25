@@ -1,189 +1,332 @@
 <div class="analysis-matrix-container">
-  <!-- Header -->
+  <!-- Simplified Header -->
   <div class="matrix-header">
-    <div class="header-content">
-      <h2>📊 Analysis Matrix</h2>
-      <p>Quality tracking and validation for all statistical analyses</p>
-    </div>
-    <button class="refresh-btn" (click)="refreshMatrix()" [disabled]="loading">
-      <mat-icon>refresh</mat-icon>
-      Refresh
-    </button>
+    <h2>📊 Statistical Analysis Quality Dashboard</h2>
+    <p>Detailed breakdown of analysis performance and coverage</p>
   </div>
 
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading">
     <mat-spinner diameter="40"></mat-spinner>
-    <p>Loading analysis matrix...</p>
+    <p>Loading analysis data...</p>
   </div>
 
-  <!-- Error State -->
-  <div class="error-state" *ngIf="error && !loading">
-    <mat-icon>error</mat-icon>
-    <p>{{ error }}</p>
-    <button class="retry-btn" (click)="refreshMatrix()">Try Again</button>
-  </div>
-
-  <!-- Matrix Content -->
-  <div class="matrix-content" *ngIf="matrix && !loading && !error">
+  <!-- Main Content -->
+  <div class="matrix-content" *ngIf="matrix && !loading">
     
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-      <div class="summary-card">
-        <div class="card-icon">📈</div>
-        <div class="card-content">
-          <h3>{{ matrix?.overall_quality_score?.toFixed(1) }}%</h3>
-          <p>Overall Quality</p>
-          <div class="quality-bar">
-            <div class="quality-fill" [style.width.%]="matrix?.overall_quality_score" 
-                 [style.background-color]="getScoreColor(matrix?.overall_quality_score || 0)"></div>
-          </div>
-        </div>
+    <!-- Key Metrics Overview -->
+    <div class="metrics-overview">
+      <div class="metric-card">
+        <h3>{{ matrix.overall_quality_score.toFixed(1) }}%</h3>
+        <p>Overall Quality Score</p>
       </div>
-
-      <div class="summary-card">
-        <div class="card-icon">🔍</div>
-        <div class="card-content">
-          <h3>{{ matrix?.total_analyses }}</h3>
-          <p>Total Analyses</p>
-        </div>
+      <div class="metric-card">
+        <h3>{{ matrix.total_analyses }}</h3>
+        <p>Analyses Completed</p>
       </div>
-
-      <div class="summary-card">
-        <div class="card-icon">📋</div>
-        <div class="card-content">
-          <h3>{{ getCoveragePercentage() }}%</h3>
-          <p>Coverage</p>
-          <div class="coverage-bar">
-            <div class="coverage-fill" [style.width.%]="getCoveragePercentage()"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="summary-card" *ngIf="report">
-        <div class="card-icon">⭐</div>
-        <div class="card-content">
-          <h3>{{ report?.summary?.average_methodology_score?.toFixed(1) }}%</h3>
-          <p>Avg Methodology</p>
-        </div>
+      <div class="metric-card">
+        <h3>{{ getCoveragePercentage() }}%</h3>
+        <p>Statistical Coverage</p>
       </div>
     </div>
 
-    <!-- Coverage Matrix -->
-    <div class="coverage-section">
-      <h3>📊 Analysis Coverage Matrix</h3>
-      <div class="coverage-grid">
-        <div class="coverage-item" 
-             *ngFor="let item of matrix.coverage_matrix | keyvalue"
-             [class.completed]="item.value"
-             [class.missing]="!item.value">
-          <div class="coverage-status">
-            <mat-icon>{{ item.value ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-          </div>
-          <div class="coverage-info">
-            <h4>{{ getAnalysisTypeName(item.key) }}</h4>
-            <p>{{ item.value ? 'Completed' : 'Not performed' }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Analyses -->
-    <div class="recent-analyses">
-      <h3>🕒 Recent Analyses</h3>
-      <div class="analyses-list">
-        <div class="analysis-item" *ngFor="let record of matrix.analysis_records.slice(-5).reverse()">
-          <div class="analysis-header">
-            <div class="analysis-type">
-              <span class="type-badge">{{ getAnalysisTypeName(record.analysis_type) }}</span>
-              <span class="timestamp">{{ formatTimestamp(record.timestamp) }}</span>
-            </div>
-            <div class="analysis-score" [style.color]="getScoreColor(record.score.overall_score)">
-              {{ record.score.overall_score?.toFixed(1) }}%
-              <span class="score-label">{{ getScoreLabel(record.score.overall_score) }}</span>
+    <!-- Statistical Analysis Details -->
+    <div class="analysis-details-section">
+      <h3>📊 Statistical Analysis Performance</h3>
+      
+      <div class="analysis-grid">
+        <div class="analysis-card" *ngFor="let record of matrix.analysis_records; let i = index">
+          <div class="card-header">
+            <h4>{{ getAnalysisTypeName(record.analysis_type) }}</h4>
+            <div class="quality-score" [style.color]="getScoreColor(record.score.overall_score)">
+              {{ record.score.overall_score.toFixed(1) }}%
             </div>
           </div>
           
-          <div class="analysis-details">
-            <p class="query">{{ record.user_query }}</p>
-            <p class="method">Method: {{ record.method_used }}</p>
-          </div>
-
-          <!-- Score Breakdown -->
-          <div class="score-breakdown">
-            <div class="score-item">
-              <span>Methodology</span>
-              <div class="score-bar">
-                <div class="score-fill" [style.width.%]="record.score.methodology_score"
-                     [style.background-color]="getScoreColor(record.score.methodology_score)"></div>
+          <div class="card-content">
+            <div class="analysis-metrics">
+              <div class="metric">
+                <span class="label">Methodology:</span>
+                <span class="value" [style.color]="getScoreColor(record.score.methodology_score)">{{ record.score.methodology_score }}%</span>
               </div>
-              <span>{{ record.score.methodology_score?.toFixed(0) }}%</span>
-            </div>
-            <div class="score-item">
-              <span>Completeness</span>
-              <div class="score-bar">
-                <div class="score-fill" [style.width.%]="record.score.completeness_score"
-                     [style.background-color]="getScoreColor(record.score.completeness_score)"></div>
+              <div class="metric">
+                <span class="label">Completeness:</span>
+                <span class="value" [style.color]="getScoreColor(record.score.completeness_score)">{{ record.score.completeness_score }}%</span>
               </div>
-              <span>{{ record.score.completeness_score?.toFixed(0) }}%</span>
-            </div>
-            <div class="score-item">
-              <span>Accuracy</span>
-              <div class="score-bar">
-                <div class="score-fill" [style.width.%]="record.score.accuracy_score"
-                     [style.background-color]="getScoreColor(record.score.accuracy_score)"></div>
+              <div class="metric">
+                <span class="label">Accuracy:</span>
+                <span class="value" [style.color]="getScoreColor(record.score.accuracy_score)">{{ record.score.accuracy_score }}%</span>
               </div>
-              <span>{{ record.score.accuracy_score.toFixed(0) }}%</span>
             </div>
-            <div class="score-item">
-              <span>Interpretation</span>
-              <div class="score-bar">
-                <div class="score-fill" [style.width.%]="record.score.interpretation_score"
-                     [style.background-color]="getScoreColor(record.score.interpretation_score)"></div>
-              </div>
-              <span>{{ record.score.interpretation_score.toFixed(0) }}%</span>
+            
+            <div class="analysis-summary">
+              <h5>Key Findings:</h5>
+              <ul>
+                <li *ngFor="let summary of getAnalysisSummary(record).slice(0, 3)">{{ summary }}</li>
+              </ul>
             </div>
-          </div>
-
-          <!-- Warnings -->
-          <div class="warnings" *ngIf="record.warnings.length > 0">
-            <h5>⚠️ Warnings:</h5>
-            <ul>
-              <li *ngFor="let warning of record.warnings">{{ warning }}</li>
-            </ul>
-          </div>
-
-          <!-- Recommendations -->
-          <div class="recommendations" *ngIf="record.recommendations.length > 0">
-            <h5>💡 Recommendations:</h5>
-            <ul>
-              <li *ngFor="let rec of record.recommendations">{{ rec }}</li>
-            </ul>
+            
+            <div class="recommendations" *ngIf="record.recommendations.length > 0">
+              <h5>Recommendations:</h5>
+              <ul>
+                <li *ngFor="let rec of record.recommendations.slice(0, 2)">{{ rec }}</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Overall Recommendations -->
-    <div class="overall-recommendations" *ngIf="matrix.recommendations.length > 0">
-      <h3>🎯 Overall Recommendations</h3>
-      <div class="recommendations-list">
-        <div class="recommendation-item" *ngFor="let rec of matrix.recommendations">
-          <mat-icon>lightbulb</mat-icon>
-          <p>{{ rec }}</p>
+    <!-- Coverage Summary -->
+    <div class="coverage-summary">
+      <h3>📋 Analysis Coverage</h3>
+      <div class="coverage-items">
+        <div class="coverage-grid">
+          <div *ngFor="let item of getCoverageItems()" class="coverage-item">
+            <mat-icon [class]="item.value ? 'covered' : 'not-covered'">
+              {{ item.value ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            <div class="coverage-content">
+              <div class="coverage-label">
+                {{ item.label }}
+                <span *ngIf="item.score !== undefined" class="accuracy-score" 
+                      [class.excellent]="item.score >= 85"
+                      [class.good]="item.score >= 70 && item.score < 85"
+                      [class.fair]="item.score >= 50 && item.score < 70"
+                      [class.poor]="item.score < 50">
+                  {{ item.score | number:'1.0-1' }}%
+                </span>
+              </div>
+              <div class="coverage-description">{{ item.description }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Quality Trends (if report data available) -->
-    <div class="quality-trends" *ngIf="report && report.quality_trends.length > 0">
-      <h3>📈 Quality Trends</h3>
-      <div class="trends-chart">
-        <div class="trend-item" *ngFor="let trend of report.quality_trends.slice(-10)">
-          <div class="trend-date">{{ trend.date }}</div>
-          <div class="trend-type">{{ getAnalysisTypeName(trend.type) }}</div>
-          <div class="trend-score" [style.color]="getScoreColor(trend.score)">
-            {{ trend.score?.toFixed(1) }}%
+    <!-- Statistical Formulas and Validation Framework -->
+    <div class="validation-framework">
+      <h3>🔬 Statistical Validation Framework</h3>
+      
+      <!-- Data Source Indicator -->
+      <div class="data-source-indicator">
+        <div class="source-badge" [class.mock]="isUsingMockData()" [class.real]="!isUsingMockData()">
+          <mat-icon>{{ isUsingMockData() ? 'science' : 'dataset' }}</mat-icon>
+          <span>{{ isUsingMockData() ? 'Mock Data (Demo)' : 'Real Analysis Data' }}</span>
+        </div>
+        <p *ngIf="isUsingMockData()" class="mock-warning">
+          ⚠️ Currently displaying hypothetical data for demonstration. Load a dataset and run analyses to see real results.
+        </p>
+      </div>
+
+      <!-- Core Statistical Formulas -->
+      <div class="formulas-section">
+        <h4>📐 Core Statistical Formulas</h4>
+        
+        <div class="formula-grid">
+          <div class="formula-card">
+            <h5>Overall Quality Score</h5>
+            <div class="formula-display">
+              Q = (0.35 × SA + 0.25 × AC + 0.25 × LC + 0.15 × RE) × 100
+            </div>
+            <div class="formula-explanation">
+              <strong>Where:</strong><br>
+              SA = Statistical Accuracy, AC = Analysis Completeness<br>
+              LC = Logical Consistency, RE = Response Efficiency
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h5>Statistical Accuracy</h5>
+            <div class="formula-display">
+              SA = |{{ '{' }}correct_claims{{ '}' }}| / |{{ '{' }}total_claims{{ '}' }}|
+            </div>
+            <div class="formula-explanation">
+              Validates statistical claims against computed results using tolerance-based matching (±5% for continuous variables)
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h5>Pearson Correlation</h5>
+            <div class="formula-display">
+              r = Σ((xi - x̄)(yi - ȳ)) / √(Σ(xi - x̄)²Σ(yi - ȳ)²)
+            </div>
+            <div class="formula-explanation">
+              Measures linear relationship strength between variables. |r| > 0.7 indicates strong correlation.
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h5>Shapiro-Wilk Test</h5>
+            <div class="formula-display">
+              W = (Σai x(i))² / Σ(xi - x̄)²
+            </div>
+            <div class="formula-explanation">
+              Tests normality assumption. W > 0.95 suggests normal distribution (p > 0.05).
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h5>Principal Component Analysis</h5>
+            <div class="formula-display">
+              PC₁ = a₁₁X₁ + a₁₂X₂ + ... + a₁ₚXₚ
+            </div>
+            <div class="formula-explanation">
+              First principal component captures maximum variance. Eigenvalues > 1.0 indicate significant components.
+            </div>
+          </div>
+
+          <div class="formula-card">
+            <h5>Chi-Square Test</h5>
+            <div class="formula-display">
+              χ² = Σ((Oi - Ei)² / Ei)
+            </div>
+            <div class="formula-explanation">
+              Tests independence in categorical data. p-value > 0.05 suggests independence.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Validation Metrics -->
+      <div class="validation-metrics">
+        <h4>🎯 Validation Metrics Breakdown</h4>
+        <p class="metric-defs">
+          Definitions:
+          <br>- Statistical Accuracy: Proportion of LLM numerical/correlation claims that match computed ground truth within tolerance.
+          <br>- Analysis Completeness: Coverage across domains (descriptive stats, data quality, relationships, visualization, modeling).
+          <br>- Logical Consistency: 1 − (contradictions detected / checks) based on contradictory term proximity.
+          <br>- Response Efficiency: Tiered score from response_time (Excellent <2s, Good 2–5s, Acceptable 5–10s, Poor >10s).
+        </p>
+        
+        <div class="metrics-detailed">
+      <div class="metric-detail-card">
+            <div class="metric-header">
+              <mat-icon>analytics</mat-icon>
+              <h5>Statistical Accuracy (35% Weight)</h5>
+            </div>
+            <div class="metric-content">
+              <div class="metric-score">{{ hasLLMValidation() ? (getStatisticalAccuracy() + '%') : 'N/A' }}</div>
+              <div class="metric-components">
+                <div class="component">
+                  <span class="label">Computational Precision:</span>
+          <span class="value">{{ llmValidation?.statistical_accuracy?.details?.computational_precision != null ? (llmValidation.statistical_accuracy.details.computational_precision * 100 | number:'1.0-1') + '%' : 'N/A' }}</span>
+                </div>
+                <div class="component">
+                  <span class="label">Statistical Test Validity:</span>
+          <span class="value">{{ llmValidation?.statistical_accuracy?.details?.test_validity != null ? (llmValidation.statistical_accuracy.details.test_validity * 100 | number:'1.0-1') + '%' : 'N/A' }}</span>
+                </div>
+                <div class="component">
+                  <span class="label">Assumption Verification:</span>
+          <span class="value">{{ llmValidation?.statistical_accuracy?.details?.assumption_verification != null ? (llmValidation.statistical_accuracy.details.assumption_verification * 100 | number:'1.0-1') + '%' : 'N/A' }}</span>
+                </div>
+              </div>
+              <div class="implementation-details">
+                <h6>Implementation:</h6>
+                <ul>
+                  <li>Tolerance thresholds: ±5% for continuous, exact for categorical</li>
+                  <li>Cross-validation against R/Python statistical libraries</li>
+                  <li>Floating-point precision handling with IEEE 754 standards</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-detail-card">
+            <div class="metric-header">
+              <mat-icon>checklist</mat-icon>
+              <h5>Analysis Completeness (25% Weight)</h5>
+            </div>
+            <div class="metric-content">
+              <div class="metric-score">{{ hasLLMValidation() ? (getCompletenessScore() + '%') : 'N/A' }}</div>
+              <div class="domain-coverage">
+                <h6>Domain Coverage:</h6>
+                <div class="domain-item">
+                  <mat-icon>check</mat-icon>
+                  <span>Descriptive Statistics: Mean, median, mode, std dev, skewness, kurtosis</span>
+                </div>
+                <div class="domain-item">
+                  <mat-icon>check</mat-icon>
+                  <span>Distribution Analysis: Normality tests, Q-Q plots, histograms</span>
+                </div>
+                <div class="domain-item">
+                  <mat-icon>check</mat-icon>
+                  <span>Correlation Analysis: Pearson, Spearman, partial correlations</span>
+                </div>
+                <div class="domain-item">
+                  <mat-icon>check</mat-icon>
+                  <span>Data Quality: Missing values, outliers, duplicates detection</span>
+                </div>
+                <div class="domain-item">
+                  <mat-icon>check</mat-icon>
+                  <span>Advanced Analytics: PCA, clustering, regression diagnostics</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-detail-card">
+            <div class="metric-header">
+              <mat-icon>verified</mat-icon>
+              <h5>Logical Consistency (25% Weight)</h5>
+            </div>
+            <div class="metric-content">
+              <div class="metric-score">{{ hasLLMValidation() ? getConsistencyScoreFormatted() : 'N/A' }}</div>
+              <div class="consistency-checks">
+                <h6>Consistency Validation:</h6>
+                <div class="check-item">
+                  <mat-icon>psychology</mat-icon>
+                  <span>Contradiction Detection: Opposing claims analysis</span>
+                </div>
+                <div class="check-item">
+                  <mat-icon>fact_check</mat-icon>
+                  <span>Statistical Alignment: Claims vs computed results</span>
+                </div>
+                <div class="check-item">
+                  <mat-icon>auto_awesome</mat-icon>
+                  <span>Cross-Domain Consistency: Interpretation coherence</span>
+                </div>
+              </div>
+              <div class="consistency-formula">
+                <strong>Formula:</strong> Consistency = 1 - (contradictions_detected / total_checks)
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-detail-card">
+            <div class="metric-header">
+              <mat-icon>speed</mat-icon>
+              <h5>Response Efficiency (15% Weight)</h5>
+            </div>
+            <div class="metric-content">
+              <div class="metric-score">{{ hasLLMValidation() ? getEfficiencyScoreFormatted() : 'N/A' }}</div>
+              <div class="efficiency-tiers">
+                <div class="tier excellent">
+                  <span class="tier-name">Excellent (&lt;2s):</span>
+                  <span class="tier-score">100%</span>
+                </div>
+                <div class="tier good">
+                  <span class="tier-name">Good (2-5s):</span>
+                  <span class="tier-score">85%</span>
+                </div>
+                <div class="tier acceptable">
+                  <span class="tier-name">Acceptable (5-10s):</span>
+                  <span class="tier-score">70%</span>
+                </div>
+                <div class="tier poor">
+                  <span class="tier-name">Poor (&gt;10s):</span>
+                  <span class="tier-score">50%</span>
+                </div>
+              </div>
+              <div class="current-performance" *ngIf="hasLLMValidation(); else noEff">
+                <strong>Current:</strong> {{ getResponseTime() | number:'1.1-1' }}s ({{ getActualEfficiencyTier() }})
+              </div>
+              <ng-template #noEff>
+                <div class="current-performance">
+                  <strong>Current:</strong> N/A
+                </div>
+              </ng-template>
+            </div>
           </div>
         </div>
       </div>

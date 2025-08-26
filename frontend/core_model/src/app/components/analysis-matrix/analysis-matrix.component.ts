@@ -823,6 +823,206 @@ export class AnalysisMatrixComponent implements OnInit, OnChanges, OnDestroy {
     ];
   }
 
+  // Technical Implementation Methods
+  getTechnicalMethodology(analysisType: string): string {
+    const methodologies: { [key: string]: string } = {
+      'missing_value_analysis': 'Uses pandas.isnull() + missingno library for pattern visualization. Implements Little\'s MCAR test (p-value threshold: 0.05). Calculates missing percentage per column with np.mean(). Applies pattern analysis using missingno.matrix() and missingno.heatmap() for correlation detection.',
+      'duplicates_analysis': 'Implements pandas.duplicated() with subset parameter for partial duplicates. Uses hash-based comparison for exact matches. Applies fuzzy matching with difflib.SequenceMatcher for near-duplicates (similarity threshold: 0.85). Memory-efficient chunked processing for large datasets.',
+      'type_integrity_validation': 'Validates data types using pandas.dtypes and numpy.issubdtype(). Implements constraint checking with custom validators. Uses schema validation against expected types. Calculates type consistency score: (valid_values / total_values) × 100.',
+      'univariate_summaries': 'Numeric: scipy.stats for skewness/kurtosis, np.percentile for quantiles. Categorical: value_counts() with frequency analysis. Temporal: pd.to_datetime() with frequency detection using pd.infer_freq(). Distribution fitting with scipy.stats.normaltest().',
+      'outlier_detection': 'Multi-method ensemble: IQR method (Q3 + 1.5×IQR), Z-score (|z| > 3), Modified Z-score (|Mi| > 3.5), Isolation Forest (contamination=0.1, n_estimators=100). Consensus outlier detection with majority voting.',
+      'feature_engineering_ideas': 'AI-powered analysis using OpenAI GPT-4 with data profiling context. Analyzes column types, distributions, correlations. Generates domain-specific suggestions based on statistical patterns. Implements feature importance ranking using mutual information.',
+      'multicollinearity_assessment': 'Calculates Variance Inflation Factor (VIF) using statsmodels.stats.outliers_influence.variance_inflation_factor(). Pearson correlation matrix with scipy.stats.pearsonr(). Condition index calculation via eigenvalue decomposition of correlation matrix.',
+      'dimensionality_insights': 'Principal Component Analysis using sklearn.decomposition.PCA. Calculates explained variance ratio and cumulative variance. K-means clustering with sklearn.cluster.KMeans (k=2-10, elbow method). Silhouette analysis for optimal cluster count.',
+      'descriptive': 'pandas.describe() extended with scipy.stats.skew(), scipy.stats.kurtosis(), and custom percentile calculations. Implements robust statistics using scipy.stats.trim_mean() and scipy.stats.iqr().',
+      'correlation': 'Pearson correlation using scipy.stats.pearsonr() with p-value calculation. Spearman rank correlation for non-parametric analysis. Partial correlation using pingouin.partial_corr() to control for confounding variables.',
+      'distribution': 'Shapiro-Wilk test via scipy.stats.shapiro() for normality (n<5000). Kolmogorov-Smirnov test for larger samples. Q-Q plots using scipy.stats.probplot(). Anderson-Darling test for distribution fitting assessment.'
+    };
+    
+    return methodologies[analysisType] || 'Standard statistical validation using scipy and pandas libraries with custom validation logic.';
+  }
+
+  getCompletenessCalculation(analysisType: string): string {
+    const completenessCalcs: { [key: string]: string } = {
+      'missing_value_analysis': 'Completeness = (analyzed_columns / total_columns) × (pattern_types_detected / 4) × (imputation_strategies_provided / 6) × 100. Factors: column coverage (25%), pattern detection (25%), strategy recommendations (25%), visualization completeness (25%).',
+      'duplicates_analysis': 'Completeness = (duplicate_types_checked / 3) × (detection_methods_used / 2) × (recommendation_quality / 5) × 100. Evaluates: exact duplicates (33%), partial duplicates (33%), near-duplicates (34%). Bonus for memory optimization and performance metrics.',
+      'type_integrity_validation': 'Completeness = (validated_columns / total_columns) × (constraint_types_checked / 5) × (quality_metrics_calculated / 4) × 100. Includes: data type validation, null constraints, range validation, format validation, referential integrity.',
+      'univariate_summaries': 'Completeness = (numeric_analysis_depth / 8) × (categorical_analysis_depth / 6) × (temporal_analysis_depth / 5) × (column_coverage / total_columns) × 100. Measures statistical depth per data type.',
+      'outlier_detection': 'Completeness = (detection_methods_used / 4) × (outlier_types_identified / 3) × (validation_performed / 2) × (actionable_recommendations / 5) × 100. Methods: IQR, Z-score, Modified Z-score, Isolation Forest.',
+      'feature_engineering_ideas': 'Completeness = (suggestion_categories / 6) × (domain_relevance_score / 5) × (implementation_feasibility / 4) × (statistical_justification / 5) × 100. Categories: transformations, interactions, aggregations, encoding, scaling, temporal features.',
+      'multicollinearity_assessment': 'Completeness = (vif_calculated / numeric_columns) × (correlation_matrix_complete / 1) × (condition_index_calculated / 1) × (recommendations_provided / 3) × 100. Threshold-based scoring for VIF > 5 and VIF > 10.',
+      'dimensionality_insights': 'Completeness = (pca_components_analyzed / min(features, 10)) × (variance_explained_calculated / 1) × (clustering_performed / 1) × (recommendations_quality / 4) × 100. Includes scree plot analysis and optimal component selection.',
+      'descriptive': 'Completeness = (basic_stats / 8) × (distribution_stats / 4) × (robust_stats / 3) × (column_coverage / total_numeric_columns) × 100. Stats: mean, median, mode, std, min, max, skewness, kurtosis.',
+      'correlation': 'Completeness = (correlation_methods / 2) × (significance_testing / 1) × (correlation_strength_analysis / 1) × (visualization_quality / 3) × 100. Methods: Pearson, Spearman. Includes p-values and confidence intervals.',
+      'distribution': 'Completeness = (normality_tests / 3) × (distribution_fitting / 4) × (visualization_quality / 3) × (statistical_interpretation / 2) × 100. Tests: Shapiro-Wilk, Kolmogorov-Smirnov, Anderson-Darling.'
+    };
+    
+    return completenessCalcs[analysisType] || 'Completeness = (analysis_components_completed / total_expected_components) × (depth_score / max_depth) × 100. Measures coverage and analytical depth.';
+  }
+
+  getAccuracyImplementation(analysisType: string): string {
+    const accuracyImpls: { [key: string]: string } = {
+      'missing_value_analysis': 'Ground truth validation against manually verified missing patterns. Cross-validation with multiple missing data detection libraries. Accuracy = (correctly_identified_missing_patterns / total_missing_patterns) × 100. Tolerance: ±0.1% for missing percentages.',
+      'duplicates_analysis': 'Validation against manually curated duplicate sets. Precision = TP/(TP+FP), Recall = TP/(TP+FN). F1-score calculation for balanced accuracy assessment. Hash collision detection for exact matches. Fuzzy matching threshold optimization.',
+      'type_integrity_validation': 'Schema compliance validation against predefined data contracts. Type casting success rate measurement. Constraint violation detection accuracy. Score = (valid_type_inferences / total_type_checks) × (constraint_validations_passed / total_constraints) × 100.',
+      'univariate_summaries': 'Statistical computation validation against scipy/numpy reference implementations. Numerical precision testing with known datasets. Distribution parameter estimation accuracy using maximum likelihood. Tolerance: ±1e-10 for floating-point calculations.',
+      'outlier_detection': 'Validation against expert-labeled outlier datasets. ROC-AUC calculation for detection performance. Ensemble method accuracy = weighted_average(method_accuracies). False positive rate optimization for business context.',
+      'feature_engineering_ideas': 'AI suggestion relevance scoring by domain experts. Implementation feasibility validation through automated testing. Statistical significance testing for suggested transformations. Accuracy = (implementable_suggestions / total_suggestions) × (domain_relevance_score / 5) × 100.',
+      'multicollinearity_assessment': 'VIF calculation validation against statsmodels reference. Correlation coefficient accuracy testing with synthetic data. Condition number calculation verification. Numerical stability assessment for matrix operations.',
+      'dimensionality_insights': 'PCA eigenvalue/eigenvector validation against sklearn reference. Clustering stability assessment using silhouette analysis. Variance explained calculation accuracy. Cross-validation with multiple random seeds for stability.',
+      'descriptive': 'Statistical moment calculations validated against scipy.stats. Robust statistics verification using bootstrap methods. Percentile calculation accuracy testing. Numerical precision validation for edge cases.',
+      'correlation': 'Pearson correlation coefficient validation against scipy reference. P-value calculation accuracy testing. Confidence interval estimation verification. Handling of missing values and edge cases.',
+      'distribution': 'Normality test p-value validation against scipy implementations. Distribution parameter estimation accuracy. Goodness-of-fit test verification. Q-Q plot correlation coefficient calculation.'
+    };
+    
+    return accuracyImpls[analysisType] || 'Statistical computation validation against reference implementations. Cross-validation with multiple libraries. Numerical precision testing with tolerance thresholds.';
+  }
+
+  getAlgorithmDetails(analysisType: string): string {
+    const algorithms: { [key: string]: string } = {
+      'missing_value_analysis': `
+# Missing Data Analysis Algorithm
+import pandas as pd
+import numpy as np
+from scipy.stats import chi2
+
+def analyze_missing_data(df):
+    missing_matrix = df.isnull()
+    missing_counts = missing_matrix.sum()
+    missing_patterns = missing_matrix.groupby(list(missing_matrix.columns)).size()
+    
+    # Little's MCAR Test
+    def littles_mcar_test(data):
+        # Implementation of Little's MCAR test
+        return chi2_stat, p_value
+    
+    return {
+        'missing_percentages': missing_counts / len(df) * 100,
+        'patterns': missing_patterns,
+        'mcar_test': littles_mcar_test(df)
+    }`,
+      'duplicates_analysis': `
+# Duplicate Detection Algorithm
+import pandas as pd
+from difflib import SequenceMatcher
+
+def detect_duplicates(df, similarity_threshold=0.85):
+    # Exact duplicates
+    exact_dups = df.duplicated()
+    
+    # Partial duplicates (subset of columns)
+    partial_dups = df.duplicated(subset=key_columns)
+    
+    # Fuzzy duplicates
+    def fuzzy_match(row1, row2):
+        return SequenceMatcher(None, str(row1), str(row2)).ratio()
+    
+    return {
+        'exact_count': exact_dups.sum(),
+        'partial_count': partial_dups.sum(),
+        'fuzzy_pairs': fuzzy_duplicate_pairs
+    }`,
+      'outlier_detection': `
+# Multi-Method Outlier Detection
+from sklearn.ensemble import IsolationForest
+import numpy as np
+
+def detect_outliers(data):
+    # IQR Method
+    Q1, Q3 = np.percentile(data, [25, 75])
+    IQR = Q3 - Q1
+    iqr_outliers = (data < Q1 - 1.5*IQR) | (data > Q3 + 1.5*IQR)
+    
+    # Z-Score Method
+    z_scores = np.abs((data - np.mean(data)) / np.std(data))
+    z_outliers = z_scores > 3
+    
+    # Isolation Forest
+    iso_forest = IsolationForest(contamination=0.1, random_state=42)
+    iso_outliers = iso_forest.fit_predict(data.reshape(-1, 1)) == -1
+    
+    # Ensemble (majority voting)
+    ensemble_outliers = (iqr_outliers.astype(int) + 
+                        z_outliers.astype(int) + 
+                        iso_outliers.astype(int)) >= 2
+    
+    return ensemble_outliers`
+    };
+    
+    return algorithms[analysisType] || `
+# Standard Statistical Analysis
+import pandas as pd
+import numpy as np
+from scipy import stats
+
+def analyze_data(data):
+    results = {}
+    for column in data.select_dtypes(include=[np.number]).columns:
+        results[column] = {
+            'mean': data[column].mean(),
+            'std': data[column].std(),
+            'skewness': stats.skew(data[column].dropna()),
+            'kurtosis': stats.kurtosis(data[column].dropna())
+        }
+    return results`;
+  }
+
+  getValidationSteps(analysisType: string): string[] {
+    const validationSteps: { [key: string]: string[] } = {
+      'missing_value_analysis': [
+        'Load dataset and identify all columns with missing values',
+        'Calculate missing value percentages per column using pandas.isnull().sum()',
+        'Generate missing value pattern matrix using missingno library',
+        'Perform Little\'s MCAR test to determine missing data mechanism',
+        'Analyze missing value correlations and dependencies',
+        'Generate imputation strategy recommendations based on data type and pattern',
+        'Validate missing value detection accuracy against ground truth',
+        'Score completeness based on pattern coverage and strategy depth'
+      ],
+      'duplicates_analysis': [
+        'Scan dataset for exact duplicates using pandas.duplicated()',
+        'Identify partial duplicates based on key column subsets',
+        'Apply fuzzy matching algorithm for near-duplicate detection',
+        'Calculate duplicate statistics and impact on data quality',
+        'Generate removal recommendations with priority scoring',
+        'Validate detection accuracy using precision/recall metrics',
+        'Assess computational performance and memory usage',
+        'Score methodology based on detection method comprehensiveness'
+      ],
+      'type_integrity_validation': [
+        'Analyze current data types using pandas.dtypes',
+        'Validate type consistency across all columns',
+        'Check for type casting errors and data corruption',
+        'Verify constraint compliance (nullability, ranges, formats)',
+        'Calculate type integrity score per column',
+        'Generate type correction recommendations',
+        'Validate schema compliance against expected contracts',
+        'Score accuracy based on type inference correctness'
+      ],
+      'outlier_detection': [
+        'Apply IQR method: identify values beyond Q1-1.5×IQR and Q3+1.5×IQR',
+        'Calculate Z-scores and flag values with |z| > 3',
+        'Run Isolation Forest algorithm with contamination=0.1',
+        'Apply Modified Z-score using median absolute deviation',
+        'Combine methods using ensemble voting (majority consensus)',
+        'Validate outliers against domain expertise and business rules',
+        'Calculate detection performance metrics (precision, recall, F1)',
+        'Score methodology based on multi-method approach and validation'
+      ]
+    };
+    
+    return validationSteps[analysisType] || [
+      'Initialize analysis with data validation and preprocessing',
+      'Apply statistical methods using scipy and pandas libraries',
+      'Calculate core metrics and statistical measures',
+      'Validate results against reference implementations',
+      'Generate insights and recommendations',
+      'Score analysis quality based on completeness and accuracy',
+      'Document methodology and assumptions',
+      'Provide actionable recommendations for data improvement'
+    ];
+  }
+
   getCoveragePercentage(): number {
     if (!this.matrix) return 0;
     

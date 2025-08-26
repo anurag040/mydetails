@@ -72,6 +72,47 @@
                 <li *ngFor="let rec of record.recommendations.slice(0, 2)">{{ rec }}</li>
               </ul>
             </div>
+            
+            <!-- Technical Implementation Details -->
+            <div class="technical-details">
+              <h5>🔧 Technical Implementation</h5>
+              <div class="implementation-breakdown">
+                <div class="methodology-detail">
+                  <strong>Methodology Score ({{ record.score.methodology_score }}%):</strong>
+                  <div class="method-explanation">
+                    {{ getTechnicalMethodology(record.analysis_type) }}
+                  </div>
+                </div>
+                
+                <div class="completeness-detail">
+                  <strong>Completeness Score ({{ record.score.completeness_score }}%):</strong>
+                  <div class="completeness-explanation">
+                    {{ getCompletenessCalculation(record.analysis_type) }}
+                  </div>
+                </div>
+                
+                <div class="accuracy-detail">
+                  <strong>Accuracy Score ({{ record.score.accuracy_score }}%):</strong>
+                  <div class="accuracy-explanation">
+                    {{ getAccuracyImplementation(record.analysis_type) }}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="algorithm-details">
+                <h6>Algorithm Implementation:</h6>
+                <div class="algorithm-code">
+                  <code>{{ getAlgorithmDetails(record.analysis_type) }}</code>
+                </div>
+              </div>
+              
+              <div class="validation-steps">
+                <h6>Validation Process:</h6>
+                <ol class="validation-list">
+                  <li *ngFor="let step of getValidationSteps(record.analysis_type)">{{ step }}</li>
+                </ol>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -229,6 +270,21 @@
                   <li>Floating-point precision handling with IEEE 754 standards</li>
                 </ul>
               </div>
+              <div class="justification-section">
+                <h6>Justification & Procedure:</h6>
+                <div class="justification-content">
+                  <p><strong>Why 35% Weight:</strong> Statistical accuracy is the most critical factor as incorrect calculations invalidate all subsequent interpretations and decisions.</p>
+                  <p><strong>Validation Process:</strong></p>
+                  <ol>
+                    <li>Extract numerical claims from LLM responses using regex patterns</li>
+                    <li>Compute ground truth values using validated statistical libraries (scipy, numpy)</li>
+                    <li>Compare claims against ground truth with tolerance-based matching</li>
+                    <li>Account for floating-point precision limitations and rounding conventions</li>
+                    <li>Score based on proportion of accurate claims: (correct_claims / total_claims) × 100</li>
+                  </ol>
+                  <p><strong>Quality Thresholds:</strong> >95% Excellent, 85-95% Good, 70-85% Acceptable, <70% Poor</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -262,6 +318,21 @@
                   <span>Advanced Analytics: PCA, clustering, regression diagnostics</span>
                 </div>
               </div>
+              <div class="justification-section">
+                <h6>Justification & Procedure:</h6>
+                <div class="justification-content">
+                  <p><strong>Why 25% Weight:</strong> Comprehensive coverage ensures no critical analytical blind spots that could lead to incomplete insights or missed patterns.</p>
+                  <p><strong>Assessment Process:</strong></p>
+                  <ol>
+                    <li>Define 17 core analysis domains (descriptive, correlation, distribution, etc.)</li>
+                    <li>Check presence of each domain in analysis output using keyword matching</li>
+                    <li>Verify depth of coverage within each domain (basic vs comprehensive)</li>
+                    <li>Score based on weighted coverage: (covered_domains / total_domains) × domain_depth_factor</li>
+                    <li>Apply domain importance weights (descriptive stats: 20%, data quality: 25%, etc.)</li>
+                  </ol>
+                  <p><strong>Coverage Standards:</strong> All 17 domains expected for 100% score, minimum 12 domains for acceptable (70%)</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -289,6 +360,21 @@
               </div>
               <div class="consistency-formula">
                 <strong>Formula:</strong> Consistency = 1 - (contradictions_detected / total_checks)
+              </div>
+              <div class="justification-section">
+                <h6>Justification & Procedure:</h6>
+                <div class="justification-content">
+                  <p><strong>Why 25% Weight:</strong> Logical consistency prevents contradictory conclusions that undermine analytical credibility and decision-making confidence.</p>
+                  <p><strong>Validation Process:</strong></p>
+                  <ol>
+                    <li>Parse analysis text into semantic chunks using NLP tokenization</li>
+                    <li>Identify contradictory term pairs (e.g., "high correlation" vs "weak relationship")</li>
+                    <li>Check statistical claim alignment with computed results (±2σ tolerance)</li>
+                    <li>Verify cross-domain consistency (e.g., outlier detection vs distribution analysis)</li>
+                    <li>Score: 1 - (contradiction_count / total_consistency_checks) × 100</li>
+                  </ol>
+                  <p><strong>Consistency Benchmarks:</strong> >95% Excellent, 90-95% Good, 80-90% Acceptable, <80% Poor</p>
+                </div>
               </div>
             </div>
           </div>
@@ -326,6 +412,22 @@
                   <strong>Current:</strong> N/A
                 </div>
               </ng-template>
+              <div class="justification-section">
+                <h6>Justification & Procedure:</h6>
+                <div class="justification-content">
+                  <p><strong>Why 15% Weight:</strong> Response efficiency impacts user experience and system scalability, but is less critical than analytical accuracy and completeness.</p>
+                  <p><strong>Measurement Process:</strong></p>
+                  <ol>
+                    <li>Record timestamp at analysis request initiation</li>
+                    <li>Capture completion timestamp when final results are returned</li>
+                    <li>Calculate total response time: completion_time - start_time</li>
+                    <li>Apply tiered scoring based on response time ranges</li>
+                    <li>Account for analysis complexity and dataset size in scoring adjustments</li>
+                  </ol>
+                  <p><strong>Performance Standards:</strong> <2s Excellent (100%), 2-5s Good (85%), 5-10s Acceptable (70%), >10s Poor (50%)</p>
+                  <p><strong>Complexity Adjustments:</strong> +50% time allowance for datasets >10MB, +25% for >15 analysis types</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

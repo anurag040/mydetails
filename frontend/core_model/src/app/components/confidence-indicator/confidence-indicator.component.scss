@@ -1,0 +1,208 @@
+.confidence-container {
+  margin: 16px 0;
+  
+  &.compact {
+    margin: 8px 0;
+    
+    .confidence-header {
+      padding: 8px 12px;
+    }
+  }
+}
+
+.confidence-header {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--confidence-color, #00ff7f);
+}
+
+.confidence-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  
+  .confidence-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .score-text {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .level-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.confidence-progress {
+  height: 6px;
+  border-radius: 3px;
+  
+  ::ng-deep .mat-progress-bar-fill::after {
+    border-radius: 3px;
+  }
+  
+  ::ng-deep .mat-progress-bar-buffer {
+    border-radius: 3px;
+  }
+}
+
+.confidence-description {
+  margin-top: 12px;
+  
+  .description-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.details-panel {
+  margin-top: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  
+  ::ng-deep .mat-expansion-panel-header {
+    padding: 12px 16px;
+    
+    .mat-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #00ff7f;
+      font-weight: 500;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+  
+  ::ng-deep .mat-expansion-panel-body {
+    padding: 0 16px 16px;
+  }
+}
+
+.confidence-details {
+  .explanation-section,
+  .factors-section,
+  .technical-info {
+    margin-bottom: 16px;
+    
+    h4 {
+      color: #00ff7f;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    p {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+}
+
+.factors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  
+  .factor-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    line-height: 1.4;
+    
+    .factor-icon {
+      color: #4caf50;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.tech-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .tech-item {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    
+    strong {
+      color: #00ff7f;
+      font-weight: 500;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .confidence-score {
+    flex-wrap: wrap;
+    gap: 8px;
+    
+    .level-badge {
+      order: 3;
+      flex-basis: 100%;
+      text-align: center;
+      margin-top: 4px;
+    }
+  }
+  
+  .details-panel {
+    ::ng-deep .mat-expansion-panel-header {
+      padding: 8px 12px;
+      
+      .mat-panel-title {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Dark theme adjustments
+.confidence-container {
+  --confidence-bg: rgba(255, 255, 255, 0.05);
+  --confidence-text: rgba(255, 255, 255, 0.9);
+  --confidence-muted: rgba(255, 255, 255, 0.7);
+}
+
+// Animation for progress bar
+.confidence-progress {
+  transition: all 0.3s ease-in-out;
+  
+  &::ng-deep .mat-progress-bar-fill::after {
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

@@ -68,10 +68,6 @@
       <mat-icon>rocket_launch</mat-icon>
       Launch Analysis
     </button>
-    <button mat-stroked-button (click)="manualDebugDimensionality()" *ngIf="basicResults" style="margin-left: 10px;">
-      <mat-icon>bug_report</mat-icon>
-      Debug PCA Data
-    </button>
     <mat-spinner *ngIf="isLoading" diameter="24" class="loading-spinner"></mat-spinner>
   </div>
 
@@ -97,13 +93,6 @@
         <div class="ai-summary-header">
           <mat-icon>psychology</mat-icon>
           <h4>AI Insights</h4>
-          <div class="confidence-badge" 
-               *ngIf="basicResults.descriptive_stats.ai_summary.confidence"
-               [matTooltip]="getConfidenceTooltip(basicResults.descriptive_stats.ai_summary.confidence)"
-               matTooltipPosition="below">
-            <mat-icon>verified</mat-icon>
-            <span>{{ (basicResults.descriptive_stats.ai_summary.confidence.score * 100).toFixed(0) }}% Confidence</span>
-          </div>
         </div>
         
         <div [ngSwitch]="basicResults.descriptive_stats.ai_summary.status" class="ai-content">
@@ -112,6 +101,14 @@
               <mat-icon>insights</mat-icon>
               <p>{{ basicResults.descriptive_stats.ai_summary.summary }}</p>
             </div>
+            
+            <!-- Enhanced Confidence Indicator -->
+            <app-confidence-indicator 
+              *ngIf="getConfidenceData(basicResults.descriptive_stats.ai_summary)"
+              [confidence]="getConfidenceData(basicResults.descriptive_stats.ai_summary)"
+              [showDetails]="true"
+              [compact]="false">
+            </app-confidence-indicator>
           </div>
           
           <div *ngSwitchCase="'unavailable'" class="ai-unavailable">
@@ -166,7 +163,7 @@
     </div>
 
     <!-- Enhanced Correlation Analysis -->
-    <div *ngIf="basicResults.correlation_matrix" class="correlation-section">
+    <div *ngIf="basicResults.correlation_matrix && isAnalysisSelected('correlation')" class="correlation-section">
       <div class="section-header">
         <mat-icon>device_hub</mat-icon>
         <h3>Correlation Analysis</h3>
@@ -174,25 +171,30 @@
       
       <!-- AI Summary for Correlations -->
       <div *ngIf="basicResults.correlation_matrix.ai_summary" class="ai-summary-section">
-        <div class="ai-summary-header">
+        <!-- <div class="ai-summary-header">
           <mat-icon>psychology</mat-icon>
           <h4>AI Insights</h4>
-          <div class="confidence-badge" 
-               *ngIf="basicResults.correlation_matrix.ai_summary.confidence"
-               [matTooltip]="getConfidenceTooltip(basicResults.correlation_matrix.ai_summary.confidence)"
-               matTooltipPosition="below">
-            <mat-icon>verified</mat-icon>
-            <span>{{ (basicResults.correlation_matrix.ai_summary.confidence.score * 100).toFixed(0) }}% Confidence</span>
-          </div>
-        </div>
-        <div [ngSwitch]="basicResults.correlation_matrix.ai_summary.status" class="ai-content">
-          <div *ngSwitchCase="'success'" class="ai-success">
+        </div> -->
+        
+        <div *ngIf="basicResults.correlation_matrix.ai_summary.status === 'success'" class="ai-content">
+          <div class="ai-success">
             <div class="ai-summary-text">
               <mat-icon>insights</mat-icon>
               <p>{{ basicResults.correlation_matrix.ai_summary.summary }}</p>
             </div>
+            
+            <!-- Enhanced Confidence Indicator -->
+            <app-confidence-indicator 
+              *ngIf="getConfidenceData(basicResults.correlation_matrix.ai_summary)"
+              [confidence]="getConfidenceData(basicResults.correlation_matrix.ai_summary)"
+              [showDetails]="true"
+              [compact]="false">
+            </app-confidence-indicator>
           </div>
-          <div *ngSwitchDefault class="ai-unavailable">
+        </div>
+        
+        <div *ngIf="basicResults.correlation_matrix.ai_summary.status !== 'success'" class="ai-content">
+          <div class="ai-unavailable">
             <mat-icon>cloud_off</mat-icon>
             <p>{{ basicResults.correlation_matrix.ai_summary.message || 'AI insights unavailable' }}</p>
           </div>
@@ -200,33 +202,30 @@
       </div>
 
       <!-- Correlation Summary Stats -->
-      <div *ngIf="basicResults.correlation_matrix.correlation_summary" class="correlation-summary">
-        <div class="summary-card">
-          <mat-icon>analytics</mat-icon>
-          <div class="summary-content">
-            <span class="summary-value">{{ basicResults.correlation_matrix.correlation_summary.total_pairs }}</span>
-            <span class="summary-label">Total Pairs</span>
+      <div *ngIf="basicResults.correlation_matrix.correlation_summary" class="correlation-summary-stats">
+        <div class="stats-row">
+          <div class="stat-metric">
+            <mat-icon class="metric-icon">analytics</mat-icon>
+            <span class="metric-value">{{ basicResults.correlation_matrix.correlation_summary.total_pairs }}</span>
+            <span class="metric-label">Total Pairs</span>
           </div>
-        </div>
-        <div class="summary-card">
-          <mat-icon>link</mat-icon>
-          <div class="summary-content">
-            <span class="summary-value">{{ basicResults.correlation_matrix.correlation_summary.strong_correlations_count }}</span>
-            <span class="summary-label">Strong Correlations</span>
+          
+          <div class="stat-metric highlight">
+            <mat-icon class="metric-icon">link</mat-icon>
+            <span class="metric-value">{{ basicResults.correlation_matrix.correlation_summary.strong_correlations_count }}</span>
+            <span class="metric-label">Strong Correlations</span>
           </div>
-        </div>
-        <div class="summary-card">
-          <mat-icon>trending_up</mat-icon>
-          <div class="summary-content">
-            <span class="summary-value">{{ formatNumber(basicResults.correlation_matrix.correlation_summary.average_correlation) }}</span>
-            <span class="summary-label">Avg Correlation</span>
+          
+          <div class="stat-metric">
+            <mat-icon class="metric-icon">trending_up</mat-icon>
+            <span class="metric-value">{{ formatNumber(basicResults.correlation_matrix.correlation_summary.average_correlation) }}</span>
+            <span class="metric-label">Avg Correlation</span>
           </div>
-        </div>
-        <div class="summary-card" [class.warning]="basicResults.correlation_matrix.correlation_summary.max_correlation > 0.9">
-          <mat-icon>priority_high</mat-icon>
-          <div class="summary-content">
-            <span class="summary-value">{{ formatNumber(basicResults.correlation_matrix.correlation_summary.max_correlation) }}</span>
-            <span class="summary-label">Max Correlation</span>
+          
+          <div class="stat-metric" [class.warning]="basicResults.correlation_matrix.correlation_summary.max_correlation > 0.9">
+            <mat-icon class="metric-icon">priority_high</mat-icon>
+            <span class="metric-value">{{ formatNumber(basicResults.correlation_matrix.correlation_summary.max_correlation) }}</span>
+            <span class="metric-label">Max Correlation</span>
           </div>
         </div>
       </div>
@@ -271,6 +270,18 @@
         <p>No strong correlations found (all correlations < 0.7)</p>
         <small>This suggests your variables are relatively independent, which is good for modeling.</small>
       </div>
+
+      <!-- Correlation Heatmap -->
+      <div *ngIf="correlationHeatmapChart" class="heatmap-section">
+        <h4>Correlation Heatmap</h4>
+        <div class="heatmap-container" style="height: 500px; width: 100%; min-height: 500px;">
+          <canvas baseChart
+                  [data]="correlationHeatmapChart"
+                  [options]="heatmapChartOptions"
+                  [type]="'scatter'">
+          </canvas>
+        </div>
+      </div>
     </div>
 
     <!-- Distribution Analysis -->
@@ -310,27 +321,18 @@
           <div class="distribution-stats">
             <div class="stat-row">
               <span>Skewness:</span>
-              <span>{{ formatNumber(basicResults.distribution_analysis.histograms?.[column]?.skewness) }}</span>
+              <span class="stat-value">{{ formatNumber(basicResults.distribution_analysis.histograms?.[column]?.skewness || getSkewnessFromStats(column)) }}</span>
+              <span class="stat-interpretation">{{ getSkewnessInterpretation(basicResults.distribution_analysis.histograms?.[column]?.skewness || getSkewnessFromStats(column)) }}</span>
             </div>
             <div class="stat-row">
               <span>Kurtosis:</span>
-              <span>{{ formatNumber(basicResults.distribution_analysis.histograms?.[column]?.kurtosis) }}</span>
+              <span class="stat-value">{{ formatNumber(basicResults.distribution_analysis.histograms?.[column]?.kurtosis || getKurtosisFromStats(column)) }}</span>
+              <span class="stat-interpretation">{{ getKurtosisInterpretation(basicResults.distribution_analysis.histograms?.[column]?.kurtosis || getKurtosisFromStats(column)) }}</span>
             </div>
           </div>
         </div>
       </div>
       
-      <!-- Correlation Heatmap -->
-      <div *ngIf="correlationHeatmapChart" class="heatmap-section">
-        <h4>Correlation Heatmap</h4>
-        <div class="heatmap-container">
-          <canvas baseChart
-                  [data]="correlationHeatmapChart"
-                  [options]="heatmapChartOptions"
-                  [type]="'scatter'">
-          </canvas>
-        </div>
-      </div>
     </div>
 
     <!-- Additional Analysis Results -->
@@ -339,7 +341,7 @@
       <div *ngIf="basicResults.missing_data_summary" class="result-item">
         <div class="item-header">
           <mat-icon>help_outline</mat-icon>
-          <h4>Missing Data</h4>
+          <h4>Missing Data Analysis</h4>
         </div>
         <div class="quick-stat">
           <span class="value">{{ basicResults.missing_data_summary.complete_rows | number }}</span>
@@ -349,6 +351,7 @@
           <span class="value">{{ basicResults.missing_data_summary.total_missing | number }}</span>
           <span class="label">Missing Values ({{ basicResults.missing_data_summary.total_percentage | number:'1.1-1' }}%)</span>
         </div>
+        
       </div>
 
       <!-- Outlier Detection -->

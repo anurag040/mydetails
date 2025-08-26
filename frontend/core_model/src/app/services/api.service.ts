@@ -32,7 +32,7 @@ export class ApiService {
   }
 
   recordAnalysis(datasetId: string, analysisData: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/analysis-matrix/${datasetId}/record`, analysisData);
+    return this.http.post(`${this.baseUrl}/record-analysis/${datasetId}`, analysisData);
   }
 
   // Comprehensive Analysis Validation endpoints

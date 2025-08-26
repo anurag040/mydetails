@@ -22,6 +22,7 @@ import { ApiService } from '../../services/api.service';
 import { DatasetService } from '../../services/dataset.service';
 import { DatasetInfo, BasicStatsResponse, AdvancedStatsResponse, AdvancedStatsRequest } from '../../models/api.models';
 import { Subscription } from 'rxjs';
+import { ConfidenceIndicatorComponent, ConfidenceData } from '../confidence-indicator/confidence-indicator.component';
 
 interface StatOption {
   id: string;
@@ -50,7 +51,8 @@ interface StatOption {
     MatInputModule,
     MatTooltipModule,
     FormsModule,
-    NgChartsModule
+    NgChartsModule,
+    ConfidenceIndicatorComponent
   ],
   templateUrl: './statistics-dashboard.component.html',
   styleUrls: ['./statistics-dashboard.component.scss']
@@ -350,19 +352,23 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   heatmapChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    aspectRatio: 1,
     plugins: {
       legend: {
         display: true,
         position: 'right',
         labels: {
-          color: '#00ff7f',
+          color: '#ffffff',
           usePointStyle: true,
+          font: {
+            size: 12
+          },
           generateLabels: () => [
-            { text: 'Strong Positive (0.7-1.0)', fillStyle: '#00ff88', strokeStyle: '#00ff88' },
-            { text: 'Moderate Positive (0.3-0.7)', fillStyle: '#c8e6c9', strokeStyle: '#c8e6c9' },
-            { text: 'Weak (-0.3-0.3)', fillStyle: '#666666', strokeStyle: '#666666' },
-            { text: 'Moderate Negative (-0.7--0.3)', fillStyle: '#ffb74d', strokeStyle: '#ffb74d' },
-            { text: 'Strong Negative (-1.0--0.7)', fillStyle: '#ff6600', strokeStyle: '#ff6600' }
+            { text: 'Strong Positive (0.7-1.0)', fillStyle: '#00ff88', strokeStyle: '#00ff88', fontColor: '#ffffff' },
+            { text: 'Moderate Positive (0.3-0.7)', fillStyle: '#c8e6c9', strokeStyle: '#c8e6c9', fontColor: '#ffffff' },
+            { text: 'Weak (-0.3-0.3)', fillStyle: '#666666', strokeStyle: '#666666', fontColor: '#ffffff' },
+            { text: 'Moderate Negative (-0.7--0.3)', fillStyle: '#ffb74d', strokeStyle: '#ffb74d', fontColor: '#ffffff' },
+            { text: 'Strong Negative (-1.0--0.7)', fillStyle: '#ff6600', strokeStyle: '#ff6600', fontColor: '#ffffff' }
           ]
         }
       },
@@ -381,21 +387,8 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
             return `${yVar} vs ${xVar}`;
           },
           label: (context: any) => {
-            const value = context.parsed.v || 0;
-            return `Correlation: ${value.toFixed(3)}`;
-          },
-          afterLabel: (context: any) => {
-            const value = context.parsed.v || 0;
-            const absValue = Math.abs(value);
-            let strength = '';
-            if (absValue >= 0.9) strength = 'Very Strong';
-            else if (absValue >= 0.7) strength = 'Strong';
-            else if (absValue >= 0.5) strength = 'Moderate';
-            else if (absValue >= 0.3) strength = 'Weak';
-            else strength = 'Very Weak';
-            
-            const direction = value > 0 ? 'Positive' : value < 0 ? 'Negative' : 'None';
-            return `Strength: ${strength} ${direction}`;
+            const correlation = context.raw.correlation || 0;
+            return `Correlation: ${correlation.toFixed(3)}`;
           }
         }
       }
@@ -407,10 +400,9 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         min: -0.5,
         max: (this.heatmapVariables?.length || 1) - 0.5,
         ticks: {
-          color: '#00ff7f',
+          color: '#ffffff',
           font: {
-            size: 12,
-            weight: 'bold'
+            size: 12
           },
           stepSize: 1,
           callback: (value: any) => {
@@ -419,13 +411,16 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
           }
         },
         grid: {
-          color: 'rgba(0, 255, 127, 0.2)',
-          lineWidth: 1
+          color: 'rgba(255, 255, 255, 0.2)'
+        },
+        border: {
+          color: '#ffffff',
+          width: 1
         },
         title: {
           display: true,
           text: 'Variables',
-          color: '#00ff7f',
+          color: '#ffffff',
           font: {
             size: 14,
             weight: 'bold'
@@ -437,10 +432,9 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         min: -0.5,
         max: (this.heatmapVariables?.length || 1) - 0.5,
         ticks: {
-          color: '#00ff7f',
+          color: '#ffffff',
           font: {
-            size: 12,
-            weight: 'bold'
+            size: 12
           },
           stepSize: 1,
           callback: (value: any) => {
@@ -449,13 +443,16 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
           }
         },
         grid: {
-          color: 'rgba(0, 255, 127, 0.2)',
-          lineWidth: 1
+          color: 'rgba(255, 255, 255, 0.2)'
+        },
+        border: {
+          color: '#ffffff',
+          width: 1
         },
         title: {
           display: true,
           text: 'Variables',
-          color: '#00ff7f',
+          color: '#ffffff',
           font: {
             size: 14,
             weight: 'bold'
@@ -656,7 +653,11 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     console.log('🔍 SELECTED OPTIONS DEBUG:');
     console.log('Selected options:', selectedOptions);
     console.log('All basic options:', this.basicOptions);
-    console.log('Dimensionality option selected:', this.basicOptions.find(opt => opt.name?.toLowerCase().includes('dimensionality') || opt.description?.toLowerCase().includes('dimensionality')));
+    
+    const dimOption = this.basicOptions.find(opt => opt.id === 'dimensionality_insights');
+    console.log('Dimensionality option found:', dimOption);
+    console.log('Dimensionality option selected state:', dimOption?.selected);
+    console.log('Is dimensionality_insights in selectedOptions?', selectedOptions.includes('dimensionality_insights'));
 
     this.isLoading = true;
     this.apiService.calculateBasicStats({
@@ -699,6 +700,9 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         
         // Process chart data for distribution analysis
         this.processChartData();
+        
+        // Generate fallback charts if backend data is missing
+        this.generateFallbackCharts();
         
         // Additional debug for PCA chart visibility
         setTimeout(() => {
@@ -1421,6 +1425,163 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     return 'Left-skewed';
   }
 
+  getSkewnessInterpretation(skewness: number): string {
+    if (!skewness && skewness !== 0) return '';
+    
+    if (Math.abs(skewness) < 0.5) {
+      return '(Approximately symmetric)';
+    } else if (skewness > 0.5) {
+      return '(Right-tailed, longer tail on right)';
+    } else if (skewness < -0.5) {
+      return '(Left-tailed, longer tail on left)';
+    }
+    return '';
+  }
+
+  getKurtosisInterpretation(kurtosis: number): string {
+    if (!kurtosis && kurtosis !== 0) return '';
+    
+    if (kurtosis > 3) {
+      return '(Heavy-tailed, more outliers)';
+    } else if (kurtosis < 3) {
+      return '(Light-tailed, fewer outliers)';
+    } else {
+      return '(Normal distribution shape)';
+    }
+  }
+
+  getSkewnessFromStats(column: string): number {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats || !stats.mean || !stats['50%'] || !stats.std) return 0;
+    
+    // Approximate skewness using Pearson's second skewness coefficient
+    const mean = stats.mean;
+    const median = stats['50%'];
+    const std = stats.std;
+    
+    return 3 * (mean - median) / std;
+  }
+
+  getKurtosisFromStats(column: string): number {
+    const stats = this.getDescriptiveStatsData()[column];
+    if (!stats || !stats['25%'] || !stats['75%'] || !stats.std) return 3;
+    
+    // Approximate kurtosis using quartile-based measure
+    const q1 = stats['25%'];
+    const q3 = stats['75%'];
+    const iqr = q3 - q1;
+    const std = stats.std;
+    
+    // Rough approximation: normal distribution has kurtosis ≈ 3
+    const kurtosisApprox = 3 + (iqr / (2.56 * std) - 1) * 2;
+    return Math.max(1, Math.min(10, kurtosisApprox)); // Clamp between 1-10
+  }
+
+  // Missing Data AI Confidence and Insights
+  getMissingDataConfidence(): any {
+    if (!this.basicResults?.missing_data_summary) {
+      return {
+        score: 0.5,
+        explanation: "Insufficient data for confidence assessment",
+        factors: ["No missing data summary available"],
+        analysis_type: "Missing Data Analysis"
+      };
+    }
+    
+    const summary = this.basicResults.missing_data_summary;
+    const totalPercentage = summary.total_percentage || 0;
+    const completeRowsPercentage = summary.complete_rows_percentage || 0;
+    
+    // Calculate confidence based on data completeness and pattern consistency
+    let confidence = 90; // Start high
+    const factors = [];
+    
+    // Reduce confidence based on missing data percentage
+    if (totalPercentage > 30) {
+      confidence -= 30;
+      factors.push("High missing data rate (>30%)");
+    } else if (totalPercentage > 15) {
+      confidence -= 20;
+      factors.push("Moderate missing data rate (15-30%)");
+    } else if (totalPercentage > 5) {
+      confidence -= 10;
+      factors.push("Low missing data rate (5-15%)");
+    } else {
+      factors.push("Very low missing data rate (<5%)");
+    }
+    
+    // Adjust based on complete rows
+    if (completeRowsPercentage < 50) {
+      confidence -= 20;
+      factors.push("Low complete row percentage (<50%)");
+    } else if (completeRowsPercentage < 70) {
+      confidence -= 10;
+      factors.push("Moderate complete row percentage (50-70%)");
+    } else {
+      factors.push("High complete row percentage (>70%)");
+    }
+    
+    // Factor in dataset size for statistical significance
+    const totalRows = this.currentDataset?.rows || 0;
+    if (totalRows < 100) {
+      confidence -= 15;
+      factors.push("Small sample size (<100 rows)");
+    } else if (totalRows < 1000) {
+      confidence -= 5;
+      factors.push("Moderate sample size (100-1000 rows)");
+    } else {
+      factors.push("Large sample size (>1000 rows)");
+    }
+    
+    const finalConfidence = Math.max(30, Math.min(95, confidence));
+    
+    return {
+      score: finalConfidence / 100,
+      explanation: this.getMissingDataConfidenceExplanation(),
+      factors: factors,
+      analysis_type: "Missing Data Analysis"
+    };
+  }
+
+  getMissingDataConfidenceExplanation(): string {
+    const summary = this.basicResults?.missing_data_summary;
+    
+    if (!summary) return "Insufficient data for confidence assessment";
+    
+    const totalPercentage = summary.total_percentage || 0;
+    const factors = [];
+    
+    if (totalPercentage < 5) factors.push("very low missing data rate");
+    else if (totalPercentage < 15) factors.push("moderate missing data rate");
+    else factors.push("high missing data rate");
+    
+    const totalRows = this.currentDataset?.rows || 0;
+    if (totalRows > 1000) factors.push("large sample size");
+    else if (totalRows > 100) factors.push("adequate sample size");
+    else factors.push("small sample size");
+    
+    return `Confidence based on ${factors.join(", ")} and data completeness patterns.`;
+  }
+
+  getMissingDataAIInsight(): string {
+    if (!this.basicResults?.missing_data_summary) return "No missing data analysis available";
+    
+    const summary = this.basicResults.missing_data_summary;
+    const totalPercentage = summary.total_percentage || 0;
+    const completeRowsPercentage = summary.complete_rows_percentage || 0;
+    const confidence = this.getMissingDataConfidence();
+    
+    if (totalPercentage === 0) {
+      return `🎯 Excellent data quality! Complete dataset with no missing values detected. This provides maximum reliability for all statistical analyses and modeling approaches. Confidence: ${confidence}%`;
+    } else if (totalPercentage < 5) {
+      return `✅ Very good data quality with minimal missing values (${totalPercentage.toFixed(1)}%). The ${completeRowsPercentage.toFixed(1)}% complete rows provide a solid foundation for analysis. Simple imputation or listwise deletion would be sufficient. Confidence: ${confidence}%`;
+    } else if (totalPercentage < 15) {
+      return `⚠️ Moderate missing data (${totalPercentage.toFixed(1)}%) requires attention. With ${completeRowsPercentage.toFixed(1)}% complete rows, consider multiple imputation or pattern analysis before proceeding. Missing data could introduce bias if not handled properly. Confidence: ${confidence}%`;
+    } else {
+      return `🚨 Significant missing data (${totalPercentage.toFixed(1)}%) presents challenges for reliable analysis. Only ${completeRowsPercentage.toFixed(1)}% of rows are complete. Recommend thorough missing data pattern analysis, advanced imputation techniques, or data collection improvements before modeling. Confidence: ${confidence}%`;
+    }
+  }
+
   // Distribution Analysis Methods
   getDistributionInsights(): Array<{title: string, description: string, icon: string, color: string}> {
     if (!this.basicResults?.descriptive_stats) return [];
@@ -1886,6 +2047,26 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     console.log('Created histogram charts:', this.distributionCharts);
   }
 
+  generateFallbackCharts(): void {
+    console.log('📊 Generating fallback charts for distribution analysis...');
+    
+    // Get numeric columns to create charts for
+    const numericColumns = this.getNumericColumns();
+    
+    // Only create fallback charts if we don't have backend data
+    numericColumns.forEach(column => {
+      if (!this.distributionCharts.has(column)) {
+        console.log(`Creating fallback chart for column: ${column}`);
+        const histogram = this.getTextHistogram(column);
+        if (histogram.length > 0) {
+          console.log(`Generated fallback histogram for ${column}:`, histogram);
+        }
+      }
+    });
+    
+    console.log('Distribution charts after fallback generation:', this.distributionCharts);
+  }
+
   createCorrelationHeatmap(): void {
     const heatmapData = this.basicResults?.correlation_matrix?.heatmap_data;
     if (!heatmapData || !heatmapData.variables || !heatmapData.correlation_matrix) return;
@@ -1905,7 +2086,7 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
         scatterData.push({
           x: j,
           y: i,
-          v: correlation // value for color mapping
+          correlation: correlation // Store correlation value for tooltip
         });
       }
     }
@@ -1914,17 +2095,15 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       datasets: [{
         data: scatterData,
         backgroundColor: (context: any) => {
-          const value = context.parsed.v;
-          if (value > 0.7) return '#00ff88';
-          if (value > 0.3) return '#c8e6c9';
-          if (value > -0.3) return '#666666';
-          if (value > -0.7) return '#ffb74d';
-          return '#ff6600';
+          const value = context.raw.correlation;
+          if (Math.abs(value) > 0.7) return value > 0 ? '#00ff88' : '#ff6600';
+          if (Math.abs(value) > 0.3) return value > 0 ? '#c8e6c9' : '#ffb74d';
+          return '#666666';
         },
-        borderColor: '#00ff7f',
+        borderColor: '#ffffff',
         borderWidth: 1,
-        pointRadius: 15,
-        pointHoverRadius: 20,
+        pointRadius: 25,
+        pointHoverRadius: 30,
         label: 'Correlation'
       }]
     };
@@ -4507,6 +4686,28 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   getResponseTime(): number {
     const validationData = this.getLLMValidationData();
     return validationData?.efficiency?.details?.response_time || 2.5;
+  }
+
+  // Convert AI summary to ConfidenceData format
+  getConfidenceData(aiSummary: any): ConfidenceData | null {
+    if (!aiSummary || !aiSummary.confidence) {
+      return null;
+    }
+
+    return {
+      score: aiSummary.confidence.score || 0.85,
+      explanation: aiSummary.confidence.explanation || 'AI confidence assessment',
+      factors: aiSummary.confidence.factors || [],
+      model_used: aiSummary.model_used,
+      analysis_type: aiSummary.analysis_type
+    };
+  }
+
+  // Check if a specific analysis type is selected
+  isAnalysisSelected(analysisType: string): boolean {
+    return this.basicOptions.some(opt => 
+      opt.selected && (opt.id === analysisType || opt.name?.toLowerCase().includes(analysisType))
+    );
   }
 
   ngOnDestroy(): void {

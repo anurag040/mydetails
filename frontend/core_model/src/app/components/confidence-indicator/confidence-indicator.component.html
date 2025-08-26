@@ -1,0 +1,62 @@
+<div class="confidence-container" [class.compact]="compact">
+  <div class="confidence-header">
+    <div class="confidence-score">
+      <mat-icon [style.color]="confidenceColor" class="confidence-icon">{{ confidenceIcon }}</mat-icon>
+      <span class="score-text" [style.color]="confidenceColor">
+        {{ confidencePercentage }}% Confidence
+      </span>
+      <span class="level-badge" [style.background-color]="confidenceColor">
+        {{ confidenceLevel }}
+      </span>
+    </div>
+    
+    <mat-progress-bar 
+      mode="determinate" 
+      [value]="confidencePercentage"
+      [color]="getProgressBarColor()"
+      class="confidence-progress">
+    </mat-progress-bar>
+  </div>
+
+  <div class="confidence-description" *ngIf="!compact">
+    <p class="description-text">{{ getConfidenceDescription() }}</p>
+  </div>
+
+  <mat-expansion-panel *ngIf="showDetails && confidence" class="details-panel">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>info_outline</mat-icon>
+        Why {{ confidencePercentage }}%?
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    
+    <div class="confidence-details">
+      <div class="explanation-section">
+        <h4>Explanation</h4>
+        <p>{{ confidence.explanation }}</p>
+      </div>
+
+      <div class="factors-section" *ngIf="confidence.factors && confidence.factors.length > 0">
+        <h4>Contributing Factors</h4>
+        <ul class="factors-list">
+          <li *ngFor="let factor of confidence.factors" class="factor-item">
+            <mat-icon class="factor-icon">check_circle_outline</mat-icon>
+            {{ factor }}
+          </li>
+        </ul>
+      </div>
+
+      <div class="technical-info" *ngIf="confidence.model_used || confidence.analysis_type">
+        <h4>Technical Details</h4>
+        <div class="tech-details">
+          <span *ngIf="confidence.analysis_type" class="tech-item">
+            <strong>Analysis Type:</strong> {{ confidence.analysis_type | titlecase }}
+          </span>
+          <span *ngIf="confidence.model_used" class="tech-item">
+            <strong>AI Model:</strong> {{ confidence.model_used }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </mat-expansion-panel>
+</div>

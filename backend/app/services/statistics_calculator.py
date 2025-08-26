@@ -1646,18 +1646,15 @@ Requirements:
                 temperature=0.3
             )
             
+            # Calculate dynamic confidence for correlation analysis
+            confidence_data = self._calculate_correlation_confidence(df, summary, strong_corrs)
+            
             return {
                 "status": "success",
                 "summary": response.choices[0].message.content.strip(),
-                "confidence": {
-                    "score": 0.88,
-                    "explanation": "High confidence for correlation analysis",
-                    "factors": [
-                        "Correlation coefficients are mathematically precise",
-                        "Standard statistical interpretation methods used",
-                        "Clear patterns in correlation strength classification"
-                    ]
-                }
+                "confidence": confidence_data,
+                "model_used": "gpt-4o-mini",
+                "analysis_type": "correlation_analysis"
             }
             
         except Exception as e:
@@ -1665,6 +1662,85 @@ Requirements:
                 "status": "error",
                 "message": f"AI analysis failed: {str(e)}"
             }
+    
+    def _calculate_correlation_confidence(self, df: pd.DataFrame, summary: Dict, strong_corrs: List) -> Dict[str, Any]:
+        """Calculate dynamic confidence score for correlation analysis"""
+        base_confidence = 75  # Base confidence for correlation analysis
+        confidence_factors = []
+        
+        # Factor 1: Sample size adequacy (0-10 points)
+        sample_size = len(df)
+        if sample_size >= 1000:
+            base_confidence += 10
+            confidence_factors.append(f"Large sample size ({sample_size:,} observations) ensures reliable correlations")
+        elif sample_size >= 100:
+            base_confidence += 7
+            confidence_factors.append(f"Adequate sample size ({sample_size:,} observations) for correlation analysis")
+        elif sample_size >= 30:
+            base_confidence += 4
+            confidence_factors.append(f"Minimum viable sample size ({sample_size:,} observations)")
+        else:
+            confidence_factors.append(f"Small sample size ({sample_size:,} observations) may affect reliability")
+        
+        # Factor 2: Number of variables (0-8 points)
+        num_vars = len(df.select_dtypes(include=[np.number]).columns)
+        if num_vars >= 10:
+            base_confidence += 8
+            confidence_factors.append(f"Rich dataset with {num_vars} numeric variables for comprehensive correlation analysis")
+        elif num_vars >= 5:
+            base_confidence += 5
+            confidence_factors.append(f"Good number of variables ({num_vars}) for meaningful correlation patterns")
+        elif num_vars >= 3:
+            base_confidence += 3
+            confidence_factors.append(f"Sufficient variables ({num_vars}) for basic correlation analysis")
+        else:
+            confidence_factors.append(f"Limited variables ({num_vars}) restricts correlation insights")
+        
+        # Factor 3: Data completeness (0-7 points)
+        numeric_df = df.select_dtypes(include=[np.number])
+        missing_percentage = (numeric_df.isnull().sum().sum() / (numeric_df.shape[0] * numeric_df.shape[1])) * 100
+        completeness = 100 - missing_percentage
+        
+        if completeness >= 95:
+            base_confidence += 7
+            confidence_factors.append(f"Excellent data completeness ({completeness:.1f}%) ensures accurate correlations")
+        elif completeness >= 85:
+            base_confidence += 5
+            confidence_factors.append(f"Good data completeness ({completeness:.1f}%)")
+        elif completeness >= 70:
+            base_confidence += 2
+            confidence_factors.append(f"Moderate data completeness ({completeness:.1f}%)")
+        else:
+            confidence_factors.append(f"Poor data completeness ({completeness:.1f}%) may bias correlations")
+        
+        # Always include foundational factors
+        confidence_factors.extend([
+            "Pearson correlation coefficients are mathematically precise",
+            "Statistical significance can be assessed with p-values"
+        ])
+        
+        # Bonus: Strong correlation patterns found
+        if summary['strong_correlations_count'] > 0:
+            confidence_factors.append(f"Clear correlation patterns detected ({summary['strong_correlations_count']} strong correlations)")
+        
+        # Cap confidence at 95%
+        final_confidence = min(base_confidence / 100, 0.95)
+        
+        # Determine explanation based on final score
+        if final_confidence >= 0.90:
+            explanation = "Very high confidence - excellent data quality with robust correlation patterns"
+        elif final_confidence >= 0.80:
+            explanation = "High confidence - reliable correlation analysis with good statistical foundation"
+        elif final_confidence >= 0.70:
+            explanation = "Good confidence - meaningful correlation insights with adequate data quality"
+        else:
+            explanation = "Moderate confidence - correlation results should be interpreted cautiously"
+        
+        return {
+            "score": round(final_confidence, 2),
+            "explanation": explanation,
+            "factors": confidence_factors
+        }
     
     def _profile_column_data(self, series: pd.Series, column_name: str) -> Dict[str, Any]:
         """Create comprehensive data profile for a column"""
@@ -3278,6 +3354,75 @@ Requirements:
         except Exception as e:
             return convert_numpy_types({"error": str(e)})
     
+    def _calculate_dynamic_confidence(self, numeric_df: pd.DataFrame, stats_summary: Dict) -> Dict[str, Any]:
+        """Calculate dynamic confidence score based on data quality factors"""
+        base_confidence = 70  # Base confidence for descriptive statistics
+        confidence_factors = []
+        
+        # Factor 1: Data completeness (0-15 points)
+        completeness_score = 100 - stats_summary['missing_data_percentage']
+        if completeness_score >= 95:
+            base_confidence += 15
+            confidence_factors.append(f"Excellent data completeness ({completeness_score:.1f}% complete)")
+        elif completeness_score >= 85:
+            base_confidence += 10
+            confidence_factors.append(f"Good data completeness ({completeness_score:.1f}% complete)")
+        elif completeness_score >= 70:
+            base_confidence += 5
+            confidence_factors.append(f"Moderate data completeness ({completeness_score:.1f}% complete)")
+        else:
+            confidence_factors.append(f"Limited data completeness ({completeness_score:.1f}% complete)")
+        
+        # Factor 2: Sample size adequacy (0-10 points)
+        sample_size = stats_summary['total_observations']
+        if sample_size >= 1000:
+            base_confidence += 10
+            confidence_factors.append(f"Large sample size ({sample_size:,} observations)")
+        elif sample_size >= 100:
+            base_confidence += 7
+            confidence_factors.append(f"Adequate sample size ({sample_size:,} observations)")
+        elif sample_size >= 30:
+            base_confidence += 4
+            confidence_factors.append(f"Minimum viable sample size ({sample_size:,} observations)")
+        else:
+            confidence_factors.append(f"Small sample size ({sample_size:,} observations)")
+        
+        # Factor 3: Statistical precision (0-5 points)
+        columns_count = stats_summary['columns_count']
+        if columns_count >= 5:
+            base_confidence += 5
+            confidence_factors.append("Multiple numeric variables for robust analysis")
+        elif columns_count >= 2:
+            base_confidence += 3
+            confidence_factors.append("Sufficient numeric variables for analysis")
+        else:
+            confidence_factors.append("Limited numeric variables")
+        
+        # Always include these foundational factors
+        confidence_factors.extend([
+            "Descriptive statistics are mathematically precise",
+            "AI interpretation based on established statistical principles"
+        ])
+        
+        # Cap confidence at 95% (never claim 100% certainty)
+        final_confidence = min(base_confidence / 100, 0.95)
+        
+        # Determine explanation based on final score
+        if final_confidence >= 0.90:
+            explanation = "Very high confidence - excellent data quality and robust statistical foundation"
+        elif final_confidence >= 0.80:
+            explanation = "High confidence - good data quality with reliable statistical measures"
+        elif final_confidence >= 0.70:
+            explanation = "Good confidence - adequate data quality for meaningful insights"
+        else:
+            explanation = "Moderate confidence - consider data quality limitations"
+        
+        return {
+            "score": round(final_confidence, 2),
+            "explanation": explanation,
+            "factors": confidence_factors
+        }
+    
     def _generate_descriptive_ai_summary(self, desc_stats: pd.DataFrame, additional_stats: Dict, numeric_df: pd.DataFrame) -> Dict[str, Any]:
         """Generate AI-powered summary of descriptive statistics"""
         if not self.openai_client:
@@ -3331,16 +3476,8 @@ Requirements:
             # Split into lines and format
             lines = [line.strip() for line in ai_text.split('\n') if line.strip()]
             
-            # Create a more meaningful confidence explanation
-            confidence_explanation = {
-                "score": 0.85,
-                "explanation": "High confidence based on standard statistical analysis",
-                "factors": [
-                    "Descriptive statistics are mathematically precise",
-                    "AI interpretation is based on well-established statistical principles",
-                    "No subjective predictions involved"
-                ]
-            }
+            # Calculate dynamic confidence based on data quality factors
+            confidence_explanation = self._calculate_dynamic_confidence(numeric_df, stats_summary)
             
             return {
                 "status": "success",

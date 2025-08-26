@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import logging
+import pandas as pd
 from app.schemas.responses import StatisticsRequest, BasicStatsResponse, AdvancedStatsRequest, AdvancedStatsResponse
 from app.services.statistics_calculator import StatisticsCalculator
 from app.services.comprehensive_analysis_validator import ComprehensiveAnalysisValidator

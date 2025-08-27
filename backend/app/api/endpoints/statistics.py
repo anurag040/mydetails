@@ -306,13 +306,17 @@ async def get_validation_metrics(dataset_id: str):
     - Recommendations for improvement
     """
     try:
-        # This endpoint returns cached validation results or triggers new validation
+        # Trigger validation if not cached
         validation_report = await validate_analysis_accuracy(dataset_id)
         
         # Format for Analysis Matrix display
         formatted_metrics = {
             'dataset_id': dataset_id,
             'overall_quality_score': validation_report['overall_quality_score'],
+            'statistical_accuracy': validation_report.get('statistical_accuracy', 0),
+            'analysis_completeness': validation_report.get('analysis_completeness', 0),
+            'logical_consistency': validation_report.get('logical_consistency', 0),
+            'response_efficiency': validation_report.get('response_efficiency', 0),
             'analysis_scores': {},
             'quality_breakdown': {
                 'excellent_analyses': 0,

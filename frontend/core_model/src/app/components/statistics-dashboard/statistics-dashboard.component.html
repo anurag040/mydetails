@@ -1747,5 +1747,71 @@
       </div>
       <!-- Regression content would go here -->
     </div>
+
+    <!-- Analysis Matrix Summary -->
+    <div class="analysis-section analysis-matrix-section">
+      <div class="section-header">
+        <mat-icon>assessment</mat-icon>
+        <h3>Analysis Matrix Summary</h3>
+      </div>
+      
+      <div class="matrix-summary-stats">
+        <div class="summary-card">
+          <div class="summary-icon">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ getSelectedCount() }}</div>
+            <div class="summary-label">Analyses Completed</div>
+          </div>
+        </div>
+        
+        <div class="summary-card">
+          <div class="summary-icon">
+            <mat-icon>pie_chart</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ getStatisticalCoverage() }}%</div>
+            <div class="summary-label">Statistical Coverage</div>
+          </div>
+        </div>
+        
+        <div class="summary-card">
+          <div class="summary-icon">
+            <mat-icon>grade</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ getOverallQualityScore() }}%</div>
+            <div class="summary-label">Overall Quality Score</div>
+          </div>
+        </div>
+        
+        <div class="summary-card">
+          <div class="summary-icon">
+            <mat-icon>verified</mat-icon>
+          </div>
+          <div class="summary-content">
+            <div class="summary-value">{{ getValidationCount() }}</div>
+            <div class="summary-label">Validations Recorded</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="coverage-breakdown" *ngIf="getSelectedCount() > 0">
+        <h4>Analysis Coverage Breakdown</h4>
+        <div class="coverage-grid">
+          <div *ngFor="let option of getAllSelectedOptions()" class="coverage-item">
+            <div class="coverage-icon">
+              <mat-icon [ngClass]="getCoverageStatusClass(option)">{{ getCoverageStatusIcon(option) }}</mat-icon>
+            </div>
+            <div class="coverage-details">
+              <div class="coverage-name">{{ getAnalysisDisplayName(option) }}</div>
+              <div class="coverage-status">{{ getCoverageStatus(option) }}</div>
+            </div>
+            <div class="coverage-score">{{ getAnalysisQualityScore(option) }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

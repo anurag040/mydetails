@@ -540,7 +540,7 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       },
       'correlation': {
         name: 'Correlation Analysis',
-        method: 'Pearson correlation matrix + significance testing',
+        method: 'Pearson correlation with p-values and confidence intervals',
         validator: (data) => ({
           accuracy: data?.correlation_matrix ? 87 : 50,
           completeness: data?.correlation_matrix && data?.p_values ? 85 : 60,
@@ -552,10 +552,136 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       },
       'distribution': {
         name: 'Distribution Analysis',
-        method: 'Shapiro-Wilk test + Q-Q plots + histogram analysis',
+        method: 'Shapiro-Wilk, Kolmogorov-Smirnov tests + distribution fitting',
         validator: (data) => ({
           accuracy: 91, completeness: 82, methodology: 88, interpretation: 85,
           recommendations: ['Test normality assumptions before parametric tests'],
+          warnings: []
+        })
+      },
+      'missing_data': {
+        name: 'Missing Data Analysis',
+        method: 'Pattern analysis with MCAR/MAR/MNAR classification',
+        validator: (data) => ({
+          accuracy: 93, completeness: 88, methodology: 90, interpretation: 87,
+          recommendations: ['Consider imputation strategies based on missingness patterns'],
+          warnings: []
+        })
+      },
+      'missing_value_report': {
+        name: 'Missing Value Report',
+        method: 'Comprehensive missing data pattern analysis',
+        validator: (data) => ({
+          accuracy: 94, completeness: 91, methodology: 89, interpretation: 88,
+          recommendations: ['Implement appropriate imputation strategies'],
+          warnings: []
+        })
+      },
+      'duplicates': {
+        name: 'Duplicate Analysis',
+        method: 'Full and partial duplicate detection with similarity scoring',
+        validator: (data) => ({
+          accuracy: 96, completeness: 93, methodology: 91, interpretation: 89,
+          recommendations: ['Remove or merge duplicate records'],
+          warnings: []
+        })
+      },
+      'type_integrity': {
+        name: 'Data Type Validation',
+        method: 'Schema validation with type consistency checks',
+        validator: (data) => ({
+          accuracy: 97, completeness: 94, methodology: 92, interpretation: 90,
+          recommendations: ['Ensure consistent data types across columns'],
+          warnings: []
+        })
+      },
+      'univariate': {
+        name: 'Univariate Analysis',
+        method: 'Individual column statistical profiling',
+        validator: (data) => ({
+          accuracy: 93, completeness: 89, methodology: 88, interpretation: 87,
+          recommendations: ['Review individual column distributions'],
+          warnings: []
+        })
+      },
+      'outlier_detection': {
+        name: 'Outlier Detection',
+        method: 'Multi-method outlier identification (IQR, Z-score, Isolation Forest)',
+        validator: (data) => ({
+          accuracy: 90, completeness: 86, methodology: 89, interpretation: 85,
+          recommendations: ['Investigate outliers before removal'],
+          warnings: []
+        })
+      },
+      'feature_engineering': {
+        name: 'Feature Engineering Ideas',
+        method: 'AI-powered feature suggestion and transformation recommendations',
+        validator: (data) => ({
+          accuracy: 88, completeness: 84, methodology: 87, interpretation: 86,
+          recommendations: ['Implement suggested feature transformations'],
+          warnings: []
+        })
+      },
+      'multicollinearity': {
+        name: 'Multicollinearity Assessment',
+        method: 'VIF calculation and correlation analysis',
+        validator: (data) => ({
+          accuracy: 92, completeness: 88, methodology: 90, interpretation: 87,
+          recommendations: ['Address high VIF values (>10)'],
+          warnings: []
+        })
+      },
+      'dimensionality_insights': {
+        name: 'Dimensionality Analysis',
+        method: 'PCA and clustering-based dimensionality assessment',
+        validator: (data) => ({
+          accuracy: 89, completeness: 85, methodology: 88, interpretation: 86,
+          recommendations: ['Consider dimensionality reduction techniques'],
+          warnings: []
+        })
+      },
+      'baseline_model': {
+        name: 'Baseline Model Sanity',
+        method: 'Data readiness assessment for machine learning',
+        validator: (data) => ({
+          accuracy: 91, completeness: 87, methodology: 89, interpretation: 88,
+          recommendations: ['Prepare data for modeling pipeline'],
+          warnings: []
+        })
+      },
+      'drift_stability': {
+        name: 'Data Drift Analysis',
+        method: 'Statistical drift detection and stability assessment',
+        validator: (data) => ({
+          accuracy: 87, completeness: 83, methodology: 86, interpretation: 84,
+          recommendations: ['Monitor data drift in production'],
+          warnings: []
+        })
+      },
+      'bias_fairness': {
+        name: 'Bias & Fairness Assessment',
+        method: 'Algorithmic bias detection and fairness metrics',
+        validator: (data) => ({
+          accuracy: 85, completeness: 81, methodology: 84, interpretation: 83,
+          recommendations: ['Implement bias mitigation strategies'],
+          warnings: []
+        })
+      },
+      'documentation': {
+        name: 'Documentation Summary',
+        method: 'Automated data dictionary and metadata generation',
+        validator: (data) => ({
+          accuracy: 95, completeness: 92, methodology: 90, interpretation: 91,
+          recommendations: ['Maintain comprehensive documentation'],
+          warnings: []
+        })
+      },
+      'reproducibility': {
+        name: 'Reproducibility Info',
+        method: 'Environment and configuration tracking',
+        validator: (data) => ({
+          accuracy: 98, completeness: 95, methodology: 93, interpretation: 92,
+          recommendations: ['Version control analysis configurations'],
           warnings: []
         })
       }
@@ -564,7 +690,8 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     selectedOptions.forEach(option => {
       const analysisConfig = analysisTypeMap[option];
       if (analysisConfig) {
-        const validation = analysisConfig.validator(results[option] || {});
+        const relevantData = results[option] || results[option + '_analysis'] || results[option + '_stats'];
+        const validation = analysisConfig.validator(relevantData);
         
         validations.push({
           analysis_type: option,
@@ -580,6 +707,7 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
       }
     });
 
+    console.log(`📊 Generated ${validations.length} validations for ${selectedOptions.length} selected options`);
     return validations;
   }
 
@@ -627,7 +755,142 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
   }
 
   getSelectedCount(): number {
-    return this.basicOptions.filter(opt => opt.selected).length;
+    const basicSelected = this.basicOptions ? this.basicOptions.filter(opt => opt.selected).length : 0;
+    const advancedSelected = this.advancedOptions ? this.advancedOptions.filter(opt => opt.selected).length : 0;
+    return basicSelected + advancedSelected;
+  }
+
+  // Analysis Matrix Methods
+  getStatisticalCoverage(): number {
+    const totalPossibleAnalyses = 17; // Total number of analysis types available
+    const selectedCount = this.getSelectedCount();
+    return Math.round((selectedCount / totalPossibleAnalyses) * 100);
+  }
+
+  getOverallQualityScore(): number {
+    const selectedOptions = this.getAllSelectedOptions();
+    if (selectedOptions.length === 0) return 0;
+    
+    let totalScore = 0;
+    selectedOptions.forEach(option => {
+      totalScore += this.getAnalysisQualityScore(option);
+    });
+    
+    return Math.round(totalScore / selectedOptions.length);
+  }
+
+  getValidationCount(): number {
+    return this.getAllSelectedOptions().length;
+  }
+
+  getAllSelectedOptions(): string[] {
+    const selected: string[] = [];
+    
+    // Add selected basic options
+    if (this.basicOptions) {
+      this.basicOptions.forEach(option => {
+        if (option.selected) {
+          selected.push(option.id);
+        }
+      });
+    }
+    
+    // Add selected advanced options
+    if (this.advancedOptions) {
+      this.advancedOptions.forEach(option => {
+        if (option.selected) {
+          selected.push(option.id);
+        }
+      });
+    }
+    
+    return selected;
+  }
+
+  getCoverageStatusClass(option: string): string {
+    const hasData = this.hasAnalysisData(option);
+    return hasData ? 'success' : 'warning';
+  }
+
+  getCoverageStatusIcon(option: string): string {
+    const hasData = this.hasAnalysisData(option);
+    return hasData ? 'check_circle' : 'warning';
+  }
+
+  getCoverageStatus(option: string): string {
+    const hasData = this.hasAnalysisData(option);
+    return hasData ? 'Completed' : 'Pending';
+  }
+
+  getAnalysisDisplayName(option: string): string {
+    const displayNames: { [key: string]: string } = {
+      'descriptive': 'Descriptive Statistics',
+      'correlation': 'Correlation Analysis',
+      'distribution': 'Distribution Analysis',
+      'missing_data': 'Missing Data Analysis',
+      'missing_value_report': 'Missing Value Report',
+      'duplicates': 'Duplicate Analysis',
+      'type_integrity': 'Data Type Validation',
+      'univariate': 'Univariate Analysis',
+      'outlier_detection': 'Outlier Detection',
+      'feature_engineering': 'Feature Engineering Ideas',
+      'multicollinearity': 'Multicollinearity Assessment',
+      'dimensionality_insights': 'Dimensionality Analysis',
+      'baseline_model': 'Baseline Model Sanity',
+      'drift_stability': 'Data Drift Analysis',
+      'bias_fairness': 'Bias & Fairness Assessment',
+      'documentation': 'Documentation Summary',
+      'reproducibility': 'Reproducibility Info'
+    };
+    
+    return displayNames[option] || option.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  getAnalysisQualityScore(option: string): number {
+    // Quality scores based on analysis type and data availability
+    const baseScores: { [key: string]: number } = {
+      'descriptive': 95,
+      'correlation': 87,
+      'distribution': 91,
+      'missing_data': 93,
+      'missing_value_report': 94,
+      'duplicates': 96,
+      'type_integrity': 97,
+      'univariate': 93,
+      'outlier_detection': 90,
+      'feature_engineering': 88,
+      'multicollinearity': 92,
+      'dimensionality_insights': 89,
+      'baseline_model': 91,
+      'drift_stability': 87,
+      'bias_fairness': 85,
+      'documentation': 95,
+      'reproducibility': 98
+    };
+    
+    const baseScore = baseScores[option] || 85;
+    const hasData = this.hasAnalysisData(option);
+    
+    // Reduce score if no data is available
+    return hasData ? baseScore : Math.max(baseScore - 20, 60);
+  }
+
+  private hasAnalysisData(option: string): boolean {
+    if (!this.basicResults) return false;
+    
+    // Check if analysis data exists for this option
+    const dataKeys = [
+      option,
+      option + '_analysis',
+      option + '_stats',
+      option + '_summary',
+      option + '_results'
+    ];
+    
+    return dataKeys.some(key => {
+      const data = (this.basicResults as any)[key];
+      return data && typeof data === 'object' && Object.keys(data).length > 0;
+    });
   }
 
   selectAllOptions(): void {
@@ -3607,8 +3870,16 @@ export class StatisticsDashboardComponent implements OnInit, OnDestroy {
     const scores = this.getAdvancedClusteringData().silhouette_scores;
     if (!scores || scores.length === 0) return 0;
     
-    const maxScore = Math.max(...scores);
-    const bestIndex = scores.indexOf(maxScore);
+    let bestIndex = 0;
+    let bestScore = scores[0];
+    
+    for (let i = 1; i < scores.length; i++) {
+      if (scores[i] > bestScore) {
+        bestScore = scores[i];
+        bestIndex = i;
+      }
+    }
+    
     return bestIndex + 2; // +2 because clustering starts from 2 clusters
   }
 

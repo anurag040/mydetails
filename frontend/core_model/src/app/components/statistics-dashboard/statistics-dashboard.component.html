@@ -568,55 +568,55 @@
                 <div class="stats-grid">
                   <div class="stat-item">
                     <span class="stat-label">Count</span>
-                    <span class="stat-value">{{ summary.count | number }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.count | number }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">Mean</span>
-                    <span class="stat-value">{{ summary.mean | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.mean | number:'1.2-2' }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">Std Dev</span>
-                    <span class="stat-value">{{ summary.std | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.std | number:'1.2-2' }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">Min</span>
-                    <span class="stat-value">{{ summary.min | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.min | number:'1.2-2' }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">25%</span>
-                    <span class="stat-value">{{ summary['25%'] | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.q1 | number:'1.2-2' }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">Median</span>
-                    <span class="stat-value">{{ summary['50%'] | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.median | number:'1.2-2' }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">75%</span>
-                    <span class="stat-value">{{ summary['75%'] | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.q3 | number:'1.2-2' }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">Max</span>
-                    <span class="stat-value">{{ summary.max | number:'1.2-2' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.max | number:'1.2-2' }}</span>
                   </div>
                 </div>
                 
                 <!-- Distribution Info -->
-                <div *ngIf="summary.distribution_info" class="distribution-info">
+                <div *ngIf="summary.distribution_stats" class="distribution-info">
                   <div class="distribution-metrics">
                     <div class="metric-row">
                       <span class="metric-name">Skewness:</span>
-                      <span class="metric-value" [ngClass]="getSkewnessClass(summary.distribution_info.skewness)">
-                        {{ summary.distribution_info.skewness | number:'1.3-3' }}
+                      <span class="metric-value" [ngClass]="getSkewnessClass(summary.distribution_stats.skewness)">
+                        {{ summary.distribution_stats.skewness | number:'1.3-3' }}
                       </span>
                     </div>
                     <div class="metric-row">
                       <span class="metric-name">Kurtosis:</span>
-                      <span class="metric-value">{{ summary.distribution_info.kurtosis | number:'1.3-3' }}</span>
+                      <span class="metric-value">{{ summary.distribution_stats.kurtosis | number:'1.3-3' }}</span>
                     </div>
-                    <div class="metric-row" *ngIf="summary.distribution_info.normality_test">
+                    <div class="metric-row" *ngIf="summary.distribution_stats.is_normal !== null">
                       <span class="metric-name">Normal:</span>
-                      <span class="metric-value" [ngClass]="summary.distribution_info.normality_test.is_normal ? 'positive' : 'negative'">
-                        {{ summary.distribution_info.normality_test.is_normal ? 'Yes' : 'No' }}
+                      <span class="metric-value" [ngClass]="summary.distribution_stats.is_normal ? 'positive' : 'negative'">
+                        {{ summary.distribution_stats.is_normal ? 'Yes' : 'No' }}
                       </span>
                     </div>
                   </div>
@@ -654,30 +654,30 @@
                 <div class="stats-grid">
                   <div class="stat-item">
                     <span class="stat-label">Count</span>
-                    <span class="stat-value">{{ summary.count | number }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.count | number }}</span>
                   </div>
                   <div class="stat-item">
                     <span class="stat-label">Unique</span>
-                    <span class="stat-value">{{ summary.unique | number }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.unique_count | number }}</span>
                   </div>
-                  <div class="stat-item" *ngIf="summary.top">
+                  <div class="stat-item" *ngIf="summary.basic_stats?.mode">
                     <span class="stat-label">Most Frequent</span>
-                    <span class="stat-value">{{ summary.top }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.mode }}</span>
                   </div>
-                  <div class="stat-item" *ngIf="summary.freq">
+                  <div class="stat-item" *ngIf="summary.basic_stats?.mode_frequency">
                     <span class="stat-label">Frequency</span>
-                    <span class="stat-value">{{ summary.freq | number }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.mode_frequency | number }}</span>
                   </div>
                 </div>
                 
                 <!-- Category Distribution -->
-                <div *ngIf="summary.value_counts" class="category-distribution">
+                <div *ngIf="summary.top_categories && getTopCategoriesArray(summary.top_categories).length > 0" class="category-distribution">
                   <h5>Top Categories:</h5>
                   <div class="category-list">
-                    <div *ngFor="let item of summary.value_counts | keyvalue | slice:0:5" class="category-item">
+                    <div *ngFor="let item of getTopCategoriesArray(summary.top_categories)" class="category-item">
                       <span class="category-name">{{ item.key }}</span>
                       <div class="category-bar">
-                        <div class="category-fill" style="width: 80%"></div>
+                        <div class="category-fill" [style.width.%]="getCategoryBarWidth(item.value, summary.top_categories)"></div>
                         <span class="category-count">{{ item.value }}</span>
                       </div>
                     </div>
@@ -703,19 +703,19 @@
                 <div class="stats-grid">
                   <div class="stat-item">
                     <span class="stat-label">Count</span>
-                    <span class="stat-value">{{ summary.count | number }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.count | number }}</span>
                   </div>
-                  <div class="stat-item" *ngIf="summary.min">
+                  <div class="stat-item" *ngIf="summary.basic_stats?.min_date">
                     <span class="stat-label">First Date</span>
-                    <span class="stat-value">{{ summary.min | date:'short' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.min_date | date:'short' }}</span>
                   </div>
-                  <div class="stat-item" *ngIf="summary.max">
+                  <div class="stat-item" *ngIf="summary.basic_stats?.max_date">
                     <span class="stat-label">Last Date</span>
-                    <span class="stat-value">{{ summary.max | date:'short' }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.max_date | date:'short' }}</span>
                   </div>
-                  <div class="stat-item" *ngIf="summary.unique">
+                  <div class="stat-item" *ngIf="summary.basic_stats?.unique_count">
                     <span class="stat-label">Unique Values</span>
-                    <span class="stat-value">{{ summary.unique | number }}</span>
+                    <span class="stat-value">{{ summary.basic_stats?.unique_count | number }}</span>
                   </div>
                 </div>
                 
@@ -875,32 +875,12 @@
           <p>Your dataset appears to be well-structured. Consider general techniques like:</p>
           <ul>
             <li>Creating polynomial features for non-linear relationships</li>
-            <li>Binning continuous variables for categorical insights</li>
             <li>Domain-specific feature creation based on business knowledge</li>
             <li>Principal Component Analysis for dimensionality reduction</li>
           </ul>
         </div>
       </div>
 
-      <!-- Model Readiness -->
-      <div *ngIf="basicResults.baseline_model_sanity" class="analysis-section">
-        <div class="section-header">
-          <mat-icon>model_training</mat-icon>
-          <h3>Model Readiness Assessment</h3>
-        </div>
-        <div class="readiness-score">
-          <div class="score-display">
-            <span class="score">{{ basicResults.baseline_model_sanity.readiness_score | number:'1.1-1' }}%</span>
-            <span class="score-label">Readiness Score</span>
-          </div>
-        </div>
-        <div *ngIf="basicResults.baseline_model_sanity.recommendations" class="recommendations-list">
-          <h4>Recommendations:</h4>
-          <ul>
-            <li *ngFor="let rec of basicResults.baseline_model_sanity.recommendations">{{ rec }}</li>
-          </ul>
-        </div>
-      </div>
 
       <!-- Dimensionality Insights -->
       <div *ngIf="basicResults.dimensionality_insights" class="analysis-section dimensionality-section">
@@ -909,93 +889,207 @@
           <h3>Dimensionality Insights</h3>
         </div>
 
-        <!-- Overview Cards -->
-        <div class="dimensionality-overview">
-          <div class="overview-card">
-            <div class="card-icon">
-              <mat-icon>view_column</mat-icon>
+        <!-- Dimensionality Summary Dashboard -->
+        <div class="dimensionality-summary-dashboard">
+          <div class="summary-row">
+            <div class="summary-stat">
+              <div class="stat-number">{{ basicResults.dimensionality_insights.overview?.total_features || basicResults.dimensionality_insights.pca_analysis?.total_components || 0 }}</div>
+              <div class="stat-label">Original Features</div>
             </div>
-            <div class="card-content">
-              <span class="card-value">{{ basicResults.dimensionality_insights.data_complexity?.original_dimensions || 0 }}</span>
-              <span class="card-label">Original Features</span>
+            
+            <div class="summary-stat" *ngIf="basicResults.dimensionality_insights.pca_analysis?.components_for_95_variance">
+              <div class="stat-number">{{ basicResults.dimensionality_insights.pca_analysis.components_for_95_variance }}</div>
+              <div class="stat-label">Components (95% Variance)</div>
             </div>
-          </div>
-          
-          <div class="overview-card" *ngIf="basicResults.dimensionality_insights.pca_analysis?.components_for_95_variance">
-            <div class="card-icon">
-              <mat-icon>compress</mat-icon>
+            
+            <div class="summary-stat" *ngIf="basicResults.dimensionality_insights.clustering_analysis?.optimal_clusters">
+              <div class="stat-number">{{ basicResults.dimensionality_insights.clustering_analysis.optimal_clusters }}</div>
+              <div class="stat-label">Optimal Clusters</div>
             </div>
-            <div class="card-content">
-              <span class="card-value">{{ basicResults.dimensionality_insights.pca_analysis.components_for_95_variance }}</span>
-              <span class="card-label">Components (95% Variance)</span>
-            </div>
-          </div>
-          
-          <div class="overview-card" *ngIf="basicResults.dimensionality_insights.clustering_analysis?.optimal_clusters">
-            <div class="card-icon">
-              <mat-icon>grain</mat-icon>
-            </div>
-            <div class="card-content">
-              <span class="card-value">{{ basicResults.dimensionality_insights.clustering_analysis.optimal_clusters }}</span>
-              <span class="card-label">Optimal Clusters</span>
-            </div>
-          </div>
-          
-          <div class="overview-card">
-            <div class="card-icon">
-              <mat-icon>assessment</mat-icon>
-            </div>
-            <div class="card-content">
-              <span class="card-value complexity-{{ basicResults.dimensionality_insights.overview?.data_complexity }}">
+            
+            <div class="summary-stat">
+              <div class="stat-number complexity-{{ basicResults.dimensionality_insights.overview?.data_complexity }}">
                 {{ (basicResults.dimensionality_insights.overview?.data_complexity || 'Unknown') | titlecase }}
-              </span>
-              <span class="card-label">Data Complexity</span>
+              </div>
+              <div class="stat-label">Data Complexity</div>
+            </div>
+          </div>
+
+          <div class="quality-indicators" *ngIf="getPCAQualityScore() > 0 || getEffectiveRank() > 0">
+            <div class="quality-item" *ngIf="getPCAQualityScore() > 0">
+              <div class="quality-bar">
+                <div class="quality-fill quality-{{ getPCAQualityClass() }}" [style.width.%]="getPCAQualityScore() * 100"></div>
+              </div>
+              <span class="quality-label">PCA Quality: {{ (getPCAQualityScore() * 100).toFixed(0) }}%</span>
+            </div>
+            
+            <div class="quality-item" *ngIf="getEffectiveRank() > 0">
+              <span class="quality-label">Effective Rank: {{ getEffectiveRank().toFixed(1) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- PCA Analysis Summary -->
+        <!-- Intrinsic Dimensionality Analysis -->
+        <div *ngIf="hasIntrinsicDimensionalityData()" class="intrinsic-dimensionality-section">
+          <h4>
+            <mat-icon>insights</mat-icon>
+            Intrinsic Dimensionality Analysis
+          </h4>
+          
+          <div class="intrinsic-metrics">
+            <div class="metric-card">
+              <div class="metric-header">
+                <mat-icon>analytics</mat-icon>
+                <span>Participation Ratio</span>
+              </div>
+              <div class="metric-value">{{ getIntrinsicDimensionality().participation_ratio?.toFixed(2) || 'N/A' }}</div>
+              <div class="metric-description">Measure of effective dimensionality</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <mat-icon>compress</mat-icon>
+                <span>90% Variance Dimensions</span>
+              </div>
+              <div class="metric-value">{{ getIntrinsicDimensionality().intrinsic_dim_90_variance || 'N/A' }}</div>
+              <div class="metric-description">Components needed for 90% variance</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <mat-icon>psychology</mat-icon>
+                <span>Complexity Assessment</span>
+              </div>
+              <div class="metric-value complexity-{{ getIntrinsicDimensionalityClass() }}">
+                {{ getIntrinsicDimensionalityAssessment() }}
+              </div>
+              <div class="metric-description">Overall data complexity level</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced PCA Analysis Summary -->
         <div *ngIf="basicResults.dimensionality_insights.pca_analysis" class="pca-summary-section">
           <h4>
             <mat-icon>analytics</mat-icon>
-            Principal Component Analysis Summary
+            Enhanced Principal Component Analysis
           </h4>
           
-          <div class="pca-metrics">
-            <div class="metric-item">
-              <span class="metric-label">First Component Explains</span>
-              <span class="metric-value">{{ (basicResults.dimensionality_insights.pca_analysis.first_component_variance * 100).toFixed(1) }}%</span>
+          <!-- Primary PCA Metrics -->
+          <div class="pca-primary-metrics">
+            <div class="primary-metric-card">
+              <div class="metric-icon">
+                <mat-icon>insights</mat-icon>
+              </div>
+              <div class="metric-content">
+                <div class="metric-value">{{ (basicResults.dimensionality_insights.pca_analysis.first_component_variance * 100).toFixed(1) }}%</div>
+                <div class="metric-label">First Component Explains</div>
+              </div>
             </div>
-            
-            <div class="metric-item">
-              <span class="metric-label">Reduction Potential</span>
-              <span class="metric-value potential-{{ basicResults.dimensionality_insights.pca_analysis.dimensionality_reduction_potential }}">
-                {{ (basicResults.dimensionality_insights.pca_analysis.dimensionality_reduction_potential || 'Unknown') | titlecase }}
-              </span>
-            </div>
-            
-            <div class="metric-item" *ngIf="basicResults.dimensionality_insights.pca_analysis.components_for_90_variance">
-              <span class="metric-label">90% Variance Components</span>
-              <span class="metric-value">{{ basicResults.dimensionality_insights.pca_analysis.components_for_90_variance }}</span>
+
+            <div class="primary-metric-card">
+              <div class="metric-icon">
+                <mat-icon>compress</mat-icon>
+              </div>
+              <div class="metric-content">
+                <div class="metric-value potential-{{ getReductionPotentialClass(basicResults.dimensionality_insights.pca_analysis.dimensionality_reduction_potential) }}">
+                  {{ (basicResults.dimensionality_insights.pca_analysis.dimensionality_reduction_potential || 'Unknown') | titlecase }}
+                </div>
+                <div class="metric-label">Reduction Potential</div>
+              </div>
             </div>
           </div>
 
-          <!-- Top Components -->
-          <div *ngIf="basicResults.dimensionality_insights.pca_analysis.component_features" class="components-overview">
-            <h5>Top Principal Components</h5>
-            <div class="components-grid">
-              <div *ngFor="let component of getTopComponents(); let i = index" class="component-card">
+          <!-- Secondary PCA Metrics -->
+          <div class="pca-secondary-metrics">
+            <div class="secondary-metric" *ngIf="basicResults.dimensionality_insights.pca_analysis.components_for_90_variance">
+              <span class="metric-label">90% Variance Components:</span>
+              <span class="metric-value">{{ basicResults.dimensionality_insights.pca_analysis.components_for_90_variance }}</span>
+            </div>
+
+            <div class="secondary-metric" *ngIf="getKaiserCriterion() > 0">
+              <span class="metric-label">Kaiser Criterion:</span>
+              <span class="metric-value">{{ getKaiserCriterion() }} components</span>
+            </div>
+
+            <div class="secondary-metric" *ngIf="getScreeElbowPoint() > 0">
+              <span class="metric-label">Scree Elbow Point:</span>
+              <span class="metric-value">Component {{ getScreeElbowPoint() }}</span>
+            </div>
+          </div>
+
+          <!-- Component Interpretations -->
+          <div *ngIf="getComponentInterpretations().length > 0" class="component-interpretations">
+            <h5>
+              <mat-icon>psychology</mat-icon>
+              Component Analysis
+            </h5>
+            <div class="components-summary">
+              <div *ngFor="let component of getComponentInterpretations(); let i = index" class="component-summary-card">
                 <div class="component-header">
-                  <span class="component-name">{{ component.component }}</span>
-                  <span class="component-variance">{{ component.variance_percentage.toFixed(1) }}%</span>
+                  <div class="component-name">{{ component.component }}</div>
+                  <div class="component-variance">{{ component.variance_percentage?.toFixed(1) || 'N/A' }}%</div>
                 </div>
-                <div class="top-features">
-                  <div *ngFor="let feature of component.top_features.slice(0, 3)" class="feature-contribution">
-                    <span class="feature-name">{{ feature.feature }}</span>
-                    <div class="contribution-bar">
-                      <div class="contribution-fill" [style.width.%]="feature.percentage"></div>
-                    </div>
-                    <span class="contribution-value">{{ feature.percentage.toFixed(1) }}%</span>
+                <div class="component-features" *ngIf="component.top_features">
+                  <div class="feature-list">
+                    <span *ngFor="let feature of component.top_features.slice(0, 3); let last = last" class="feature-tag">
+                      {{ feature.feature }}<span *ngIf="!last">, </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Importance Visualization -->
+          <div *ngIf="getFeatureImportanceData().length > 0" class="feature-importance-section">
+            <h5>
+              <mat-icon>bar_chart</mat-icon>
+              Feature Importance Across Components
+            </h5>
+            <div class="chart-container">
+              <div style="height: 300px; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
+                <canvas baseChart
+                        [data]="getFeatureImportanceChartData()"
+                        [options]="featureImportanceOptions"
+                        type="bar">
+                </canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Principal Components Analysis -->
+          <div *ngIf="basicResults.dimensionality_insights.pca_analysis.component_features" class="principal-components-analysis">
+            <h5>
+              <mat-icon>scatter_plot</mat-icon>
+              Principal Components Breakdown
+            </h5>
+            
+            <div class="components-table">
+              <div class="table-header">
+                <div class="header-cell">Component</div>
+                <div class="header-cell">Variance %</div>
+                <div class="header-cell">Top Contributing Features</div>
+              </div>
+              
+              <div *ngFor="let component of getTopComponents().slice(0, 4); let i = index" class="table-row">
+                <div class="component-cell">
+                  <div class="component-badge">{{ component.component }}</div>
+                </div>
+                
+                <div class="variance-cell">
+                  <div class="variance-bar">
+                    <div class="variance-fill" [style.width.%]="component.variance_percentage"></div>
+                  </div>
+                  <span class="variance-text">{{ component.variance_percentage?.toFixed(1) || 'N/A' }}%</span>
+                </div>
+                
+                <div class="features-cell">
+                  <div class="feature-chips">
+                    <span *ngFor="let feature of component.top_features?.slice(0, 3)" class="feature-chip">
+                      {{ feature.feature }}
+                      <small>({{ feature.contribution?.toFixed(2) || feature.loading?.toFixed(2) || 'N/A' }})</small>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1025,12 +1119,6 @@
             <div *ngIf="getTopComponents().length > 0" class="chart-container">
               <h6>Feature Contributions to Principal Components</h6>
               
-              <!-- Debug info -->
-              <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 12px;">
-                <strong>Debug:</strong> Components: {{ getPCAFeatureContributionDebugInfo().components }}, 
-                Chart Data Labels: {{ getPCAFeatureContributionDebugInfo().labels }}, 
-                Datasets: {{ getPCAFeatureContributionDebugInfo().datasets }}
-              </div>
               
               <div style="height: 300px; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
                 <canvas baseChart
@@ -1043,74 +1131,148 @@
           </div>
         </div>
 
-        <!-- Clustering Analysis Summary -->
-        <div *ngIf="basicResults.dimensionality_insights.clustering_analysis && !basicResults.dimensionality_insights.clustering_analysis.message" class="clustering-summary-section">
+        <!-- Advanced Clustering Analysis -->
+        <div *ngIf="hasAdvancedClusteringData()" class="advanced-clustering-section">
           <h4>
             <mat-icon>grain</mat-icon>
-            Clustering Structure Analysis
+            Clustering Analysis Results
           </h4>
           
-          <div class="clustering-metrics">
-            <div class="metric-item">
-              <span class="metric-label">Optimal Clusters</span>
-              <span class="metric-value">{{ basicResults.dimensionality_insights.clustering_analysis.optimal_clusters }}</span>
+          <!-- Clustering Summary Cards -->
+          <div class="clustering-summary-cards">
+            <div class="clustering-card primary">
+              <div class="card-header">
+                <mat-icon>grain</mat-icon>
+                <span>Optimal Clusters</span>
+              </div>
+              <div class="card-value">{{ getAdvancedClusteringData().optimal_clusters || 'N/A' }}</div>
+              <div class="card-subtitle">{{ getBestClusteringMethod() | titlecase }} Method</div>
             </div>
             
-            <div class="metric-item">
-              <span class="metric-label">Clustering Quality</span>
-              <span class="metric-value clustering-{{ getClusteringQualityClass() }}">
-                {{ basicResults.dimensionality_insights.clustering_analysis.clustering_recommendation | titlecase }}
-              </span>
+            <div class="clustering-card">
+              <div class="card-header">
+                <mat-icon>assessment</mat-icon>
+                <span>Quality Score</span>
+              </div>
+              <div class="card-value clustering-{{ getClusteringQualityClass() }}">
+                {{ getAdvancedClusteringData().clustering_recommendation | titlecase }}
+              </div>
+              <div class="card-subtitle" *ngIf="getBestSilhouetteScore() > 0">
+                Silhouette: {{ getBestSilhouetteScore().toFixed(3) }}
+              </div>
             </div>
             
-            <div class="metric-item" *ngIf="basicResults.dimensionality_insights.clustering_analysis.silhouette_scores">
-              <span class="metric-label">Best Silhouette Score</span>
-              <span class="metric-value">{{ getBestSilhouetteScore().toFixed(3) }}</span>
+            <div class="clustering-card" *ngIf="getAdvancedClusteringData().cluster_stability">
+              <div class="card-header">
+                <mat-icon>trending_up</mat-icon>
+                <span>Stability</span>
+              </div>
+              <div class="card-value">{{ (getAdvancedClusteringData().cluster_stability.stability_score * 100).toFixed(0) }}%</div>
+              <div class="card-subtitle">Cluster Consistency</div>
+            </div>
+          </div>
+          
+          <!-- Available Methods -->
+          <div class="clustering-methods-section" *ngIf="getClusteringMethods().length > 0">
+            <h5>Available Clustering Methods</h5>
+            <div class="methods-list">
+              <span *ngFor="let method of getClusteringMethods()" class="method-tag">{{ method }}</span>
             </div>
           </div>
 
-          <!-- Clustering Visualization -->
-          <div class="clustering-viz" *ngIf="basicResults.dimensionality_insights.clustering_analysis.silhouette_scores">
-            <h5>Silhouette Scores by Cluster Count</h5>
-            <div class="silhouette-bars">
-              <div *ngFor="let score of basicResults.dimensionality_insights.clustering_analysis.silhouette_scores; let i = index" 
-                   class="silhouette-bar">
-                <div class="bar-label">{{ i + 2 }} clusters</div>
-                <div class="bar-container">
-                  <div class="bar-fill" 
-                       [style.width.%]="(score * 100)"
-                       [ngClass]="getSilhouetteScoreClass(score)">
-                  </div>
-                </div>
-                <div class="bar-value">{{ score.toFixed(3) }}</div>
+          <!-- Validation Metrics -->
+          <div *ngIf="getClusterValidationMetrics().length > 0" class="validation-metrics">
+            <h5>Cluster Validation Metrics</h5>
+            <div class="metrics-grid">
+              <div *ngFor="let metric of getClusterValidationMetrics()" class="validation-metric">
+                <div class="metric-name">{{ metric.name }}</div>
+                <div class="metric-value">{{ metric.value }}</div>
+                <div class="metric-description">{{ metric.description }}</div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Recommendations -->
-        <div *ngIf="basicResults.dimensionality_insights.recommendations" class="dimensionality-recommendations">
-          <h4>
-            <mat-icon>lightbulb</mat-icon>
-            Recommendations
-          </h4>
-          <div class="recommendations-list">
-            <div *ngFor="let recommendation of basicResults.dimensionality_insights.recommendations" class="recommendation-item">
-              <mat-icon>check_circle</mat-icon>
-              <span>{{ recommendation }}</span>
+          <!-- Clustering Quality Radar Chart -->
+          <div *ngIf="getClusterValidationMetrics().length > 0" class="clustering-radar">
+            <h5>Clustering Quality Assessment</h5>
+            <div class="chart-container">
+              <div style="height: 300px; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;">
+                <canvas baseChart
+                        [data]="getClusteringComparisonData()"
+                        [options]="clusteringRadarOptions"
+                        type="radar">
+                </canvas>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- No Data Message -->
-        <div *ngIf="!basicResults.dimensionality_insights.pca_analysis && !basicResults.dimensionality_insights.clustering_analysis" class="no-analysis">
-          <mat-icon>info</mat-icon>
-          <p>Insufficient data for dimensionality analysis. Need at least 2 numeric columns.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
+          <!-- Silhouette Analysis Visualization -->
+          <div class="silhouette-analysis" *ngIf="getAdvancedClusteringData().silhouette_scores">
+            <h5>
+              <mat-icon>analytics</mat-icon>
+              Silhouette Analysis by Cluster Count
+            </h5>
+            
+            <!-- Chart Visualization -->
+            <div class="silhouette-chart-container">
+              <div class="chart-wrapper">
+                <canvas baseChart
+                        [data]="getSilhouetteChartData()"
+                        [options]="silhouetteChartOptions"
+                        type="bar">
+                </canvas>
+              </div>
+            </div>
+            
+            <!-- Detailed Scores Table -->
+            <div class="silhouette-scores-table">
+              <div class="table-header">
+                <div class="header-cell">Clusters</div>
+                <div class="header-cell">Silhouette Score</div>
+                <div class="header-cell">Quality Rating</div>
+                <div class="header-cell">Visual</div>
+              </div>
+              
+              <div *ngFor="let score of getAdvancedClusteringData().silhouette_scores; let i = index" 
+                   class="score-row" [ngClass]="{'best-score': getBestSilhouetteScore() === score}">
+                <div class="cluster-cell">
+                  <div class="cluster-badge">{{ i + 2 }}</div>
+                </div>
+                
+                <div class="score-cell">
+                  <span class="score-value">{{ score.toFixed(3) }}</span>
+                </div>
+                
+                <div class="quality-cell">
+                  <div class="quality-visual">
+                    <div class="quality-rating-number {{ getSilhouetteScoreClass(score) }}">
+                      {{ getSilhouetteRatingNumber(score) }}
+                    </div>
+                    <div class="quality-info">
+                      <span class="quality-badge quality-{{ getSilhouetteScoreClass(score) }}">
+                        {{ getSilhouetteQualityText(score) }}
+                      </span>
+                      <span class="quality-description">{{ getSilhouetteDescription(score) }}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="visual-cell">
+                  <div class="score-bar">
+                    <div class="score-fill {{ getSilhouetteScoreClass(score) }}" 
+                         [style.width.%]="(score * 100)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Best Score Highlight -->
+            <div class="best-score-highlight" *ngIf="getBestSilhouetteScore() > 0">
+              <mat-icon>star</mat-icon>
+              <span>Optimal cluster count: <strong>{{ getBestSilhouetteClusterCount() }} clusters</strong> with score {{ getBestSilhouetteScore().toFixed(3) }}</span>
+            </div>
+          </div>
   <!-- Advanced Analysis Results -->
   <div *ngIf="advancedResults" class="advanced-results-container">
     <div class="section-header">

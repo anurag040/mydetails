@@ -1,203 +1,46 @@
-import { Component, OnInit } from '@angular/core';
-
-export interface NewsItem {
-  id: number;
-  title: string;
-  category: string;
-  date: string;
-  dateFormatted: string;
-  author: string;
-  views: string;
-  shares: string;
-  image: string;
-  trending?: boolean;
-}
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { NewsService } from '../../shared/services/news.service';
+import { NewsItem, MainArticle, ArticleContent, NewsStats, TagCloudItem } from '../../shared/interfaces/news.interface';
 
 @Component({
   selector: 'app-news-feed',
   templateUrl: './news-feed.component.html'
 })
-export class NewsFeedComponent implements OnInit {
+export class NewsFeedComponent implements OnInit, OnDestroy {
+  
+  private destroy$ = new Subject<void>();
   
   isLoading: boolean = false;
   currentSlide: number = 0;
-  totalNewsCount: number = 247;
-  todayNewsCount: number = 23;
-  trendingCount: number = 8;
+  totalNewsCount: number = 0;
+  todayNewsCount: number = 0;
+  trendingCount: number = 0;
   currentFeatureImage: string = '';
   showFullArticle: boolean = false;
+  
   // Dense hashtag cloud entries rendered over the feature image
-  featureTagCloud: Array<{ text: string; rotate: number; opacity: number }> = [];
-  // High-priority tags (stable order)
-  preferredTags: string[] = ['#NACKS_Exceeded', '#P3inProgress', '#SwiftWorkingFine'];
+  featureTagCloud: TagCloudItem[] = [];
   
   // Current main article data
-  currentMainArticle: any = {
-    title: 'Federal Reserve Settlement Activity Remains Stable During Off-Peak Period',
-    category: 'Market Intelligence',
-    date: '2025-08-30',
-    dateFormatted: '30 Aug, 2025',
-    author: 'BNY',
-    views: '4,127',
-    shares: '67',
-    comments: '15'
-  };
+  currentMainArticle: MainArticle = {} as MainArticle;
   
-  // Full article content
-  fullArticleContent: string = `
-    <span style="color: #1976d2; font-weight: 600;">Federal Reserve payment activity</span> remained quiet through the recent settlement cycle, with <span style="color: #d32f2f; font-weight: 500;">no transactions reported</span>. This pattern is consistent with the typical slowdown during off-peak periods, when flows across the FED rails tend to subside.
-
-    <span style="color: #388e3c; font-weight: 600;">SWIFT negative acknowledgments</span> were broadly stable, closely tracking <span style="color: #f57c00; font-weight: 500;">long-term averages</span>. The absence of irregular spikes indicated that settlement conditions across the SWIFT network remained <span style="color: #388e3c;">orderly and within expected norms</span>.
-
-    <span style="color: #7b1fa2; font-weight: 600;">CHIPS rejects</span> registered a <span style="color: #f57c00; font-weight: 500;">modest increase</span> compared with recent trends, though volumes stayed comfortably <span style="color: #388e3c;">within tolerance levels</span>. Market participants regarded the movement as routine variability rather than a signal of systemic stress.
-
-    <span style="color: #1976d2; font-weight: 600;">Federal Reserve rejects</span> followed a similar path, recording a <span style="color: #f57c00;">slight uptick</span> but remaining contained. Settlement flows continued <span style="color: #388e3c; font-weight: 500;">without disruption</span>, and <span style="color: #388e3c;">no client impact was reported</span>.
-
-    Deposit and payment activity across both <span style="color: #7b1fa2; font-weight: 500;">CHIPS and FED channels</span> was largely absent during the most recent off-peak window. The quiet session aligned with <span style="color: #1976d2;">seasonal patterns</span> when settlement desks typically experience limited throughput.
-
-    <span style="color: #2e7d32; font-weight: 700; font-size: 1.1em;">Overall, activity across the major payment rails remained stable.</span> Minor fluctuations in rejects were observed, but they fall within <span style="color: #388e3c; font-weight: 500;">normal operating ranges</span> and do not warrant escalation at this stage.
-
-    Looking ahead, market participants expect activity to gradually pick up as we move into the next settlement cycle. The <span style="color: #1976d2; font-weight: 600;">Federal Reserve continues to monitor</span> all payment rail activities closely, ensuring <span style="color: #388e3c; font-weight: 500;">system stability</span> and efficient processing of all transactions.
-
-    <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #1976d2;">
-    <strong style="color: #1976d2; font-size: 1.1em;">Key metrics from the settlement period:</strong><br/>
-    • <span style="color: #388e3c; font-weight: 600;">SWIFT acknowledgments: 99.7% success rate</span><br/>
-    • <span style="color: #f57c00; font-weight: 600;">CHIPS processing: 0.03% reject rate</span> (within normal parameters)<br/>
-    • <span style="color: #1976d2; font-weight: 600;">FED rail throughput: Minimal activity</span> as expected<br/>
-    • <span style="color: #388e3c; font-weight: 600;">No system-wide incidents reported</span><br/>
-    • <span style="color: #388e3c; font-weight: 600;">All settlement windows completed successfully</span>
-    </div>
-
-    <span style="color: #2e7d32; font-weight: 600; font-size: 1.05em;">The stability observed across all major payment infrastructure demonstrates the robustness of the current financial settlement system and the effectiveness of ongoing monitoring protocols.</span>
-  `;
-
-  excerptContent: string = `
-    <span style="color: #1976d2; font-weight: 600;">Federal Reserve payment activity</span> remained quiet through the recent settlement cycle, with <span style="color: #d32f2f; font-weight: 500;">no transactions reported</span>. This pattern is consistent with the typical slowdown during off-peak periods, when flows across the FED rails tend to subside. <span style="color: #388e3c; font-weight: 600;">SWIFT negative acknowledgments</span> were broadly stable, closely tracking <span style="color: #f57c00; font-weight: 500;">long-term averages</span>.
-  `;
+  // Article content
+  currentArticleContent: ArticleContent = { excerpt: '', full: '' };
   
-  recentNews: NewsItem[] = [
-    {
-      id: 1,
-      title: "BNY Mellon Reports Record Growth in Digital Asset Custody Services",
-      category: "Business",
-      date: "2025-08-30",
-      dateFormatted: "30 Aug, 2025",
-      author: "BNY Mellon Press",
-      views: "3,247",
-      shares: "89",
-      image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=300&h=300&fit=crop", // BNY building
-      trending: true
-    },
-    {
-      id: 2,
-      title: "Enhanced Security Protocols Launched for Institutional Banking Clients",
-      category: "Security",
-      date: "2025-08-29",
-      dateFormatted: "29 Aug, 2025",
-      author: "Security Operations",
-      views: "2,834",
-      shares: "67",
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&h=300&fit=crop", // Modern banking
-      trending: true
-    },
-    {
-      id: 3,
-      title: "Federal Reserve Updates Impact BNY Mellon's Global Investment Services",
-      category: "Regulation",
-      date: "2025-08-28",
-      dateFormatted: "28 Aug, 2025",
-      author: "Regulatory Affairs",
-      views: "4,156",
-      shares: "123",
-      image: "https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=300&h=300&fit=crop" // Federal/banking
-    },
-    {
-      id: 4,
-      title: "AI-Powered Investment Analytics Platform Processes $2.1T in Assets",
-      category: "Technology",
-      date: "2025-08-27",
-      dateFormatted: "27 Aug, 2025",
-      author: "Innovation Team",
-      views: "5,431",
-      shares: "234",
-      image: "https://images.unsplash.com/photo-1565373679256-3ad7fd8cc62d?w=300&h=300&fit=crop", // Financial tech
-      trending: true
-    },
-    {
-      id: 5,
-      title: "Cross-Border Settlement Network Reduces Transaction Times by 75%",
-      category: "Technology",
-      date: "2025-08-26",
-      dateFormatted: "26 Aug, 2025",
-      author: "Global Operations",
-      views: "2,923",
-      shares: "78",
-      image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=300&h=300&fit=crop" // Banking operations
-    }
-  ];
-
-  // Enhanced BNY-themed financial images pool
-  private bnyImages = [
-    "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=300&h=300&fit=crop", // Bank building exterior
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&h=300&fit=crop", // Modern office building
-    "https://images.unsplash.com/photo-1568992687947-868a62a9f521?w=300&h=300&fit=crop", // Banking interior
-    "https://images.unsplash.com/photo-1565373679256-3ad7fd8cc62d?w=300&h=300&fit=crop", // Financial data/charts
-    "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=300&h=300&fit=crop", // Banking/vault
-    "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=300&h=300&fit=crop", // Financial district
-    "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=300&h=300&fit=crop", // Bank interior/lobby
-    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&h=300&fit=crop", // Financial charts/analytics
-    "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=300&h=300&fit=crop", // Financial/banking tech
-    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop", // Wall Street/financial district
-    "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=300&fit=crop", // Corporate headquarters
-    "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=300&h=300&fit=crop", // Financial meeting
-    "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=300&h=300&fit=crop", // Banking documents
-    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop", // Financial analysis
-    "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=300&h=300&fit=crop"  // Investment services
-  ];
-
-  // Custom flower images that change over time
-  private featureImages = [
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuDofr0MF66-z8jLOvhIXtjUz7pYLNjq_ukJJN-GtRo_SHVdv89o_v_rHBoguywFjj6CoFmqAVymhLMnpcX7cFDcKK52uoM128vUWDSpsuLsH-5Hq420ZmIVdVSpAlZ4EAqDSX8a3igbbyb6XrqZ2G-AFFp9zHWiNSz7Vyk-48sCFUw6KsRQDRzLNYZHPh2t2vqF-zQYlo9Cyfrrqs0yXrUV4IyEzUHRuCtrlOdG_z7SmIbnPINQVkJ9MZZIRlh5SHOv33xnvrxTCgQ", // Custom flower image 1
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBfz50Upa0idQeescZprb1IJotqIqCpVdMJtP4JMidzebVd2INSROu_rK0_mIxlKHjmfzVN_u3YjjJYU9QymQ62-p9PnxqJebdrqQGVid4kZg09w9eND5DH7-b6zJ9pW--f-iOiQBviKJ9HF2KEn3NvCNr5WALOhSo4Q363dSughiWgltobhoSMys_8gKQaFGHhpWh2iny763Ny_AqUIpdwXVjO9wEO3Q1UZA_xqtx7XJ_JPRUr1x7gBB4kAlmAxeOSwJ2CYulZiIU"  // Custom flower image 3
-  ];
-
-  private gradients = [
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
-  ];
-
-  private categoryColors = {
-    'Business': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'Security': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'Technology': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'Regulation': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'Finance': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-  };
-
-  private categoryIcons = {
-    'Business': '💼',
-    'Security': '🛡️',
-    'Technology': '🚀',
-    'Regulation': '⚖️',
-    'Finance': '💰'
-  };
+  // Recent news list
+  recentNews: NewsItem[] = [];
 
   private animationId: number = 0;
   private particles: any[] = [];
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
 
-  constructor() { }
+  constructor(private newsService: NewsService) { }
 
   ngOnInit(): void {
+    this.loadAllData();
     this.initializeFeatureImages();
-    this.initializeTagCloud();
     this.startImageRotation();
   }
 
@@ -206,28 +49,236 @@ export class NewsFeedComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
     }
   }
 
+  private loadAllData(): void {
+    this.isLoading = true;
+    
+    // Load all data in parallel using forkJoin
+    forkJoin({
+      mainArticle: this.newsService.getMainArticle(),
+      articleContent: this.newsService.getArticleContent(),
+      recentNews: this.newsService.getRecentNews(),
+      newsStats: this.newsService.getNewsStats(),
+      tagCloud: this.newsService.generateTagCloud()
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (data) => {
+        this.currentMainArticle = data.mainArticle;
+        this.currentArticleContent = data.articleContent;
+        this.recentNews = data.recentNews;
+        this.totalNewsCount = data.newsStats.totalNewsCount;
+        this.todayNewsCount = data.newsStats.todayNewsCount;
+        this.trendingCount = data.newsStats.trendingCount;
+        this.featureTagCloud = data.tagCloud;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading news data:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
   private initializeFeatureImages(): void {
     // Set random feature image
-    this.currentFeatureImage = this.getRandomFeatureImage();
+    this.currentFeatureImage = this.newsService.getRandomFeatureImage();
   }
 
   private initializeTagCloud(): void {
-    // Build initial hashtag cloud
-    this.buildTagCloud();
+    // Tag cloud is now loaded via service in loadAllData()
   }
 
   private startImageRotation(): void {
-    // Simulate initial loading
-    this.isLoading = true;
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+    // Simulate initial loading - this is now handled in loadAllData()
   }
+
+  // Randomize BNY-themed images
+  private randomizeImages(): void {
+    // Set random feature image
+    this.currentFeatureImage = this.newsService.getRandomFeatureImage();
+    
+    // Set random images for news items
+    this.recentNews.forEach(news => {
+      news.image = this.newsService.getRandomBnyImage();
+    });
+    
+    // Refresh the tag cloud
+    this.newsService.generateTagCloud()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tagCloud => {
+        this.featureTagCloud = tagCloud;
+      });
+  }
+
+  // Get random BNY-themed image
+  getRandomBnyImage(): string {
+    return this.newsService.getRandomBnyImage();
+  }
+
+  // Get random feature image
+  getRandomFeatureImage(): string {
+    return this.newsService.getRandomFeatureImage();
+  }
+
+  // Slider functionality
+  setActiveSlide(index: number): void {
+    this.currentSlide = index;
+    // Change feature image when clicking slider dots
+    this.currentFeatureImage = this.newsService.getRandomFeatureImage();
+    this.newsService.generateTagCloud()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tagCloud => {
+        this.featureTagCloud = tagCloud;
+      });
+  }
+
+  // TrackBy for hashtag chips by index (fast)
+  trackByTagIndex(index: number): number { return index; }
+
+  // Build a visually rich tag cloud from status + domain tags - now handled by service
+  private buildTagCloud(): void {
+    this.newsService.generateTagCloud()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tagCloud => {
+        this.featureTagCloud = tagCloud;
+      });
+  }
+
+  // Style helpers - delegate to service
+  getRandomGradient(): string {
+    return this.newsService.getRandomGradient();
+  }
+
+  getCategoryColor(category: string): string {
+    return this.newsService.getCategoryColor(category);
+  }
+
+  getCategoryIcon(category: string): string {
+    return this.newsService.getCategoryIcon(category);
+  }
+
+  // Article actions
+  readFullArticle(): void {
+    this.showFullArticle = !this.showFullArticle;
+    console.log('Toggling full article view:', this.showFullArticle);
+  }
+
+  getArticleContent(): string {
+    return this.showFullArticle ? this.currentArticleContent.full : this.currentArticleContent.excerpt;
+  }
+
+  getReadButtonText(): string {
+    return this.showFullArticle ? 'Show Less' : 'Read Full Article';
+  }
+
+  shareArticle(): void {
+    console.log('Sharing article...');
+    // Implement share functionality
+    if (navigator.share) {
+      navigator.share({
+        title: 'The Payments Industry is Transforming',
+        text: 'Check out this article about AI-powered financial intelligence platforms',
+        url: window.location.href
+      });
+    }
+  }
+
+  // News list actions
+  refreshNews(): void {
+    this.isLoading = true;
+    console.log('Refreshing news...');
+    
+    this.newsService.refreshNews()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            // Randomize images on refresh
+            this.randomizeImages();
+            // Reload all data
+            this.loadAllData();
+            console.log('News refreshed successfully!');
+          }
+        },
+        error: (error) => {
+          console.error('Error refreshing news:', error);
+          this.isLoading = false;
+        }
+      });
+  }
+
+  onNewsItemClick(item: NewsItem, event: Event): void {
+    event.preventDefault();
+    console.log('News item clicked:', item.title);
+    // Implement navigation to news article
+  }
+
+  // Load news item in main view
+  loadNewsInMain(item: NewsItem): void {
+    console.log('Loading news in main view:', item.title);
+    
+    // Update current main article
+    this.currentMainArticle = {
+      title: item.title,
+      category: item.category,
+      date: item.date,
+      dateFormatted: item.dateFormatted,
+      author: item.author,
+      views: item.views,
+      shares: item.shares,
+      comments: item.comments || '0' // Default value
+    };
+    
+    // Create content based on the news item using service
+    this.currentArticleContent = this.newsService.createArticleContentForNewsItem(item);
+    
+    // Reset to excerpt view
+    this.showFullArticle = false;
+    
+    // Randomize feature image
+    this.randomizeImages();
+    
+    // Scroll to top to show the main article
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  viewAllNews(): void {
+    console.log('Viewing all news...');
+    // Implement navigation to all news page
+  }
+
+  // Mobile swipe handlers
+  onSwipeLeft(): void {
+    console.log('Swiped left');
+    // Implement swipe functionality
+  }
+
+  onSwipeRight(): void {
+    console.log('Swiped right');
+    // Implement swipe functionality
+  }
+
+  // Utility functions
+  trackByNewsId(index: number, item: NewsItem): number {
+    return item.id;
+  }
+
+  highlightSearchTerm(text: string): string {
+    // For now, just return the text as-is
+    // In a real app, you'd highlight search terms
+    return text;
+  }
+
+  // =================== PARTICLE SYSTEM METHODS ===================
+  // These methods handle the 3D text animation in the feature area
 
   private initParticleSystem(): void {
     this.canvas = document.getElementById('threejs-canvas') as HTMLCanvasElement;
@@ -473,187 +524,5 @@ export class NewsFeedComponent implements OnInit {
     });
 
     this.animationId = requestAnimationFrame(() => this.animate());
-  }
-
-  // Randomize BNY-themed images
-  private randomizeImages(): void {
-    // Set random feature image
-    this.currentFeatureImage = this.getRandomFeatureImage();
-    
-    // Set random images for news items
-    this.recentNews.forEach(news => {
-      news.image = this.getRandomBnyImage();
-    });
-  // Refresh the tag cloud on image change
-  this.buildTagCloud();
-  }
-
-  // Get random BNY-themed image
-  getRandomBnyImage(): string {
-    const randomIndex = Math.floor(Math.random() * this.bnyImages.length);
-    return this.bnyImages[randomIndex];
-  }
-
-  // Get random feature image
-  getRandomFeatureImage(): string {
-    const randomIndex = Math.floor(Math.random() * this.featureImages.length);
-    return this.featureImages[randomIndex];
-  }
-
-  // Slider functionality
-  setActiveSlide(index: number): void {
-    this.currentSlide = index;
-    // Change feature image when clicking slider dots
-    this.currentFeatureImage = this.getRandomFeatureImage();
-    this.buildTagCloud();
-  }
-
-  // TrackBy for hashtag chips by index (fast)
-  trackByTagIndex(index: number): number { return index; }
-
-  // Build a visually rich tag cloud from status + domain tags
-  private buildTagCloud(): void {
-    const fallback = [
-      '#Payments', '#Settlement', '#SWIFT', '#Stable', '#Monitoring', '#Compliance'
-    ];
-    const pool = (this.preferredTags && this.preferredTags.length > 0)
-      ? this.preferredTags.slice()
-      : fallback.slice();
-  // Enforce exactly three tags for compact prominence
-  const desired = Math.min(3, pool.length);
-  const chosen = pool.slice(0, desired);
-    this.featureTagCloud = chosen.map(text => ({
-      text,
-      rotate: Math.floor(Math.random() * 7) - 3,
-      opacity: 0.6 + Math.random() * 0.25
-    }));
-  }
-
-  // Style helpers
-  getRandomGradient(): string {
-    return this.gradients[Math.floor(Math.random() * this.gradients.length)];
-  }
-
-  getCategoryColor(category: string): string {
-    return this.categoryColors[category as keyof typeof this.categoryColors] || this.categoryColors['Business'];
-  }
-
-  getCategoryIcon(category: string): string {
-    return this.categoryIcons[category as keyof typeof this.categoryIcons] || '📰';
-  }
-
-  // Article actions
-  readFullArticle(): void {
-    this.showFullArticle = !this.showFullArticle;
-    console.log('Toggling full article view:', this.showFullArticle);
-  }
-
-  getArticleContent(): string {
-    return this.showFullArticle ? this.fullArticleContent : this.excerptContent;
-  }
-
-  getReadButtonText(): string {
-    return this.showFullArticle ? 'Show Less' : 'Read Full Article';
-  }
-
-  shareArticle(): void {
-    console.log('Sharing article...');
-    // Implement share functionality
-    if (navigator.share) {
-      navigator.share({
-        title: 'The Payments Industry is Transforming',
-        text: 'Check out this article about AI-powered financial intelligence platforms',
-        url: window.location.href
-      });
-    }
-  }
-
-  // News list actions
-  refreshNews(): void {
-    this.isLoading = true;
-    console.log('Refreshing news...');
-    
-    // Randomize images on refresh
-    this.randomizeImages();
-    
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-      console.log('News refreshed with new BNY images!');
-    }, 1500);
-  }
-
-  onNewsItemClick(item: NewsItem, event: Event): void {
-    event.preventDefault();
-    console.log('News item clicked:', item.title);
-    // Implement navigation to news article
-  }
-
-  // Load news item in main view
-  loadNewsInMain(item: NewsItem): void {
-    console.log('Loading news in main view:', item.title);
-    
-    // Update current main article
-    this.currentMainArticle = {
-      title: item.title,
-      category: item.category,
-      date: item.date,
-      dateFormatted: item.dateFormatted,
-      author: item.author,
-      views: item.views,
-      shares: item.shares,
-      comments: '0' // Default value
-    };
-    
-    // Create content based on the news item
-    const baseContent = `This is a detailed article about: ${item.title}. Published on ${item.dateFormatted} by ${item.author}. This article has received ${item.views} views and ${item.shares} shares from our readers.`;
-    
-    // Update excerpt and full content
-    this.excerptContent = `<span style="color: #1976d2; font-weight: 600;">${item.title}</span> - ${baseContent.substring(0, 200)}...`;
-    this.fullArticleContent = `<span style="color: #1976d2; font-weight: 600; font-size: 1.1em;">${item.title}</span><br/><br/>${baseContent}<br/><br/>
-    <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #1976d2;">
-    <strong style="color: #1976d2;">Article Details:</strong><br/>
-    • <span style="color: #388e3c; font-weight: 600;">Category: ${item.category}</span><br/>
-    • <span style="color: #f57c00; font-weight: 600;">Author: ${item.author}</span><br/>
-    • <span style="color: #1976d2; font-weight: 600;">Published: ${item.dateFormatted}</span><br/>
-    • <span style="color: #388e3c; font-weight: 600;">Views: ${item.views}</span><br/>
-    • <span style="color: #7b1fa2; font-weight: 600;">Shares: ${item.shares}</span>
-    </div>`;
-    
-    // Reset to excerpt view
-    this.showFullArticle = false;
-    
-    // Randomize feature image
-    this.randomizeImages();
-    
-    // Scroll to top to show the main article
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  viewAllNews(): void {
-    console.log('Viewing all news...');
-    // Implement navigation to all news page
-  }
-
-  // Mobile swipe handlers
-  onSwipeLeft(): void {
-    console.log('Swiped left');
-    // Implement swipe functionality
-  }
-
-  onSwipeRight(): void {
-    console.log('Swiped right');
-    // Implement swipe functionality
-  }
-
-  // Utility functions
-  trackByNewsId(index: number, item: NewsItem): number {
-    return item.id;
-  }
-
-  highlightSearchTerm(text: string): string {
-    // For now, just return the text as-is
-    // In a real app, you'd highlight search terms
-    return text;
   }
 }

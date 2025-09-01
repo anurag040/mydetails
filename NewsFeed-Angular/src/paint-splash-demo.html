@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brown Paint Splash Pills</title>
+    <style>
+        body {
+            min-height: 100vh;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+        }
+        
+        .title {
+            margin-bottom: 2rem;
+        }
+        
+        .title h1 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .title p {
+            color: #666;
+        }
+        
+        .pill-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .paint-splash-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            color: white;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+            min-width: 160px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            
+            /* Lustrous brown metallic base */
+            background: linear-gradient(145deg, #CD853F 0%, #8B4513 25%, #654321 75%, #3E2723 100%);
+            box-shadow: 
+                inset 0 1px 0 rgba(222, 184, 135, 0.25),
+                inset 0 -1px 0 rgba(62, 39, 35, 0.38),
+                0 2px 4px rgba(62, 39, 35, 0.19),
+                0 8px 16px rgba(101, 67, 33, 0.13);
+            border: 1px solid #654321;
+        }
+        
+        /* Brown metallic shine overlay */
+        .paint-splash-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent 30%, rgba(222, 184, 135, 0.8) 50%, transparent 70%);
+            border-radius: inherit;
+            animation: shine 3s ease-in-out infinite;
+            z-index: 2;
+        }
+        
+        /* Paint splash overlay 1 - Large splash with golden accent */
+        .paint-splash-pill .splash-1 {
+            position: absolute;
+            top: -1px;
+            right: -2px;
+            width: 32px;
+            height: 32px;
+            background: 
+                radial-gradient(ellipse at 30% 70%, #D4AF37 0%, #FFE55C 30%, #E6C767 60%, transparent 90%),
+                radial-gradient(circle at 60% 40%, #B8941F 20%, #D4AF37 50%, transparent 80%);
+            clip-path: polygon(20% 0%, 80% 10%, 100% 35%, 85% 100%, 60% 85%, 30% 95%, 0% 70%, 15% 40%);
+            filter: blur(0.5px);
+            transform: rotate(15deg);
+            opacity: 0.9;
+            z-index: 3;
+        }
+        
+        /* Paint splash overlay 2 - Medium splash with copper tones */
+        .paint-splash-pill .splash-2 {
+            position: absolute;
+            top: 0;
+            left: 1px;
+            width: 24px;
+            height: 24px;
+            background: 
+                radial-gradient(circle at 40% 60%, #B87333 0%, #CD853F 40%, #DAA520 70%, transparent 90%),
+                radial-gradient(ellipse at 20% 30%, #8B4513 10%, #D2691E 60%, transparent 85%);
+            clip-path: polygon(30% 0%, 70% 20%, 100% 60%, 80% 100%, 40% 90%, 0% 60%, 20% 20%);
+            filter: blur(0.3px);
+            transform: rotate(-25deg);
+            opacity: 0.8;
+            z-index: 4;
+        }
+        
+        /* Paint splash overlay 3 - Small bronze splatter */
+        .paint-splash-pill .splash-3 {
+            position: absolute;
+            bottom: -1px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle, #CD7F32 0%, #B87333 50%, #D4AF37 80%, transparent 100%);
+            clip-path: polygon(40% 0%, 100% 30%, 90% 80%, 50% 100%, 10% 70%, 0% 30%);
+            filter: blur(0.2px);
+            transform: rotate(45deg);
+            opacity: 0.85;
+            z-index: 5;
+        }
+        
+        /* Golden paint drip effect */
+        .paint-splash-pill .drip {
+            position: absolute;
+            top: 32px;
+            right: 16px;
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(to bottom, #D4AF37 0%, #B8941F 50%, transparent 100%);
+            border-radius: 0 0 50% 50%;
+            transform: rotate(5deg);
+            opacity: 0.7;
+            z-index: 6;
+        }
+        
+        /* Brown textured overlay for paint effect */
+        .paint-splash-pill .texture {
+            position: absolute;
+            inset: 0;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 1px,
+                    rgba(139, 69, 19, 0.15) 1px,
+                    rgba(139, 69, 19, 0.15) 2px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 1px,
+                    rgba(160, 82, 45, 0.15) 1px,
+                    rgba(160, 82, 45, 0.15) 2px
+                );
+            background-size: 8px 8px, 6px 6px;
+            mix-blend-mode: overlay;
+            opacity: 0.5;
+            border-radius: inherit;
+            z-index: 7;
+        }
+        
+        /* Additional metallic brown texture */
+        .paint-splash-pill .metallic {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(205, 133, 63, 0.3) 0%, transparent 30%),
+                radial-gradient(circle at 70% 60%, rgba(222, 184, 135, 0.2) 0%, transparent 25%),
+                radial-gradient(circle at 40% 80%, rgba(184, 115, 51, 0.25) 0%, transparent 35%);
+            filter: blur(1px);
+            opacity: 0.4;
+            border-radius: inherit;
+            z-index: 8;
+        }
+        
+        .paint-splash-pill .text {
+            position: relative;
+            z-index: 10;
+        }
+        
+        @keyframes shine {
+            0%, 100% { transform: translateX(-100%) rotate(45deg); }
+            50% { transform: translateX(300%) rotate(45deg); }
+        }
+        
+        .paint-splash-pill:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 
+                inset 0 1px 0 rgba(245, 222, 179, 0.4),
+                inset 0 -1px 0 rgba(62, 39, 35, 0.5),
+                0 4px 8px rgba(62, 39, 35, 0.25),
+                0 12px 24px rgba(101, 67, 33, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            <h1>Brown Metallic Paint Splash Pills</h1>
+            <p>Lustrous brown base with golden paint splash effects</p>
+        </div>
+        
+        <div class="pill-container">
+            <span class="paint-splash-pill">
+                <span class="text">#PaymentsPrism</span>
+                <div class="splash-1"></div>
+                <div class="splash-2"></div>
+                <div class="splash-3"></div>
+                <div class="drip"></div>
+                <div class="texture"></div>
+                <div class="metallic"></div>
+            </span>
+            
+            <span class="paint-splash-pill">
+                <span class="text">#FinTech</span>
+                <div class="splash-1"></div>
+                <div class="splash-2"></div>
+                <div class="splash-3"></div>
+                <div class="drip"></div>
+                <div class="texture"></div>
+                <div class="metallic"></div>
+            </span>
+            
+            <span class="paint-splash-pill">
+                <span class="text">#Innovation</span>
+                <div class="splash-1"></div>
+                <div class="splash-2"></div>
+                <div class="splash-3"></div>
+                <div class="drip"></div>
+                <div class="texture"></div>
+                <div class="metallic"></div>
+            </span>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!-- Left: Feature story -->
+<article class="card feature" aria-label="Feature article">
+  <figure class="media">
+    <img src="https://picsum.photos/id/103/1200/675" alt="Morning sun over fields" />
+    <div class="slider-dots" aria-hidden="true">
+      <span class="active"></span><span></span><span></span><span></span>
+    </div>
+  </figure>
+  <div class="content">
+    <div class="meta-row">
+      <span class="pill">Business</span>
+      <time datetime="2025-08-30">30 August, 2025</time>
+    </div>
+    <h1>The Payments Industry is Transforming: AI-Powered Financial Intelligence Platforms Lead the Charge</h1>
+    <div class="byline">
+      <span>Payments Prism Team</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span>2,847 Views</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span>45 Shares</span>
+    </div>
+  </div>
+</article>
+
+<!-- Right: Recent News -->
+<aside class="sidebar" aria-label="Recent news">
+  <div class="title">Recent Financial News</div>
+
+  <div class="news-list">
+    <!-- item -->
+    <a class="news-item" href="#" *ngFor="let item of recentNews">
+      <div class="thumb"><img [src]="item.image" [alt]="item.title" /></div>
+      <div class="info">
+        <div class="top-row">
+          <span class="pill">{{item.category}}</span>
+          <time [attr.datetime]="item.date">{{item.dateFormatted}}</time>
+        </div>
+        <h3>{{item.title}}</h3>
+        <div class="mini-meta">
+          <span>{{item.author}}</span><span class="sep"></span>
+          <span>{{item.views}} Views</span><span class="sep"></span>
+          <span>{{item.shares}} Shares</span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <button class="cta" type="button">All Recent News →</button>
+</aside>

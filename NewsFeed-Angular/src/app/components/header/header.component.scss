@@ -1,0 +1,45 @@
+/* Layout inside header */
+header{
+	display:flex;
+	align-items:center;
+	justify-content:flex-start; /* tabs right after brand */
+	gap:12px;
+}
+
+.brand{ display:flex; align-items:center; gap:10px; }
+
+/* push theme selector to the far right */
+.theme-selector{ margin-left:auto; }
+
+/* Simple nav tabs matching glass look */
+.nav-tabs{
+	display:flex;
+	gap:10px;
+	align-items:center;
+	margin-left:16px; /* small gap after brand */
+}
+.nav-tabs a{
+	padding:8px 12px;
+	border-radius:999px;
+	border:1px solid var(--glass-border);
+	background: var(--glass-surface);
+	backdrop-filter: blur(var(--glass-blur));
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	color: var(--text);
+	font-weight: 700;
+	text-decoration:none;
+	transition: all .15s ease;
+}
+.nav-tabs a:hover{ transform: translateY(-1px); box-shadow: var(--glass-shadow) }
+.nav-tabs a.active{
+	background: var(--gradient-primary);
+	color: var(--pill-text);
+	border-color: var(--glass-border-strong);
+	box-shadow: var(--glass-shadow);
+}
+
+/* Hide header tabs on mobile */
+@media (max-width: 768px){
+	.nav-tabs{ display:none; }
+}
+// Header styles are now handled in global styles.scss

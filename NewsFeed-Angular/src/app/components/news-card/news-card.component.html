@@ -1,0 +1,88 @@
+<article class="news-card premium-card" [class.featured]="newsItem.featured">
+  <!-- Card Header with Status -->
+  <div class="card-header">
+    <div class="status-section">
+      <div class="status-dot" [ngClass]="'status-dot-' + getStatusColor()"></div>
+      <span class="status-text" [ngClass]="'status-' + getStatusColor()">
+        {{ getStatusText() }}
+      </span>
+    </div>
+    
+    <div class="meta-info">
+      <span class="source">{{ newsItem.source }}</span>
+      <span class="separator">•</span>
+      <time class="timestamp">{{ newsItem.publishedAt | date:'shortTime' }}</time>
+    </div>
+  </div>
+
+  <!-- Card Image -->
+  <div class="card-image" *ngIf="newsItem.imageUrl">
+    <img 
+      [src]="newsItem.imageUrl" 
+      [alt]="newsItem.title"
+      class="article-image"
+      (error)="onImageError($event)"
+      loading="lazy"
+    />
+    <div class="image-overlay"></div>
+  </div>
+
+  <!-- Card Content -->
+  <div class="card-content">
+    <h3 class="article-title line-clamp-2">
+      {{ newsItem.title }}
+    </h3>
+    
+    <p class="article-description line-clamp-3" *ngIf="newsItem.excerpt">
+      {{ newsItem.excerpt }}
+    </p>
+
+    <!-- Financial Intelligence Tags -->
+    <div class="intelligence-tags" *ngIf="getIntelligenceTags().length > 0">
+      <span 
+        *ngFor="let tag of getIntelligenceTags()" 
+        class="intelligence-tag"
+        [ngClass]="'tag-' + tag.type"
+      >
+        <svg class="tag-icon" viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="3" fill="currentColor"/>
+        </svg>
+        {{ tag.label }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Card Actions -->
+  <div class="card-actions">
+    <button class="action-btn primary" (click)="readArticle()">
+      <span>Read Intelligence</span>
+      <svg class="action-icon" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-width="2" d="M5 12h14m-7-7l7 7-7 7"/>
+      </svg>
+    </button>
+    
+    <div class="secondary-actions">
+      <button class="action-btn secondary" (click)="shareArticle()" title="Share">
+        <svg class="action-icon" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-width="2" d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+          <polyline stroke="currentColor" stroke-width="2" points="16,6 12,2 8,6"/>
+          <line stroke="currentColor" stroke-width="2" x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+      </button>
+      
+      <button class="action-btn secondary" (click)="toggleBookmark()" title="Bookmark">
+        <svg class="action-icon" viewBox="0 0 24 24" [class.active]="isBookmarked">
+          <path stroke="currentColor" stroke-width="2" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Premium Badge for Featured Articles -->
+  <div class="premium-badge" *ngIf="newsItem.featured">
+    <svg class="premium-icon" viewBox="0 0 24 24">
+      <polygon stroke="currentColor" stroke-width="2" points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+    </svg>
+    <span>Intelligence</span>
+  </div>
+</article>

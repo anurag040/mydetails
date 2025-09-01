@@ -1,0 +1,33 @@
+<header>
+  <div class="brand">
+    <span class="logo" aria-hidden="true"></span>
+    <span>Payments Prism</span>
+  </div>
+  
+  <nav class="nav-tabs" aria-label="Primary">
+    <a routerLink="/" [routerLinkActive]="'active'" [routerLinkActiveOptions]="{ exact: true }">News</a>
+    <a routerLink="/incidents" routerLinkActive="active">Incidents</a>
+    <a routerLink="/payments-insights" routerLinkActive="active">Payments Insights</a>
+  </nav>
+  
+  <div class="theme-selector">
+    <button 
+      class="theme-toggle" 
+      (click)="toggleThemeDropdown()"
+      [class.active]="showThemeDropdown"
+      aria-label="Select theme">
+      {{ getSelectedThemeLabel() }}
+      <span class="dropdown-arrow">▼</span>
+    </button>
+    
+    <div class="theme-dropdown" [class.show]="showThemeDropdown">
+      <div 
+        *ngFor="let theme of themes" 
+        class="theme-option"
+        [class.selected]="theme.value === selectedTheme"
+        (click)="selectTheme(theme.value)">
+        {{ theme.label }}
+      </div>
+    </div>
+  </div>
+</header>

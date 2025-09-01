@@ -1,0 +1,14 @@
+<div class="wrap">
+  <app-header></app-header>
+  
+  <main aria-label="News layout">
+  <router-outlet></router-outlet>
+  </main>
+
+  <!-- Mobile bottom navigation -->
+  <nav class="mobile-nav" aria-label="Bottom navigation">
+    <a routerLink="/" [routerLinkActive]="'active'" [routerLinkActiveOptions]="{ exact: true }">News</a>
+    <a routerLink="/incidents" routerLinkActive="active">Incidents</a>
+    <a routerLink="/payments-insights" routerLinkActive="active">Payments Insights</a>
+  </nav>
+</div>

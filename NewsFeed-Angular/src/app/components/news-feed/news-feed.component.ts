@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 export interface NewsItem {
   id: number;
@@ -15,10 +15,9 @@ export interface NewsItem {
 
 @Component({
   selector: 'app-news-feed',
-  templateUrl: './news-feed.component.html',
-  styleUrls: ['./news-feed.component.scss']
+  templateUrl: './news-feed.component.html'
 })
-export class NewsFeedComponent implements OnInit, AfterViewInit, OnDestroy {
+export class NewsFeedComponent implements OnInit {
   
   isLoading: boolean = false;
   currentSlide: number = 0;

@@ -14,9 +14,15 @@ export class HeaderComponent implements OnInit {
   themes = [
     { value: 'light', label: 'Light' },
     { value: 'dark', label: 'Dark' },
-    { value: 'graphite', label: 'Graphite' },
-    { value: 'forest', label: 'Forest' },
-    { value: 'noir', label: 'Noir' }
+    { value: 'apple-silicon', label: '🍎 Apple Silicon' },
+    { value: 'apple-titanium', label: '🍎 Apple Titanium' },
+    { value: 'apple-pro', label: '🍎 Apple Pro' },
+    { value: 'iphone-glass', label: '📱 iPhone Glass' },
+    { value: 'iphone-midnight', label: '📱 iPhone Midnight' },
+    { value: 'iphone-gold', label: '📱 iPhone Gold' },
+    { value: 'metallic-platinum', label: '✨ Metallic Platinum' },
+    { value: 'aurora', label: 'Aurora' },
+    { value: 'oceanic', label: 'Oceanic' }
   ];
 
   constructor(@Inject(DOCUMENT) private document: Document) {}
@@ -60,7 +66,8 @@ export class HeaderComponent implements OnInit {
     body.classList.remove(
       'dark', 'orange-white', 'purple-white', 'neon-black',
       'bloom', 'oceanic', 'ember', 'solar',
-      'graphite', 'forest', 'noir'
+      'graphite', 'forest', 'noir', 'apple-silicon', 'apple-titanium', 'apple-pro',
+      'iphone-glass', 'iphone-midnight', 'iphone-gold', 'metallic-platinum', 'aurora'
     );
     // Add selected theme class (if not light)
     if (theme !== 'light') {

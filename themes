@@ -1,0 +1,106 @@
+🔴 Nothing Monochrome
+Pure black and white minimalism
+
+Colors:
+Primary: `#000000` (Black)
+Accent: `#374151` (Gray-800)
+Background Gradient: Black → Gray-800 → Gray-900
+Card Background: Gray-50 → White
+Text: Black
+
+Code:
+```jsx
+{
+  id: 'nothing-mono',
+  name: 'Nothing Monochrome',
+  description: 'Pure minimalism with Nothing\'s signature black and white aesthetic',
+  gradient: 'bg-gradient-to-br from-black via-gray-800 to-gray-900',
+  cardBg: 'bg-gradient-to-r from-gray-50 to-white',
+  primaryColor: 'bg-black',
+  accentColor: 'bg-gray-800',
+  textColor: 'text-black',
+  category: '⚫ Nothing'
+}
+```
+
+🔘 Nothing Glyph
+Iconic dot patterns and LED interface
+
+Colors:
+Primary: `#111827` (Gray-900)
+Accent: `#4B5563` (Gray-600)
+Background Gradient: Gray-900 → Gray-700 → Gray-800
+Card Background: Gray-100 → Gray-50
+Text: Gray-900
+Dot Pattern: White dots with 30% opacity
+
+Code:
+```jsx
+{
+  id: 'nothing-glyph',
+  name: 'Nothing Glyph',
+  description: 'Inspired by Nothing\'s iconic dot patterns and LED interface',
+  gradient: 'bg-gradient-to-br from-gray-900 via-gray-700 to-gray-800',
+  cardBg: 'bg-gradient-to-r from-gray-100 to-gray-50',
+  primaryColor: 'bg-gray-900',
+  accentColor: 'bg-gray-600',
+  textColor: 'text-gray-900',
+  category: '🔘 Glyph'
+}
+
+// Special Glyph Pattern Effect:
+{theme.id === 'nothing-glyph' && (
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div className="grid grid-cols-4 gap-2">
+      {[...Array(16)].map((_, i) => (
+        <div key={i} className="w-2 h-2 bg-white rounded-full opacity-30"></div>
+      ))}
+    </div>
+  </div>
+)}
+```
+
+💡 Nothing LED
+Glowing LED effects inspired by Nothing's light interface
+
+Colors:
+Primary: `#FFFFFF` (White)
+Accent: `#D1D5DB` (Gray-300)
+Background Gradient: White → Gray-100 → Gray-300
+Card Background: White → Gray-50
+Text: Gray-900
+LED Effect: `#EF4444` (Red-500) with pulsing animation and glow
+
+Code:
+```jsx
+{
+  id: 'nothing-led',
+  name: 'Nothing LED',
+  description: 'Glowing LED effects inspired by Nothing\'s light interface',
+  gradient: 'bg-gradient-to-br from-white via-gray-100 to-gray-300',
+  cardBg: 'bg-gradient-to-r from-white to-gray-50',
+  primaryColor: 'bg-white',
+  accentColor: 'bg-gray-300',
+  textColor: 'text-gray-900',
+  category: '💡 LED'
+}
+
+// Special LED Effect:
+{theme.id === 'nothing-led' && (
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div className="w-8 h-8 bg-red-500 rounded-full opacity-80 animate-pulse shadow-lg shadow-red-500/50"></div>
+  </div>
+)}
+```
+
+Hex Color Reference:
+Black: `#000000`
+Gray-900: `#111827`
+Gray-800: `#1F2937`
+Gray-700: `#374151`
+Gray-600: `#4B5563`
+Gray-300: `#D1D5DB`
+Gray-100: `#F3F4F6`
+Gray-50: `#F9FAFB`
+White: `#FFFFFF`
+Red-500: `#EF4444` (LED accent)

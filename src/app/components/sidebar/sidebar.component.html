@@ -1,0 +1,29 @@
+<div class="fixed left-0 top-[68px] bottom-0 w-[72px] bg-[#1a1a1a] border-r border-white/10 flex flex-col items-center py-4 gap-4 z-40">
+  <ng-container *ngFor="let item of sidebarItems">
+    <button
+      (click)="onItemClick(item.id)"
+      [class.active]="isActive(item.id)"
+      [title]="item.tooltip"
+      class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl transition-all duration-200"
+      [ngClass]="{
+        'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg': isActive(item.id),
+        'bg-white/5 text-gray-400 hover:bg-white/10': !isActive(item.id)
+      }"
+    >
+      {{ item.icon }}
+    </button>
+  </ng-container>
+
+  <!-- Voice Button -->
+  <button
+    (click)="onVoiceClick()"
+    [title]="isVoiceActive ? 'Stop Voice Mode' : 'Start Voice Mode'"
+    class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl transition-all duration-200 mt-auto"
+    [ngClass]="{
+      'bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg animate-pulse': isVoiceActive,
+      'bg-white/5 text-gray-400 hover:bg-white/10': !isVoiceActive
+    }"
+  >
+    🎤
+  </button>
+</div>

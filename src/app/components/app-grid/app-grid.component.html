@@ -1,0 +1,40 @@
+<div class="space-y-6">
+  <!-- Title -->
+  <div>
+    <h2 class="text-2xl font-bold text-white">{{ title }}</h2>
+    <p class="text-sm text-gray-400 mt-1">
+      {{ applications.length }} application{{ applications.length !== 1 ? 's' : '' }}
+    </p>
+  </div>
+
+  <!-- Grid -->
+  <div
+    class="grid gap-4"
+    [ngClass]="{
+      'grid-cols-1': true,
+      'sm:grid-cols-3': true,
+      'md:grid-cols-4': true,
+      'lg:grid-cols-5': true,
+      'xl:grid-cols-6': true
+    }"
+  >
+    <ng-container
+      *ngFor="let app of applications; trackBy: trackByAppId"
+    >
+      <app-tile
+        [application]="app"
+        (toggleFavorite)="onToggleFavorite($event)"
+        (launch)="onLaunchApp($event)"
+      ></app-tile>
+    </ng-container>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="applications.length === 0"
+    class="text-center py-12"
+  >
+    <div class="text-5xl mb-4">📭</div>
+    <p class="text-gray-400">No applications found</p>
+  </div>
+</div>

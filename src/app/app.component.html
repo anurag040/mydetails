@@ -1,0 +1,96 @@
+<div class="min-h-screen bg-[#141414]">
+  <!-- Voice Message Notification -->
+  <div
+    *ngIf="voiceMessage"
+    class="fixed top-[80px] left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-lg backdrop-blur-md border"
+    [ngClass]="{
+      'bg-green-500/20 border-green-500/50 text-green-300': voiceMessage.includes('Opening'),
+      'bg-red-500/20 border-red-500/50 text-red-300': voiceMessage.includes('couldn\'t')
+    }"
+  >
+    {{ voiceMessage }}
+  </div>
+
+  <!-- Header -->
+  <app-header
+    [searchQuery]="searchQuery"
+    (searchChange)="onSearchChange($event)"
+  ></app-header>
+
+  <!-- Sidebar -->
+  <app-sidebar
+    [currentView]="currentView"
+    (viewChange)="onViewChange($event)"
+    (voiceToggle)="onVoiceToggle($event)"
+  ></app-sidebar>
+
+  <!-- Main Content -->
+  <main class="ml-[72px] pt-[68px]">
+    <div class="px-8 py-8 max-w-[2000px]">
+      <!-- Favorites View -->
+      <ng-container *ngIf="currentView === 'favorites'">
+        <div class="space-y-8">
+          <div>
+            <h1 class="text-3xl font-bold text-white mb-2">
+              Favorite Applications
+            </h1>
+            <p class="text-base text-gray-400">
+              Quick access to your most used applications
+            </p>
+          </div>
+          <app-grid
+            [applications]="favoriteApps"
+            title="All Favorites"
+            (toggleFavorite)="onToggleFavorite($event)"
+            (launchApp)="onLaunchApp($event)"
+          ></app-grid>
+        </div>
+      </ng-container>
+
+      <!-- Home View -->
+      <ng-container *ngIf="currentView === 'home'">
+        <div class="space-y-8">
+          <!-- Filter Panel -->
+          <app-filter-panel
+            [selectedRole]="selectedRole"
+            [selectedSort]="selectedSort"
+            (roleChange)="onRoleChange($event)"
+            (sortChange)="onSortChange($event)"
+          ></app-filter-panel>
+
+          <!-- Favorites Row -->
+          <app-favorites-row
+            *ngIf="showFavoritesRow && favoriteApps.length > 0"
+            [applications]="favoriteApps"
+            (toggleFavorite)="onToggleFavorite($event)"
+            (launchApp)="onLaunchApp($event)"
+          ></app-favorites-row>
+
+          <!-- Recently Accessed Row -->
+          <app-recently-accessed-row
+            *ngIf="showRecentRow && recentApps.length > 0"
+            [applications]="recentApps"
+            (toggleFavorite)="onToggleFavorite($event)"
+            (launchApp)="onLaunchApp($event)"
+          ></app-recently-accessed-row>
+
+          <!-- All Applications Grid -->
+          <app-grid
+            [applications]="filteredApps"
+            [title]="
+              selectedSort === 'all'
+                ? 'All Applications'
+                : selectedSort === 'recent'
+                ? 'Recently Accessed'
+                : selectedSort === 'favorites'
+                ? 'Favorite Applications'
+                : 'Most Used Applications'
+            "
+            (toggleFavorite)="onToggleFavorite($event)"
+            (launchApp)="onLaunchApp($event)"
+          ></app-grid>
+        </div>
+      </ng-container>
+    </div>
+  </main>
+</div>

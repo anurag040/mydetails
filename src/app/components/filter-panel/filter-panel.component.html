@@ -1,0 +1,35 @@
+<div class="space-y-4">
+  <!-- Role Filters -->
+  <div class="flex flex-wrap gap-2">
+    <ng-container *ngFor="let role of roles">
+      <button
+        (click)="onRoleSelect(role)"
+        [class.active]="selectedRole === role"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border"
+        [ngClass]="{
+          'bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-cyan-500/50 shadow-lg': selectedRole === role,
+          'bg-white/5 text-gray-400 border-white/10 hover:border-white/30': selectedRole !== role
+        }"
+      >
+        {{ role }}
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- Sort Dropdown -->
+  <div class="flex items-center gap-3">
+    <label for="sort" class="text-sm font-medium text-gray-300">
+      Sort by:
+    </label>
+    <select
+      id="sort"
+      [value]="selectedSort"
+      (change)="onSortSelect($event.target.value)"
+      class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-white/40 transition-colors cursor-pointer"
+    >
+      <ng-container *ngFor="let option of sortOptions">
+        <option [value]="option.value">{{ option.label }}</option>
+      </ng-container>
+    </select>
+  </div>
+</div>

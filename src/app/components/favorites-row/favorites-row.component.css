@@ -1,0 +1,21 @@
+:host {
+  display: block;
+}
+
+.flex {
+  scrollbar-width: thin;
+  scrollbar-color: #404040 #141414;
+}
+
+.flex::-webkit-scrollbar {
+  height: 6px;
+}
+
+.flex::-webkit-scrollbar-track {
+  background: #141414;
+}
+
+.flex::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 3px;
+}

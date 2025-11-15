@@ -1,0 +1,86 @@
+<div class="voice-input-container">
+  <div class="voice-card glass">
+    <!-- Header -->
+    <div class="voice-header">
+      <h2>🎤 Voice Input</h2>
+      <p class="subtitle">Speak to control the dashboard</p>
+    </div>
+
+    <!-- Status Message -->
+    <div *ngIf="statusMessage" class="status-message" [ngClass]="status">
+      {{ statusMessage }}
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="status === 'error' && errorMessage" class="error-message">
+      <span>⚠️ {{ errorMessage }}</span>
+    </div>
+
+    <!-- Unsupported Message -->
+    <div *ngIf="!isSupported" class="unsupported-message">
+      <span>⚠️ Voice input is not supported in this browser.</span>
+      <p class="text-sm text-gray-400 mt-2">Please use Chrome, Edge, or Safari for voice recognition features.</p>
+    </div>
+
+    <!-- Microphone Button -->
+    <div class="mic-button-container">
+      <button
+        [disabled]="isMicButtonDisabled"
+        (click)="onMicButtonClick()"
+        [ngClass]="{ listening: isListening, disabled: isMicButtonDisabled }"
+        class="mic-button"
+        [attr.aria-label]="'Microphone button. Currently ' + (isListening ? 'recording' : 'idle')"
+      >
+        {{ micButtonLabel }}
+      </button>
+    </div>
+
+    <!-- Listening Indicator Animation -->
+    <div *ngIf="isListening" class="listening-indicator">
+      <div class="pulse-dot"></div>
+      <div class="pulse-dot"></div>
+      <div class="pulse-dot"></div>
+    </div>
+
+    <!-- Live Recognized Text (while listening or in review) -->
+    <div *ngIf="recognizedText && (currentState === 'listening' || currentState === 'review')" class="recognized-text-section">
+      <div class="text-label">Recognized Text:</div>
+      <div class="recognized-text-box">
+        {{ recognizedText }}
+      </div>
+    </div>
+
+    <!-- Review State: Show confirmation section -->
+    <div *ngIf="currentState === 'review'" class="review-section">
+      <div class="review-header">You said:</div>
+      <div class="review-text-box">
+        {{ recognizedText }}
+      </div>
+      <div class="review-actions">
+        <button
+          [disabled]="isConfirmButtonDisabled"
+          (click)="onConfirm()"
+          class="btn btn-confirm"
+        >
+          ✓ Confirm
+        </button>
+        <button (click)="onRetry()" class="btn btn-retry">
+          ↻ Retry
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirmed State: Show final confirmed text -->
+    <div *ngIf="currentState === 'confirmed'" class="confirmed-section">
+      <div class="confirmed-header">✓ Final Confirmed Text:</div>
+      <div class="confirmed-text-box">
+        {{ confirmedText }}
+      </div>
+      <div class="confirmed-actions">
+        <button (click)="onStartNewRecording()" class="btn btn-new">
+          🎤 Record Again
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

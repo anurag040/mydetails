@@ -1,0 +1,36 @@
+<header class="fixed top-0 left-0 right-0 h-[68px] bg-white/5 backdrop-blur-md border-b border-white/10 z-50">
+  <div class="flex items-center justify-between h-full px-8">
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+        <span class="text-white font-bold text-lg">Ph</span>
+      </div>
+      <span class="text-white font-bold text-xl">Payments Hub</span>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex-1 mx-12">
+      <input
+        type="text"
+        placeholder="Search applications..."
+        [value]="searchQuery"
+        (input)="onSearchChange($event.target.value)"
+        class="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-white/40 transition-colors"
+      />
+    </div>
+
+    <!-- User Profile -->
+    <div class="flex items-center gap-4">
+      <div class="text-right">
+        <div class="text-sm font-medium text-white">John Doe</div>
+        <div class="text-xs text-gray-400">{{ userRole }}</div>
+      </div>
+      <button
+        (click)="onProfileClick()"
+        class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm hover:scale-105 transition-transform"
+      >
+        {{ userInitials }}
+      </button>
+    </div>
+  </div>
+</header>

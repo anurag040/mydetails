@@ -1,0 +1,109 @@
+I have three existing Angular applications that already run independently, and I want you to help me integrate them cleanly as microfrontends using Webpack Module Federation, without breaking their existing behavior, paths, or authorization logic.
+
+Applications:
+
+UI Hub – Angular 18
+
+Acts as the host / shell.
+
+Has global header, navigation, layout.
+
+Will own the main login flow using Microsoft Authenticator (MSAL / OIDC).
+
+FMR2 – Angular 20
+
+Standalone, fully working application today.
+
+Has its own routing, its own Spring Security backend, and an authorization mechanism that is injected at bootstrap time.
+
+Must keep its existing auth bootstrap logic and backend calls intact.
+
+Payments Digest (or Payments Digestor) – Angular 17
+
+Same story: standalone, its own routing, its own Spring Security backend, its own authorization bootstrapped when the app starts.
+
+Important constraints & goals:
+
+Do not use iframes.
+
+Do not destroy or heavily rewrite the existing apps. I want a minimal, elegant, and reversible set of changes.
+
+FMR2, UI Hub, and Payments Digest should still be able to run standalone in their own environments as they work today.
+
+Each child app must keep its existing authorization mechanism that runs during bootstrap. That logic should continue to execute when the app is loaded inside UI Hub as a remote.
+
+We have path-related issues right now when trying to compose these apps (base href, router base paths, deep links, asset URLs, API base URLs, etc.). I want you to analyse and fix those path problems as part of the refactor.
+
+All three apps share the same Microsoft Authenticator client ID and secret, but each one has its own Spring Security backend and authorization model.
+
+Angular versions are different (17, 18, 20), so do not try to share Angular as a singleton across apps. Each remote should ship its own Angular runtime so all versions can coexist.
+
+Target architecture:
+
+Make UI Hub the Module Federation host.
+
+It should:
+
+Declare FMR2 and Payments Digest as remotes.
+
+Provide routes like /fmr2/** and /digest/** (or similar) that mount the appropriate remote app in a content outlet while keeping the host header/nav.
+
+Own the primary Microsoft Authenticator login flow, but still allow each child app’s authorization bootstrap logic to run when the child app is loaded.
+
+Make FMR2 a Module Federation remote that exposes a root entry (e.g. its main shell / root component).
+
+Make Payments Digest a Module Federation remote that exposes its root entry.
+
+Path & routing expectations:
+
+When FMR2 and Payments Digest are loaded inside the UI Hub:
+
+Their internal routing should work under a base path (e.g. /fmr2/... and /digest/...) without breaking navigation or reloading the host.
+
+Deep links (e.g. bookmarking a specific FMR2 route) should still work, preferably by routing via the host and then into the remote.
+
+Static assets (CSS, images, fonts) and API calls should resolve correctly without broken relative paths.
+
+When each app is run standalone:
+
+Its existing URLs, routing, and assets should still work as before.
+
+Auth expectations:
+
+UI Hub should handle the main Microsoft Auth login and keep the user session.
+
+When loading FMR2 or Payments Digest as remotes, their existing authorization bootstrap logic should still run (for example, reading tokens/cookies and configuring their interceptors), but they should not trigger a completely separate or conflicting login flow.
+
+Where necessary, adjust how tokens or cookies are read so that they work both in standalone mode and when embedded inside UI Hub.
+
+What I want you to do now:
+
+Detect and/or create the Module Federation configuration for:
+
+UI Hub as host.
+
+FMR2 as remote.
+
+Payments Digest as remote.
+
+Carefully update routing and base paths in all three apps so that:
+
+Host routes can mount the remotes.
+
+Child routes work correctly under those prefixes.
+
+Standalone mode still works.
+
+Fix any path-related issues you see (baseHref, router configuration, asset paths, API base URLs) that would cause problems when FMR2 or Payments Digest are rendered inside the host.
+
+Preserve each child app’s authorization bootstrap logic in its main entry file, making only the minimal changes required so that it also behaves correctly when running as a remote.
+
+Add clear comments where you make non-trivial changes, explaining:
+
+Why the change was needed (e.g., “to support MF host + remote routing while keeping standalone mode”).
+
+How it affects paths, routing, or authorization.
+
+Ensure the final solution is clean, modular, and scalable, so that a future React or other framework app could be added as another remote or web component without changing the core architecture.
+
+Before you modify files, explain briefly what you plan to do (at a high level). Then go file by file and apply the changes, making sure you do NOT break standalone builds and that paths & auth are handled safely.

@@ -1,0 +1,240 @@
+<svg viewBox="0 0 1400 2400" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .title { font: bold 20px Arial, sans-serif; fill: #1a1a1a; }
+    .subtitle { font: bold 14px Arial, sans-serif; fill: #333; }
+    .label { font: 12px Arial, sans-serif; fill: #444; }
+    .small { font: 10px Arial, sans-serif; fill: #666; }
+    .code { font: 10px monospace; fill: #1a1a1a; }
+  </style>
+
+  <text x="700" y="30" text-anchor="middle" class="title">Monorepo vs Multi-Repo for BNY</text>
+  <text x="700" y="50" text-anchor="middle" class="subtitle">50-60 Apps Managed by 16 Groups</text>
+
+  <!-- Monorepo Box -->
+  <rect x="50" y="80" width="600" height="400" fill="#e3f2fd" stroke="#1565c0" stroke-width="2" rx="5"/>
+  <text x="350" y="105" text-anchor="middle" class="subtitle">MONOREPO - Single Repository</text>
+  
+  <rect x="70" y="120" width="560" height="340" fill="#fff" stroke="#1565c0" rx="3"/>
+  <text x="350" y="140" text-anchor="middle" class="label">git.bny.com/enterprise-portal</text>
+  
+  <text x="90" y="165" class="code">enterprise-portal/</text>
+  <text x="100" y="182" class="code">apps/</text>
+  <text x="115" y="199" class="code">host/ (Grp1)</text>
+  <text x="130" y="216" class="code">src/, package.json</text>
+  <text x="130" y="233" class="code">.gitlab-ci.yml</text>
+  <text x="115" y="255" class="code">child-app-a/ (Grp5)</text>
+  <text x="130" y="272" class="code">frontend/</text>
+  <text x="145" y="289" class="code">package.json</text>
+  <text x="130" y="306" class="code">backend/</text>
+  <text x="145" y="323" class="code">pom.xml</text>
+  <text x="130" y="340" class="code">.gitlab-ci.yml</text>
+  <text x="115" y="362" class="code">child-app-b/ ... (60 apps)</text>
+  <text x="100" y="384" class="code">libs/</text>
+  <text x="115" y="401" class="code">shared-auth/</text>
+  <text x="115" y="418" class="code">shared-ui/</text>
+  <text x="90" y="445" class="small">All in one repo, separate CI/CD per app OK</text>
+
+  <!-- Multi-repo Box -->
+  <rect x="700" y="80" width="650" height="400" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="5"/>
+  <text x="1025" y="105" text-anchor="middle" class="subtitle">MULTI-REPO - Separate Repositories</text>
+  
+  <rect x="720" y="120" width="610" height="340" fill="#fff" stroke="#2e7d32" rx="3"/>
+  
+  <text x="740" y="150" class="code">Repo 1: git.bny.com/host-app (Grp1)</text>
+  <text x="750" y="167" class="code">host-app/</text>
+  <text x="760" y="184" class="code">src/, package.json, .gitlab-ci.yml</text>
+  
+  <text x="740" y="210" class="code">Repo 2: git.bny.com/child-app-a (Grp5)</text>
+  <text x="750" y="227" class="code">child-app-a/</text>
+  <text x="760" y="244" class="code">frontend/</text>
+  <text x="770" y="261" class="code">package.json, angular.json</text>
+  <text x="760" y="278" class="code">backend/</text>
+  <text x="770" y="295" class="code">pom.xml</text>
+  <text x="760" y="312" class="code">.gitlab-ci.yml</text>
+  
+  <text x="740" y="338" class="code">Repos 3-61: Other child apps</text>
+  <text x="750" y="355" class="code">Each has package.json AND pom.xml</text>
+  <text x="750" y="372" class="code">Each has own CI/CD pipeline</text>
+  <text x="750" y="389" class="code">16 groups manage 60 apps</text>
+  
+  <text x="1025" y="445" text-anchor="middle" class="small">Each repo complete with all dependencies</text>
+
+  <!-- CI/CD Reality -->
+  <rect x="50" y="510" width="1300" height="120" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="5"/>
+  <text x="700" y="535" text-anchor="middle" class="subtitle">CI/CD REALITY - Both Can Have Separate Pipelines</text>
+  
+  <rect x="70" y="555" width="590" height="60" fill="#fff" stroke="#7b1fa2" rx="3"/>
+  <text x="365" y="575" text-anchor="middle" class="label">MONOREPO</text>
+  <text x="80" y="595" class="small">Can have per-app pipelines with path filters</text>
+  <text x="80" y="610" class="code">only: changes: apps/child-app-a/**</text>
+  
+  <rect x="690" y="555" width="640" height="60" fill="#fff" stroke="#7b1fa2" rx="3"/>
+  <text x="1010" y="575" text-anchor="middle" class="label">MULTI-REPO</text>
+  <text x="700" y="595" class="small">Each repo MUST have own pipeline</text>
+  <text x="700" y="610" class="small">Independent by default</text>
+
+  <!-- Advantages Monorepo -->
+  <rect x="50" y="660" width="600" height="450" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2" rx="5"/>
+  <text x="350" y="685" text-anchor="middle" class="subtitle">MONOREPO ADVANTAGES</text>
+  
+  <rect x="70" y="700" width="560" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="350" y="720" text-anchor="middle" class="label">1. Shared Code Zero Duplication</text>
+  <text x="80" y="740" class="small">libs/shared-auth used by all 60 apps</text>
+  <text x="80" y="755" class="small">Update once, all apps use new version</text>
+
+  <rect x="70" y="775" width="560" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="350" y="795" text-anchor="middle" class="label">2. Atomic Cross-App Changes</text>
+  <text x="80" y="815" class="small">Change JWT structure in one commit</text>
+  <text x="80" y="830" class="small">Update all 60 apps in same PR</text>
+
+  <rect x="70" y="850" width="560" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="350" y="870" text-anchor="middle" class="label">3. Easier Refactoring</text>
+  <text x="80" y="890" class="small">IDE knows all code locations</text>
+  <text x="80" y="905" class="small">Rename function across 60 apps</text>
+
+  <rect x="70" y="925" width="560" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="350" y="945" text-anchor="middle" class="label">4. Single Clone Gets Everything</text>
+  <text x="80" y="965" class="small">New developer clones once</text>
+  <text x="80" y="980" class="small">Can search across all apps</text>
+
+  <rect x="70" y="1000" width="560" height="100" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="350" y="1020" text-anchor="middle" class="label">5. Consistent Tooling (Optional)</text>
+  <text x="80" y="1040" class="small">CAN enforce same versions</text>
+  <text x="80" y="1055" class="small">CAN share configs</text>
+  <text x="80" y="1070" class="small">But not required</text>
+  <text x="80" y="1085" class="small">6. Better code visibility</text>
+
+  <!-- Advantages Multi-repo -->
+  <rect x="700" y="660" width="650" height="450" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2" rx="5"/>
+  <text x="1025" y="685" text-anchor="middle" class="subtitle">MULTI-REPO ADVANTAGES</text>
+  
+  <rect x="720" y="700" width="610" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="1025" y="720" text-anchor="middle" class="label">1. True Group Autonomy - CRITICAL</text>
+  <text x="730" y="740" class="small">Grp5 fully owns their repos</text>
+  <text x="730" y="755" class="small">Different Spring Boot versions OK</text>
+
+  <rect x="720" y="775" width="610" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="1025" y="795" text-anchor="middle" class="label">2. Independent Deployments - CRITICAL</text>
+  <text x="730" y="815" class="small">Grp5 deploys without waiting</text>
+  <text x="730" y="830" class="small">No release train coordination</text>
+
+  <rect x="720" y="850" width="610" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="1025" y="870" text-anchor="middle" class="label">3. Blast Radius Contained</text>
+  <text x="730" y="890" class="small">Bad commit only breaks their apps</text>
+  <text x="730" y="905" class="small">Other 15 groups unaffected</text>
+
+  <rect x="720" y="925" width="610" height="65" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="1025" y="945" text-anchor="middle" class="label">4. Clear Git Permissions</text>
+  <text x="730" y="965" class="small">Grp5 cannot touch Grp6 code</text>
+  <text x="730" y="980" class="small">Git access per repository</text>
+
+  <rect x="720" y="1000" width="610" height="100" fill="#fff" stroke="#2e7d32" rx="3"/>
+  <text x="1025" y="1020" text-anchor="middle" class="label">5. Faster Git Operations</text>
+  <text x="730" y="1040" class="small">Clone only what you need</text>
+  <text x="730" y="1055" class="small">Git operations faster</text>
+  <text x="730" y="1070" class="small">Less disk space</text>
+  <text x="730" y="1085" class="small">6. Easy to archive old apps</text>
+
+  <!-- Disadvantages Monorepo -->
+  <rect x="50" y="1140" width="600" height="420" fill="#ffcdd2" stroke="#c62828" stroke-width="2" rx="5"/>
+  <text x="350" y="1165" text-anchor="middle" class="subtitle">MONOREPO DISADVANTAGES</text>
+  
+  <rect x="70" y="1180" width="560" height="70" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="350" y="1200" text-anchor="middle" class="label">1. Coordination Required - MAJOR</text>
+  <text x="80" y="1220" class="small">16 groups must coordinate changes</text>
+  <text x="80" y="1235" class="small">Grp5 blocked by Grp6 scenarios</text>
+
+  <rect x="70" y="1260" width="560" height="70" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="350" y="1280" text-anchor="middle" class="label">2. Blast Radius Large - CRITICAL</text>
+  <text x="80" y="1300" class="small">Bad commit can break all 60 apps</text>
+  <text x="80" y="1315" class="small">Weekend deploy affects everyone</text>
+
+  <rect x="70" y="1340" width="560" height="70" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="350" y="1360" text-anchor="middle" class="label">3. Repository Size Grows Large</text>
+  <text x="80" y="1380" class="small">60 apps = 10GB+ repository</text>
+  <text x="80" y="1395" class="small">Initial clone slow</text>
+
+  <rect x="70" y="1420" width="560" height="130" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="350" y="1440" text-anchor="middle" class="label">4. Harder to Enforce Boundaries</text>
+  <text x="80" y="1460" class="small">Grp5 can import from Grp6 code</text>
+  <text x="80" y="1475" class="small">Accidental dependencies</text>
+  <text x="80" y="1495" class="small">5. CI/CD Can Be Complex</text>
+  <text x="80" y="1510" class="small">Need NX/Turborepo for optimization</text>
+  <text x="80" y="1525" class="small">Path filters can be fragile</text>
+
+  <!-- Disadvantages Multi-repo -->
+  <rect x="700" y="1140" width="650" height="420" fill="#ffcdd2" stroke="#c62828" stroke-width="2" rx="5"/>
+  <text x="1025" y="1165" text-anchor="middle" class="subtitle">MULTI-REPO DISADVANTAGES</text>
+  
+  <rect x="720" y="1180" width="610" height="70" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="1025" y="1200" text-anchor="middle" class="label">1. Code Duplication - MAJOR</text>
+  <text x="730" y="1220" class="small">Auth code copied to 60 repos</text>
+  <text x="730" y="1235" class="small">Bug fix = update 60 repos</text>
+
+  <rect x="720" y="1260" width="610" height="70" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="1025" y="1280" text-anchor="middle" class="label">2. Cross-Repo Changes Hard</text>
+  <text x="730" y="1300" class="small">API change = 60 separate PRs</text>
+  <text x="730" y="1315" class="small">Apps drift out of sync</text>
+
+  <rect x="720" y="1340" width="610" height="70" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="1025" y="1360" text-anchor="middle" class="label">3. Tooling Can Diverge</text>
+  <text x="730" y="1380" class="small">Each repo might use different tools</text>
+  <text x="730" y="1395" class="small">Hard to enforce standards</text>
+
+  <rect x="720" y="1420" width="610" height="130" fill="#fff" stroke="#c62828" rx="3"/>
+  <text x="1025" y="1440" text-anchor="middle" class="label">4. Discovery Harder</text>
+  <text x="730" y="1460" class="small">Cannot search all code at once</text>
+  <text x="730" y="1475" class="small">Duplicate implementations</text>
+  <text x="730" y="1495" class="small">5. More Repos to Manage</text>
+  <text x="730" y="1510" class="small">61 repos need management</text>
+  <text x="730" y="1525" class="small">61 CI/CD pipelines</text>
+
+  <!-- Recommendation -->
+  <rect x="50" y="1590" width="1300" height="550" fill="#fff9c4" stroke="#f57f17" stroke-width="2" rx="5"/>
+  <text x="700" y="1620" text-anchor="middle" class="subtitle">RECOMMENDATION FOR BNY</text>
+  
+  <rect x="70" y="1645" width="1260" height="480" fill="#fff" stroke="#f57f17" rx="3"/>
+  
+  <text x="700" y="1670" text-anchor="middle" class="label">MULTI-REPO Recommended But Trade-offs Exist</text>
+  
+  <text x="90" y="1700" class="label">Multi-Repo Wins If:</text>
+  <text x="100" y="1720" class="small">16 groups need full autonomy</text>
+  <text x="100" y="1737" class="small">Cannot coordinate weekend deploys</text>
+  <text x="100" y="1754" class="small">Groups use different tech versions</text>
+  <text x="100" y="1771" class="small">Blast radius containment critical</text>
+  <text x="100" y="1788" class="small">Clear ownership boundaries needed</text>
+  <text x="100" y="1805" class="small">JWT = minimal shared code</text>
+  <text x="100" y="1822" class="small">Accept code duplication cost</text>
+  
+  <text x="750" y="1700" class="label">Monorepo Wins If:</text>
+  <text x="760" y="1720" class="small">Can coordinate cross-group changes</text>
+  <text x="760" y="1737" class="small">Shared code changes frequent</text>
+  <text x="760" y="1754" class="small">Want atomic refactoring</text>
+  <text x="760" y="1771" class="small">Groups use same versions</text>
+  <text x="760" y="1788" class="small">Strong governance in place</text>
+  <text x="760" y="1805" class="small">NX/Turborepo expertise available</text>
+  <text x="760" y="1822" class="small">Accept coordination overhead</text>
+  
+  <text x="90" y="1860" class="label">Code Sharing Solutions Multi-Repo:</text>
+  <text x="100" y="1880" class="small">1. NPM Private Packages: @bny/shared-auth</text>
+  <text x="110" y="1897" class="small">Each app: npm install @bny/shared-auth@1.2.3</text>
+  <text x="110" y="1914" class="small">Groups update at their own pace</text>
+  
+  <text x="100" y="1940" class="small">2. Maven Artifacts: com.bny:bny-spring-security</text>
+  <text x="110" y="1957" class="small">Each backend adds as dependency</text>
+  
+  <text x="100" y="1983" class="small">3. Copy-Paste for stable simple code</text>
+  <text x="110" y="2000" class="small">HTTP interceptor is 50 lines - copy OK</text>
+  
+  <text x="90" y="2030" class="label">BNY Specific:</text>
+  <text x="100" y="2050" class="small">JWT architecture = loose coupling = less shared code</text>
+  <text x="100" y="2067" class="small">Weekend deployments = need independence</text>
+  <text x="100" y="2084" class="small">16 groups = coordination is expensive</text>
+  <text x="100" y="2101" class="small">Conclusion: Multi-repo fits better</text>
+
+  <rect x="50" y="2160" width="1300" height="50" fill="#2e7d32" stroke="#2e7d32" stroke-width="2" rx="5"/>
+  <text x="700" y="2190" text-anchor="middle" class="label" fill="#fff">For 50-60 apps with 16 groups and weekend-only deployments: Multi-Repo recommended</text>
+
+  <rect x="50" y="2230" width="1300" height="50" fill="#1565c0" stroke="#1565c0" stroke-width="2" rx="5"/>
+  <text x="700" y="2260" text-anchor="middle" class="label" fill="#fff">Key: Both can have separate CI/CD. Both need package.json and pom.xml in each app.</text>
+</svg>

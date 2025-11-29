@@ -35,3 +35,6 @@ Key requirement: Valid token
 Host dependency: Only for authentication, nothing else
 
 Let me know if you need a visual flow or if we should schedule a walkthrough.
+
+
+ComponentCurrent (OAuth2 Client)New (Resource Server)AuthenticationApp does OAuth2 redirect❌ Remove - Host handles thisToken ReceptionGets token from Azure AD✅ Receives JWT from host via HTTP headerToken ValidationImplicit via OAuth2 flow✅ Add JWT signature validationEntitlementsFetch via euaGeepService✅ Keep same logic!Authorities MappingCustom mapper✅ Keep same logic!SessionCreates session❌ Remove - Stateless

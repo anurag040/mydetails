@@ -1,0 +1,37 @@
+Hi Team,
+
+Here is a clear summary of how our child applications behave in the new architecture:
+
+1. Can the child apps work independently?
+
+Direct access: No. If a user opens a child app directly, it won’t work because there is no JWT token available for API calls, so the backend returns 401 Unauthorized.
+
+Through the host: Yes. When opened via the host, the host supplies the valid token and everything works as expected.
+
+2. Local testing
+
+Child apps can be tested locally without the host by using a mock token or by running the backend in a local relaxed-security mode. This ensures API calls succeed without affecting production configs.
+
+3. Dependency on the host
+
+The only dependency is the JWT token.
+
+Child apps do not depend on the host’s backend, session, Spring Security config, or deployment environment.
+
+4. Session & Security considerations
+
+No session issues — we are fully stateless.
+
+Any Spring Security errors locally are typically due to missing or invalid tokens, not due to the architecture itself.
+
+Summary
+
+Standalone in production: No
+
+Standalone for local development: Yes
+
+Key requirement: Valid token
+
+Host dependency: Only for authentication, nothing else
+
+Let me know if you need a visual flow or if we should schedule a walkthrough.

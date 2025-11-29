@@ -1,0 +1,170 @@
+<svg viewBox="0 0 1400 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; fill: #1a1a1a; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #333; }
+      .label { font-family: Arial, sans-serif; font-size: 14px; fill: #444; }
+      .small-label { font-family: Arial, sans-serif; font-size: 12px; fill: #666; }
+      .code { font-family: 'Courier New', monospace; font-size: 11px; fill: #1a1a1a; }
+      .team-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+      .deploy-box { fill: #fff9c4; stroke: #f57f17; stroke-width: 2; }
+      .azure-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 3; }
+    </style>
+  </defs>
+
+  <text x="700" y="40" text-anchor="middle" class="title">Payments Independent Weekend Deployment Model</text>
+  <text x="700" y="65" text-anchor="middle" class="subtitle">(Each Group Deploys Saturday/Sunday Only)</text>
+
+  <!-- Azure AD (Shared) -->
+  <rect x="450" y="100" width="500" height="120" class="azure-box" rx="5"/>
+  <text x="700" y="130" text-anchor="middle" class="subtitle" fill="#1565c0">Azure AD (Shared by All Payments Apps)</text>
+  <text x="470" y="155" class="small-label">• Single Payments tenant: bny.onmicrosoft.com</text>
+  <text x="470" y="173" class="small-label">• Host App Registration + 60 Child App Registrations</text>
+  <text x="470" y="191" class="small-label">• MFA policies configured once for all BNY users</text>
+  <text x="470" y="209" class="small-label">✓ No per-deployment changes needed</text>
+
+  <!-- Grp1 - Platform Group -->
+  <rect x="50" y="260" width="400" height="320" class="team-box" rx="5"/>
+  <text x="250" y="290" text-anchor="middle" class="label" font-weight="bold">Grp1 - Group1</text>
+  
+  <rect x="70" y="305" width="360" height="90" fill="#ffffff" stroke="#2e7d32" stroke-width="1" rx="3"/>
+  <text x="250" y="325" text-anchor="middle" class="small-label" font-weight="bold">Manages: Host Application</text>
+  <text x="80" y="345" class="code">Repository: git.bny.com/host-app</text>
+  <text x="80" y="361" class="code">Deploy: https://host.bny.com</text>
+  <text x="80" y="377" class="code">Schedule: Saturday or Sunday only</text>
+  
+  <rect x="70" y="405" width="360" height="160" class="deploy-box" rx="3"/>
+  <text x="250" y="425" text-anchor="middle" class="small-label" font-weight="bold">Weekend Deployment Process:</text>
+  <text x="90" y="445" class="small-label">✓ Deploy Saturday 10 PM - Sunday 6 AM</text>
+  <text x="90" y="463" class="small-label">✓ No coordination with child app groups</text>
+  <text x="90" y="481" class="small-label">✓ Child groups notified via email</text>
+  <text x="90" y="499" class="small-label">✓ Rollback plan in place</text>
+  <text x="90" y="517" class="small-label">✓ Testing window: Sunday morning</text>
+  <text x="90" y="535" class="small-label" font-weight="bold">✓ Zero downtime for child apps</text>
+  <text x="90" y="553" class="small-label" font-weight="bold">✓ Child apps continue working</text>
+
+  <!-- Grp2 -->
+  <rect x="500" y="260" width="400" height="320" class="team-box" rx="5"/>
+  <text x="700" y="290" text-anchor="middle" class="label" font-weight="bold">Grp2 - Group2</text>
+  
+  <rect x="520" y="305" width="360" height="90" fill="#ffffff" stroke="#2e7d32" stroke-width="1" rx="3"/>
+  <text x="700" y="325" text-anchor="middle" class="small-label" font-weight="bold">Manages: Child App A (Finance)</text>
+  <text x="530" y="345" class="code">Repo: git.bny.com/finance-app</text>
+  <text x="530" y="361" class="code">Deploy: https://api-finance.bny.com</text>
+  <text x="530" y="377" class="code">Schedule: Every other Saturday</text>
+  
+  <rect x="520" y="405" width="360" height="160" class="deploy-box" rx="3"/>
+  <text x="700" y="425" text-anchor="middle" class="small-label" font-weight="bold">Weekend Deployment Process:</text>
+  <text x="540" y="445" class="small-label">✓ Deploy Saturday 11 PM - Sunday 5 AM</text>
+  <text x="540" y="463" class="small-label">✓ Independent from Grp1 and other groups</text>
+  <text x="540" y="481" class="small-label">✓ Own deployment window</text>
+  <text x="540" y="499" class="small-label">✓ No shared database changes</text>
+  <text x="540" y="517" class="small-label" font-weight="bold">✓ JWT validation works immediately</text>
+  <text x="540" y="535" class="small-label" font-weight="bold">✓ Works right after deploy</text>
+  <text x="540" y="553" class="small-label" font-weight="bold">✓ No breaking changes to others</text>
+
+  <!-- Grp3 -->
+  <rect x="950" y="260" width="400" height="320" class="team-box" rx="5"/>
+  <text x="1150" y="290" text-anchor="middle" class="label" font-weight="bold">Grp3 - Group3</text>
+  
+  <rect x="970" y="305" width="360" height="90" fill="#ffffff" stroke="#2e7d32" stroke-width="1" rx="3"/>
+  <text x="1150" y="325" text-anchor="middle" class="small-label" font-weight="bold">Manages: Child App B (HR Portal)</text>
+  <text x="980" y="345" class="code">Repository: git.bny.com/hr-app</text>
+  <text x="980" y="361" class="code">Deploy: https://api-hr.bny.com</text>
+  <text x="980" y="377" class="code">Schedule: First Sunday each month</text>
+  
+  <rect x="970" y="405" width="360" height="160" class="deploy-box" rx="3"/>
+  <text x="1150" y="425" text-anchor="middle" class="small-label" font-weight="bold">Weekend Deployment Process:</text>
+  <text x="990" y="445" class="small-label">✓ Deploy Sunday 12 AM - 8 AM</text>
+  <text x="990" y="463" class="small-label">✓ No Grp2 or Grp1 approval needed</text>
+  <text x="990" y="481" class="small-label">✓ Own weekend deployment slot</text>
+  <text x="990" y="499" class="small-label">✓ Emergency Sunday hotfixes allowed</text>
+  <text x="990" y="517" class="small-label" font-weight="bold">✓ Different tech stack OK</text>
+  <text x="990" y="535" class="small-label" font-weight="bold">✓ Different Spring Boot version OK</text>
+  <text x="990" y="553" class="small-label" font-weight="bold">✓ Independent release cycle</text>
+
+  <!-- Deployment Timeline -->
+  <rect x="50" y="620" width="1300" height="280" fill="#f5f5f5" stroke="#666" stroke-width="2" rx="5"/>
+  <text x="700" y="650" text-anchor="middle" class="subtitle">Example: Weekend Deployment Schedule at Payments</text>
+  
+  <!-- Saturday Early -->
+  <rect x="80" y="680" width="230" height="80" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="3"/>
+  <text x="195" y="700" text-anchor="middle" class="label" font-weight="bold">Saturday 10 PM</text>
+  <text x="90" y="720" class="small-label">Grp1 deploys Host v1.8</text>
+  <text x="90" y="736" class="small-label">New navigation menu</text>
+  <text x="90" y="752" class="small-label" font-weight="bold">✓ All children work as before</text>
+
+  <!-- Saturday Late -->
+  <rect x="330" y="680" width="230" height="80" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="3"/>
+  <text x="445" y="700" text-anchor="middle" class="label" font-weight="bold">Saturday 11 PM</text>
+  <text x="340" y="720" class="small-label">Grp2 deploys App A v2.3</text>
+  <text x="340" y="736" class="small-label">New invoice feature</text>
+  <text x="340" y="752" class="small-label" font-weight="bold">✓ No impact on other apps</text>
+
+  <!-- Sunday Early -->
+  <rect x="580" y="680" width="230" height="80" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="3"/>
+  <text x="695" y="700" text-anchor="middle" class="label" font-weight="bold">Sunday 12 AM</text>
+  <text x="590" y="720" class="small-label">Grp3 deploys App B v1.2</text>
+  <text x="590" y="736" class="small-label">HR portal updates</text>
+  <text x="590" y="752" class="small-label" font-weight="bold">✓ Independent deployment</text>
+
+  <!-- Sunday Morning -->
+  <rect x="830" y="680" width="230" height="80" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="3"/>
+  <text x="945" y="700" text-anchor="middle" class="label" font-weight="bold">Sunday 2 AM</text>
+  <text x="840" y="720" class="small-label">Grp4 hotfix App C v3.1.1</text>
+  <text x="840" y="736" class="small-label">Critical bug fixed</text>
+  <text x="840" y="752" class="small-label" font-weight="bold">✓ Emergency deploy OK</text>
+
+  <!-- Sunday Late -->
+  <rect x="1080" y="680" width="230" height="80" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2" rx="3"/>
+  <text x="1195" y="700" text-anchor="middle" class="label" font-weight="bold">Sunday 4 AM</text>
+  <text x="1090" y="720" class="small-label">Grp5 deploys App D v2.0</text>
+  <text x="1090" y="736" class="small-label">Major UI redesign</text>
+  <text x="1090" y="752" class="small-label" font-weight="bold">✓ No coordination needed</text>
+
+  <!-- Result -->
+  <rect x="80" y="780" width="1230" height="100" fill="#c8e6c9" stroke="#2e7d32" stroke-width="2" rx="3"/>
+  <text x="695" y="805" text-anchor="middle" class="label" font-weight="bold">Result: 5 Groups Deploy Same Weekend ✓</text>
+  <text x="90" y="830" class="small-label">• All deployments Saturday/Sunday only</text>
+  <text x="90" y="866" class="small-label">• Groups coordinate own time slots</text>
+  <text x="400" y="830" class="small-label">• No breaking changes between groups</text>
+  <text x="400" y="848" class="small-label">• Each group moves at own pace</text>
+  <text x="400" y="866" class="small-label">• Emergency weekend hotfixes possible</text>
+  <text x="750" y="830" class="small-label">• No database migration coordination</text>
+  <text x="750" y="848" class="small-label">• No shared infrastructure updates</text>
+  <text x="750" y="866" class="small-label" font-weight="bold">• JWT validation works immediately</text>
+
+  <!-- Why This Works -->
+  <rect x="50" y="930" width="1300" height="230" fill="#e3f2fd" stroke="#1565c0" stroke-width="2" rx="5"/>
+  <text x="700" y="960" text-anchor="middle" class="subtitle" fill="#1565c0">Why Independent Deployment Works</text>
+  
+  <rect x="80" y="980" width="380" height="160" fill="#ffffff" stroke="#1565c0" stroke-width="1" rx="3"/>
+  <text x="270" y="1005" text-anchor="middle" class="label" font-weight="bold">1. Stateless Authentication</text>
+  <text x="90" y="1025" class="small-label">• No shared session database</text>
+  <text x="90" y="1041" class="small-label">• No synchronized session state</text>
+  <text x="90" y="1057" class="small-label">• Each backend validates JWT alone</text>
+  <text x="90" y="1073" class="small-label">• JWT public keys from Azure AD</text>
+  <text x="90" y="1089" class="small-label">• No backend-to-backend calls</text>
+  <text x="90" y="1105" class="small-label" font-weight="bold">✓ Deploy without coordination</text>
+  <text x="90" y="1121" class="small-label" font-weight="bold">✓ Restart anytime - no impact</text>
+
+  <rect x="480" y="980" width="380" height="160" fill="#ffffff" stroke="#1565c0" stroke-width="1" rx="3"/>
+  <text x="670" y="1005" text-anchor="middle" class="label" font-weight="bold">2. Decoupled Architecture</text>
+  <text x="490" y="1025" class="small-label">• Each child is self-contained</text>
+  <text x="490" y="1041" class="small-label">• Own database per child</text>
+  <text x="490" y="1057" class="small-label">• Own business logic</text>
+  <text x="490" y="1073" class="small-label">• Own authorization rules</text>
+  <text x="490" y="1089" class="small-label">• Module federation loads frontend</text>
+  <text x="490" y="1105" class="small-label" font-weight="bold">✓ Update without breaking others</text>
+  <text x="490" y="1121" class="small-label" font-weight="bold">✓ Scale independently</text>
+
+  <rect x="880" y="980" width="450" height="160" fill="#ffffff" stroke="#1565c0" stroke-width="1" rx="3"/>
+  <text x="1105" y="1005" text-anchor="middle" class="label" font-weight="bold">3. Stable JWT Contract</text>
+  <text x="890" y="1025" class="small-label">• JWT structure defined by Azure AD</text>
+  <text x="890" y="1041" class="small-label">• Standard claims: sub, email, roles, groups</text>
+  <text x="890" y="1057" class="small-label">• Each child extracts what it needs</text>
+  <text x="890" y="1073" class="small-label">• Adding new child doesn't change JWT</text>
+  <text x="890" y="1089" class="small-label">• Removing child doesn't affect others</text>
+  <text x="890" y="1105" class="small-label" font-weight="bold">✓ Stable interface across all apps</text>
+  <text x="890" y="1121" class="small-label" font-weight="bold">✓ Backwards compatible always</text>
+</svg>
